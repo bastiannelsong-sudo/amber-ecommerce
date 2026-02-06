@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useCartStore } from '../lib/stores/cart.store';
 import FreeShippingProgress from './marketing/FreeShippingProgress';
+import CouponInput from './marketing/CouponInput';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartDrawer() {
@@ -11,6 +13,9 @@ export default function CartDrawer() {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const getTotal = useCartStore((state) => state.getTotal());
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+  const finalTotal = Math.max(0, getTotal - discount);
 
   return (
     <AnimatePresence>
@@ -126,10 +131,25 @@ export default function CartDrawer() {
                 {/* Free Shipping Progress */}
                 <FreeShippingProgress cartTotal={getTotal} />
 
+                {/* Coupon Input */}
+                <CouponInput
+                  cartTotal={getTotal}
+                  onApply={(amt, code) => { setDiscount(amt); setAppliedCoupon(code); }}
+                  onRemove={() => { setDiscount(0); setAppliedCoupon(''); }}
+                  appliedCode={appliedCoupon}
+                />
+
+                {discount > 0 && (
+                  <div className="flex items-center justify-between text-sm text-green-700">
+                    <span>Descuento:</span>
+                    <span>-${discount.toLocaleString('es-CL')}</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between text-lg">
                   <span className="font-medium text-obsidian-900">Total:</span>
                   <span className="font-medium text-obsidian-900">
-                    ${getTotal.toLocaleString('es-CL')}
+                    ${finalTotal.toLocaleString('es-CL')}
                   </span>
                 </div>
 

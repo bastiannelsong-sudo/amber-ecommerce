@@ -114,41 +114,44 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-obsidian-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
         onClick={handleClose}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="relative bg-gradient-to-br from-obsidian-900 to-obsidian-800 text-white p-8">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="bg-white w-full max-w-md shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h2
-              className="text-3xl font-light"
-              style={{ fontFamily: 'var(--font-cormorant)' }}
-            >
-              {mode === 'login' && 'Iniciar Sesión'}
-              {mode === 'register' && 'Crear Cuenta'}
-              {mode === 'forgot' && 'Recuperar Contraseña'}
-            </h2>
-            <p className="text-pearl-300 mt-2">
-              {mode === 'login' && 'Bienvenido de vuelta'}
-              {mode === 'register' && 'Únete a nuestra comunidad'}
-              {mode === 'forgot' && 'Te enviaremos un email para restablecer tu contraseña'}
-            </p>
-          </div>
+
+            {/* Header */}
+            <div className="bg-gradient-to-br from-obsidian-950 to-obsidian-800 text-white px-8 pt-10 pb-8">
+              <div className="w-10 h-[1px] bg-amber-gold-500 mb-6"></div>
+              <h2
+                className="text-3xl lg:text-4xl font-light"
+                style={{ fontFamily: 'var(--font-cormorant)' }}
+              >
+                {mode === 'login' && 'Iniciar Sesion'}
+                {mode === 'register' && 'Crear Cuenta'}
+                {mode === 'forgot' && 'Recuperar Contrasena'}
+              </h2>
+              <p className="text-pearl-300 mt-3 text-sm tracking-wide">
+                {mode === 'login' && 'Bienvenido de vuelta a Amber'}
+                {mode === 'register' && 'Unete a nuestra comunidad exclusiva'}
+                {mode === 'forgot' && 'Te enviaremos un email para restablecer tu contrasena'}
+              </p>
+            </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -240,7 +243,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 <button
                   type="button"
                   onClick={() => setMode('forgot')}
-                  className="text-sm text-amber-gold-600 hover:text-amber-gold-700 transition-colors"
+                  className="text-sm text-amber-gold-600 hover:text-amber-gold-700 transition-colors cursor-pointer"
                 >
                   ¿Olvidaste tu contraseña?
                 </button>
@@ -251,7 +254,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors disabled:bg-platinum-400 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors disabled:bg-platinum-400 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -278,7 +281,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                   <button
                     type="button"
                     onClick={() => setMode('register')}
-                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors"
+                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors cursor-pointer"
                   >
                     Regístrate aquí
                   </button>
@@ -290,7 +293,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                   <button
                     type="button"
                     onClick={() => setMode('login')}
-                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors"
+                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors cursor-pointer"
                   >
                     Inicia sesión
                   </button>
@@ -301,7 +304,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                   <button
                     type="button"
                     onClick={() => setMode('login')}
-                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors"
+                    className="text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors cursor-pointer"
                   >
                     Volver a iniciar sesión
                   </button>
@@ -309,7 +312,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               )}
             </div>
           </form>
-        </motion.div>
+          </motion.div>
       </motion.div>
     </AnimatePresence>
   );

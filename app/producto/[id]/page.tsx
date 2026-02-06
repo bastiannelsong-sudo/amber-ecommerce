@@ -11,35 +11,12 @@ import SocialProofBadge from '@/app/components/marketing/SocialProofBadge';
 import ScarcityIndicator from '@/app/components/marketing/ScarcityIndicator';
 import PriceAnchor from '@/app/components/marketing/PriceAnchor';
 import TrustBadges from '@/app/components/marketing/TrustBadges';
+import ReviewList from '@/app/components/marketing/ReviewList';
 import { useCartStore } from '@/app/lib/stores/cart.store';
 import { useWishlistStore } from '@/app/lib/stores/wishlist.store';
 import { productsService } from '@/app/lib/services/products.service';
-import type { Product, Review } from '@/app/lib/types';
+import type { Product } from '@/app/lib/types';
 import toast, { Toaster } from 'react-hot-toast';
-
-// Mock reviews data
-const mockReviews: Review[] = [
-  {
-    review_id: 1,
-    product_id: 1,
-    user: { id: '1', email: 'user@example.com', name: 'Maria Gonzalez' },
-    rating: 5,
-    title: 'Producto excepcional',
-    comment: 'La calidad es increible, supero mis expectativas. El acabado es perfecto y llego muy bien empacado.',
-    created_at: new Date().toISOString(),
-    helpful_count: 12,
-  },
-  {
-    review_id: 2,
-    product_id: 1,
-    user: { id: '2', email: 'user2@example.com', name: 'Carla Perez' },
-    rating: 4,
-    title: 'Muy bonito',
-    comment: 'Me encanto, aunque el envio tardo un poco mas de lo esperado.',
-    created_at: new Date().toISOString(),
-    helpful_count: 8,
-  },
-];
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -132,7 +109,7 @@ export default function ProductDetailPage({ params }: PageProps) {
     ? product.images
     : [product.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=800&fit=crop'];
 
-  const averageRating = mockReviews.reduce((acc, review) => acc + review.rating, 0) / mockReviews.length;
+  const averageRating = 4.5; // Will be replaced by real data from API
 
   return (
     <div className="min-h-screen bg-pearl-50">
@@ -223,7 +200,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                   ))}
                 </div>
                 <span className="text-sm text-platinum-600">
-                  {averageRating.toFixed(1)} ({mockReviews.length} reviews)
+                  {averageRating.toFixed(1)}
                 </span>
               </div>
 
@@ -367,7 +344,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                     : 'text-platinum-600 hover:text-obsidian-700'
                 }`}
               >
-                Reviews ({mockReviews.length})
+                Reviews
                 {selectedTab === 'reviews' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-gold-500"></div>
                 )}
@@ -398,49 +375,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                 </ul>
               </div>
             ) : (
-              <div className="space-y-8">
-                {mockReviews.map((review) => (
-                  <div
-                    key={review.review_id}
-                    className="border-b border-pearl-200 pb-8 last:border-0"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg
-                              key={star}
-                              className={`w-4 h-4 ${
-                                star <= review.rating
-                                  ? 'text-amber-gold-500'
-                                  : 'text-pearl-300'
-                              }`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        <h3 className="font-medium text-obsidian-900 mb-1">
-                          {review.title}
-                        </h3>
-                        <p className="text-sm text-platinum-600">
-                          Por {review.user.name} - {new Date(review.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-platinum-700 mb-4">{review.comment}</p>
-                    <button className="text-sm text-platinum-600 hover:text-amber-gold-500 transition-colors cursor-pointer">
-                      Te resulto util? ({review.helpful_count})
-                    </button>
-                  </div>
-                ))}
-
-                <button className="w-full py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors cursor-pointer">
-                  Escribir una review
-                </button>
-              </div>
+              <ReviewList productId={productId} />
             )}
           </div>
         </div>

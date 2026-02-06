@@ -1,21 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CheckoutProgressBar from '../components/marketing/CheckoutProgressBar';
 import TrustBadges from '../components/marketing/TrustBadges';
 import { useCartStore } from '../lib/stores/cart.store';
-import { useRouter } from 'next/navigation';
+import type { CartItem } from '../lib/types';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal());
   const clearCart = useCartStore((state) => state.clearCart);
+  const [orderNumber] = useState(() => Math.floor(Math.random() * 10000));
 
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
+  const orderSnapshot = useRef<{ items: CartItem[]; subtotal: number; shipping: number; total: number } | null>(null);
   const [formData, setFormData] = useState({
     // Shipping
     email: '',
@@ -39,7 +40,20 @@ export default function CheckoutPage() {
   const total = subtotal + shipping;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+
+    if (name === 'cardNumber') {
+      value = value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    } else if (name === 'cardExpiry') {
+      value = value.replace(/\D/g, '');
+      if (value.length >= 2) value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    } else if (name === 'cardCvv') {
+      value = value.replace(/\D/g, '').slice(0, 4);
+    } else if (name === 'phone') {
+      value = value.replace(/[^\d+\s]/g, '');
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmitShipping = (e: React.FormEvent) => {
@@ -59,18 +73,44 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Snapshot the order before clearing cart
+    orderSnapshot.current = { items: [...items], subtotal, shipping, total };
+
     // Simulate payment processing
     toast.loading('Procesando pago...', { duration: 2000 });
 
     setTimeout(() => {
+      clearCart();
       setStep('confirmation');
       toast.success('¡Pago procesado exitosamente!');
     }, 2000);
   };
 
+  // Get display data: use snapshot for confirmation, live cart otherwise
+  const displayItems = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.items : items;
+  const displaySubtotal = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.subtotal : subtotal;
+  const displayShipping = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.shipping : shipping;
+  const displayTotal = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.total : total;
+
   if (items.length === 0 && step !== 'confirmation') {
-    router.push('/carrito');
-    return null;
+    return (
+      <div className="min-h-screen bg-pearl-50">
+        <Header />
+        <div className="flex flex-col items-center justify-center py-24">
+          <svg className="w-24 h-24 text-platinum-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <h2 className="text-2xl font-light text-obsidian-900 mb-4" style={{ fontFamily: 'var(--font-cormorant)' }}>
+            Tu carrito esta vacio
+          </h2>
+          <p className="text-platinum-600 mb-8">Agrega productos antes de continuar al checkout</p>
+          <a href="/catalogo" className="px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors">
+            Explorar Productos
+          </a>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -78,6 +118,15 @@ export default function CheckoutPage() {
       <Header />
 
       <div className="container mx-auto px-4 lg:px-8 py-12">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-platinum-600 mb-8">
+          <a href="/" className="hover:text-amber-gold-500 transition-colors">Inicio</a>
+          <span>/</span>
+          <a href="/carrito" className="hover:text-amber-gold-500 transition-colors">Carrito</a>
+          <span>/</span>
+          <span className="text-obsidian-900">Checkout</span>
+        </div>
+
         {/* Progress Steps */}
         <CheckoutProgressBar currentStep={step} />
 
@@ -208,10 +257,22 @@ export default function CheckoutPage() {
                         className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
                       >
                         <option value="">Seleccionar</option>
-                        <option value="metropolitana">Metropolitana</option>
+                        <option value="arica">Arica y Parinacota</option>
+                        <option value="tarapaca">Tarapacá</option>
+                        <option value="antofagasta">Antofagasta</option>
+                        <option value="atacama">Atacama</option>
+                        <option value="coquimbo">Coquimbo</option>
                         <option value="valparaiso">Valparaíso</option>
+                        <option value="metropolitana">Metropolitana</option>
+                        <option value="ohiggins">O'Higgins</option>
+                        <option value="maule">Maule</option>
+                        <option value="nuble">Ñuble</option>
                         <option value="biobio">Biobío</option>
                         <option value="araucania">Araucanía</option>
+                        <option value="losrios">Los Ríos</option>
+                        <option value="loslagos">Los Lagos</option>
+                        <option value="aysen">Aysén</option>
+                        <option value="magallanes">Magallanes</option>
                       </select>
                     </div>
                     <div>
@@ -230,7 +291,7 @@ export default function CheckoutPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+                    className="w-full py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors cursor-pointer"
                   >
                     Continuar al Pago
                   </button>
@@ -317,16 +378,39 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setStep('shipping')}
-                      className="flex-1 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
+                      className="flex-1 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors cursor-pointer"
                     >
                       Volver
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+                      className="flex-1 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors cursor-pointer"
                     >
                       Finalizar Compra
                     </button>
+                  </div>
+
+                  {/* Payment security badges */}
+                  <div className="mt-6 pt-6 border-t border-pearl-200">
+                    <div className="flex items-center justify-center gap-6 text-platinum-500">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <span className="text-xs">SSL Encriptado</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                        <span className="text-xs">Pago Seguro</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-center gap-3 mt-4">
+                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">VISA</div>
+                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">MC</div>
+                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">AMEX</div>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -364,7 +448,7 @@ export default function CheckoutPage() {
                   <div className="bg-amber-gold-50 border border-amber-gold-200 p-6 rounded-lg text-center">
                     <p className="text-sm text-amber-gold-700 mb-2 uppercase tracking-wider">Número de Orden</p>
                     <p className="text-3xl font-medium text-obsidian-900" style={{ fontFamily: 'var(--font-cormorant)' }}>
-                      #AMB{Math.floor(Math.random() * 10000)}
+                      #AMB{orderNumber}
                     </p>
                   </div>
 
@@ -461,7 +545,7 @@ export default function CheckoutPage() {
                   <div>
                     <h3 className="text-lg font-medium text-obsidian-900 mb-4">Productos Ordenados</h3>
                     <div className="border border-pearl-200 rounded-lg divide-y divide-pearl-200">
-                      {items.map((item) => (
+                      {displayItems.map((item) => (
                         <div key={item.product.product_id} className="p-4 flex items-center gap-4">
                           <div className="w-20 h-20 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
                             <img
@@ -488,32 +572,29 @@ export default function CheckoutPage() {
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-platinum-600">Subtotal</span>
-                        <span className="text-obsidian-900">${subtotal.toLocaleString('es-CL')}</span>
+                        <span className="text-obsidian-900">${displaySubtotal.toLocaleString('es-CL')}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-platinum-600">Envío</span>
+                        <span className="text-platinum-600">Envio</span>
                         <span className="text-obsidian-900">
-                          {shipping === 0 ? 'Gratis' : `$${shipping.toLocaleString('es-CL')}`}
+                          {displayShipping === 0 ? 'Gratis' : `$${displayShipping.toLocaleString('es-CL')}`}
                         </span>
                       </div>
                       <div className="pt-3 border-t border-pearl-200 flex justify-between">
                         <span className="font-medium text-obsidian-900 text-lg">Total Pagado</span>
-                        <span className="font-medium text-obsidian-900 text-lg">${total.toLocaleString('es-CL')}</span>
+                        <span className="font-medium text-obsidian-900 text-lg">${displayTotal.toLocaleString('es-CL')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button
-                      onClick={() => {
-                        clearCart();
-                        router.push('/');
-                      }}
-                      className="flex-1 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+                    <a
+                      href="/"
+                      className="flex-1 py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
                     >
                       Ir al Inicio
-                    </button>
+                    </a>
                     <a
                       href="/catalogo"
                       className="flex-1 py-4 text-center border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
@@ -555,7 +636,7 @@ export default function CheckoutPage() {
               </h3>
 
               <div className="space-y-4 mb-6">
-                {items.map((item) => (
+                {displayItems.map((item) => (
                   <div key={item.product.product_id} className="flex gap-4">
                     <div className="w-16 h-16 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
                       <img
@@ -582,19 +663,19 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-6 pb-6 border-b border-pearl-200">
                 <div className="flex justify-between text-sm">
                   <span className="text-platinum-600">Subtotal</span>
-                  <span className="text-obsidian-900">${subtotal.toLocaleString('es-CL')}</span>
+                  <span className="text-obsidian-900">${displaySubtotal.toLocaleString('es-CL')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-platinum-600">Envío</span>
+                  <span className="text-platinum-600">Envio</span>
                   <span className="text-obsidian-900">
-                    {shipping === 0 ? 'Gratis' : `$${shipping.toLocaleString('es-CL')}`}
+                    {displayShipping === 0 ? 'Gratis' : `$${displayShipping.toLocaleString('es-CL')}`}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-between text-lg font-medium mb-6">
                 <span className="text-obsidian-900">Total</span>
-                <span className="text-obsidian-900">${total.toLocaleString('es-CL')}</span>
+                <span className="text-obsidian-900">${displayTotal.toLocaleString('es-CL')}</span>
               </div>
 
               {/* Trust Badges */}

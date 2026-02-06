@@ -1,41 +1,60 @@
 import { apiClient } from '../api-client';
+import { dummyProducts, getDummyProductById } from '../data/dummy-products';
 import type { Product } from '../types';
 
 export const productsService = {
   /**
-   * Get all products
+   * Get all products - falls back to dummy data if API is unavailable
    */
   async getAll(): Promise<Product[]> {
-    const response = await apiClient.get<Product[]>('/products');
-    return response.data;
+    try {
+      const response = await apiClient.get<Product[]>('/products');
+      return response.data;
+    } catch {
+      return dummyProducts;
+    }
   },
 
   /**
-   * Get a single product by ID
+   * Get a single product by ID - falls back to dummy data
    */
   async getById(id: number): Promise<Product> {
-    const response = await apiClient.get<Product>(`/products/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.get<Product>(`/products/${id}`);
+      return response.data;
+    } catch {
+      const product = getDummyProductById(id);
+      if (!product) throw new Error('Product not found');
+      return product;
+    }
   },
 
   /**
    * Get products with low stock
    */
   async getLowStock(threshold: number = 10): Promise<Product[]> {
-    const response = await apiClient.get<Product[]>('/products/low-stock', {
-      params: { threshold },
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get<Product[]>('/products/low-stock', {
+        params: { threshold },
+      });
+      return response.data;
+    } catch {
+      return dummyProducts.filter((p) => p.stock <= threshold);
+    }
   },
 
   /**
    * Get product history
    */
   async getHistory(id: number, limit: number = 50): Promise<any[]> {
-    const response = await apiClient.get(`/products/${id}/history`, {
-      params: { limit },
-    });
-    return response.data;
+    try {
+      const response = await apiClient.get(`/products/${id}/history`, {
+        params: { limit },
+      });
+      return response.data;
+    } catch {
+      return [];
+    }
   },
 
   /**

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import ProductGridSkeleton from './ProductGridSkeleton';
+import { dummyProducts } from '../lib/data/dummy-products';
 import type { Product } from '../lib/types';
 
 interface RelatedProductsProps {
@@ -15,69 +16,8 @@ export default function RelatedProducts({ currentProductId, categoryId }: Relate
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to fetch related products
     setTimeout(() => {
-      // Mock related products - filter out current product
-      const allProducts: Product[] = [
-        {
-          product_id: 1,
-          internal_sku: 'AMB-COL-001',
-          name: 'Collar Solitario Diamante',
-          stock: 5,
-          stock_bodega: 2,
-          cost: 800000,
-          price: 1250000,
-          image_url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=800&fit=crop',
-          images: [
-            'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=800&fit=crop',
-            'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=800&fit=crop',
-          ],
-          category: { category_id: 1, name: 'Collares' },
-        },
-        {
-          product_id: 2,
-          internal_sku: 'AMB-ANI-001',
-          name: 'Anillo Eternidad Oro Rosa',
-          stock: 8,
-          stock_bodega: 3,
-          cost: 550000,
-          price: 890000,
-          image_url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=800&fit=crop',
-          images: [
-            'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=800&fit=crop',
-            'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=800&fit=crop',
-          ],
-          category: { category_id: 2, name: 'Anillos' },
-        },
-        {
-          product_id: 3,
-          internal_sku: 'AMB-ARE-001',
-          name: 'Aretes Perla Cultivada',
-          stock: 12,
-          stock_bodega: 5,
-          cost: 420000,
-          price: 680000,
-          image_url: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&h=800&fit=crop',
-          images: [
-            'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&h=800&fit=crop',
-            'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=800&fit=crop',
-          ],
-          category: { category_id: 3, name: 'Aretes' },
-        },
-        {
-          product_id: 7,
-          internal_sku: 'AMB-ARE-002',
-          name: 'Aretes Gota Zafiro',
-          stock: 6,
-          stock_bodega: 2,
-          cost: 980000,
-          price: 1580000,
-          image_url: 'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?w=600&h=800&fit=crop',
-          category: { category_id: 3, name: 'Aretes' },
-        },
-      ];
-
-      const related = allProducts
+      const related = dummyProducts
         .filter((p) => p.product_id !== currentProductId)
         .slice(0, 4);
 
