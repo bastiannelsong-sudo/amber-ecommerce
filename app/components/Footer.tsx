@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 
@@ -16,13 +17,13 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-obsidian-900 text-white mt-24">
+    <footer className="bg-obsidian-900 text-white mt-12 sm:mt-24">
       {/* Newsletter Section */}
       <div className="border-b border-white/10">
-        <div className="container mx-auto px-4 lg:px-8 py-16">
+        <div className="container mx-auto px-4 lg:px-8 py-10 sm:py-16">
           <div className="max-w-2xl mx-auto text-center">
             <h3
-              className="text-3xl lg:text-4xl font-light mb-4"
+              className="text-2xl sm:text-3xl lg:text-4xl font-light mb-3 sm:mb-4"
               style={{ fontFamily: 'var(--font-cormorant)' }}
             >
               Únete a Nuestra Comunidad
@@ -51,29 +52,30 @@ export default function Footer() {
       </div>
 
       {/* Main Footer */}
-      <div className="container mx-auto px-4 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+      <div className="container mx-auto px-4 lg:px-8 py-10 sm:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12">
           {/* Brand Column */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2 lg:col-span-2">
             <div className="mb-6">
               <Image
                 src="/logo_claro.jpeg"
                 alt="Amber"
                 width={120}
                 height={40}
-                className="h-10 w-auto"
+                className="h-10"
+                style={{ width: 'auto' }}
               />
             </div>
             <p className="text-pearl-300 leading-relaxed mb-6">
-              Joyería artesanal de lujo desde 2004. Cada pieza es única y creada con los más altos
-              estándares de calidad y elegancia.
+              Joyeria en Plata 925 y amuletos de proteccion con significado. Presentes en
+              Mercado Libre, Falabella y Paris. Mas de 1.400 personas confian en nosotros.
             </p>
             <div className="flex gap-4">
               <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
+                className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
                 aria-label="Facebook"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -84,7 +86,7 @@ export default function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
+                className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
                 aria-label="Instagram"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -95,7 +97,7 @@ export default function Footer() {
                 href="https://pinterest.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
+                className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
                 aria-label="Pinterest"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -106,7 +108,7 @@ export default function Footer() {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
+                className="w-11 h-11 flex items-center justify-center border border-white/20 hover:border-amber-gold-500 hover:bg-amber-gold-500/10 transition-colors"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -118,81 +120,81 @@ export default function Footer() {
 
           {/* Shop Links */}
           <div>
-            <h4 className="text-lg font-medium mb-6 uppercase tracking-wider">Tienda</h4>
+            <h4 className="text-sm sm:text-lg font-medium mb-4 sm:mb-6 uppercase tracking-wider">Tienda</h4>
             <ul className="space-y-3">
               <li>
-                <a href="/catalogo" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/catalogo" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Catálogo
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/colecciones" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/colecciones" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Colecciones
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/favoritos" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/favoritos" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Favoritos
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/carrito" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/carrito" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Carrito
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
           {/* About Links */}
           <div>
-            <h4 className="text-lg font-medium mb-6 uppercase tracking-wider">Acerca de</h4>
+            <h4 className="text-sm sm:text-lg font-medium mb-4 sm:mb-6 uppercase tracking-wider">Acerca de</h4>
             <ul className="space-y-3">
               <li>
-                <a href="/sobre-nosotros" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/sobre-nosotros" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Nuestra Historia
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/contacto" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/contacto" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Contacto
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/garantia" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Garantía
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/envios" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Envíos
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
           {/* Help Links */}
           <div>
-            <h4 className="text-lg font-medium mb-6 uppercase tracking-wider">Ayuda</h4>
+            <h4 className="text-sm sm:text-lg font-medium mb-4 sm:mb-6 uppercase tracking-wider">Ayuda</h4>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/preguntas-frecuentes" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Preguntas Frecuentes
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/politicas-devolucion" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Políticas de Devolución
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/terminos-condiciones" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Términos y Condiciones
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
+                <Link href="/privacidad" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Privacidad
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -239,7 +241,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-pearl-400">
-            <p>&copy; 2025 Amber Joyeria. Todos los derechos reservados.</p>
+            <p>&copy; 2025 AMBER Joyas. Todos los derechos reservados.</p>
             <p className="flex items-center gap-1">
               Hecho con
               <svg className="w-3.5 h-3.5 text-amber-gold-500" fill="currentColor" viewBox="0 0 24 24">

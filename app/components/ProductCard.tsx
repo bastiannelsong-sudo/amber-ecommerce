@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useCartStore } from '../lib/stores/cart.store';
 import { useWishlistStore } from '../lib/stores/wishlist.store';
 import ScarcityIndicator from './marketing/ScarcityIndicator';
@@ -33,25 +35,29 @@ export default function ProductCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image container */}
-      <a
+      <Link
         href={`/producto/${product.product_id}`}
-        className="block relative aspect-[3/4] bg-pearl-100 overflow-hidden mb-5 cursor-pointer"
+        className="block relative aspect-[3/4] bg-pearl-100 overflow-hidden mb-3 sm:mb-5 cursor-pointer"
       >
         {/* Main image */}
-        <img
+        <Image
           src={image}
           alt={name}
-          className={`w-full h-full object-cover transition-all duration-700 ${
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className={`object-cover transition-all duration-700 ${
             isHovered && hoverImage ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
           }`}
         />
 
         {/* Hover image */}
         {hoverImage && (
-          <img
+          <Image
             src={hoverImage}
             alt={`${name} - Vista alternativa`}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className={`absolute inset-0 object-cover transition-all duration-700 ${
               isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
           />
@@ -59,7 +65,7 @@ export default function ProductCard({
 
         {/* New badge */}
         {isNew && (
-          <div className="absolute top-4 left-4 bg-obsidian-900 text-white px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] font-medium">
+          <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-obsidian-900 text-white px-2 py-1 sm:px-3 sm:py-1.5 text-[9px] sm:text-[10px] uppercase tracking-[0.15em] font-medium">
             Nuevo
           </div>
         )}
@@ -100,8 +106,8 @@ export default function ProductCard({
             toast.success(isInWishlist ? 'Eliminado de favoritos' : 'Agregado a favoritos');
           }}
           aria-label="Agregar a favoritos"
-          className={`absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm transition-all duration-300 z-10 cursor-pointer ${
-            isHovered || isInWishlist ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+          className={`absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full transition-all duration-300 z-10 cursor-pointer ${
+            isHovered || isInWishlist ? 'opacity-100 scale-100' : 'sm:opacity-0 sm:scale-90 opacity-70'
           }`}
         >
           <svg
@@ -122,24 +128,24 @@ export default function ProductCard({
             />
           </svg>
         </button>
-      </a>
+      </Link>
 
       {/* Product info */}
-      <div className="text-center space-y-1.5">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-platinum-500 font-medium">
+      <div className="text-center space-y-1">
+        <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] text-platinum-500 font-medium">
           {category?.name || 'Joyeria'}
         </p>
 
-        <a href={`/producto/${product.product_id}`} className="cursor-pointer">
+        <Link href={`/producto/${product.product_id}`} className="cursor-pointer">
           <h3
-            className="text-lg text-obsidian-900 font-light group-hover:text-amber-gold-600 transition-colors duration-300"
+            className="text-sm sm:text-lg text-obsidian-900 font-light group-hover:text-amber-gold-600 transition-colors duration-300 line-clamp-2"
             style={{ fontFamily: 'var(--font-cormorant)' }}
           >
             {name}
           </h3>
-        </a>
+        </Link>
 
-        <p className="text-sm font-medium text-obsidian-900 tracking-wide">
+        <p className="text-xs sm:text-sm font-medium text-obsidian-900 tracking-wide">
           ${price?.toLocaleString('es-CL') || '0'}
         </p>
 

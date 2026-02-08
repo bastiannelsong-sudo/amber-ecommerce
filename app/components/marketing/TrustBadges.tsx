@@ -42,7 +42,7 @@ const badges = [
       </svg>
     ),
     title: 'Envio gratis',
-    subtitle: 'Sobre $50.000',
+    subtitle: 'Sobre $30.000',
   },
 ];
 

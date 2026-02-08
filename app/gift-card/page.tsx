@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import toast from 'react-hot-toast';
@@ -39,10 +40,13 @@ export default function GiftCardPage() {
       {/* Hero */}
       <section className="relative h-[50vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-amber-gold-900/80 to-amber-gold-800/70 z-10" />
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1920&h=800&fit=crop"
           alt="Gift Card"
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
         />
         <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
           <div className="text-center text-white max-w-3xl">
@@ -211,9 +215,11 @@ export default function GiftCardPage() {
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
 
                 <div className="relative z-10">
-                  <img
+                  <Image
                     src="/logo_claro.jpeg"
                     alt="Amber"
+                    width={120}
+                    height={32}
                     className="h-8 w-auto object-contain mb-6"
                   />
                   <p className="text-sm uppercase tracking-widest text-pearl-300">Gift Card</p>

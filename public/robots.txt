@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /favoritos
+Disallow: /perfil
+
+Sitemap: https://amberjoyeria.cl/sitemap.xml

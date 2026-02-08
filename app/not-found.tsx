@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -45,18 +46,18 @@ export default function NotFound() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/"
               className="px-12 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors shadow-luxury inline-block"
             >
               Ir al Inicio
-            </a>
-            <a
+            </Link>
+            <Link
               href="/catalogo"
               className="px-12 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors inline-block"
             >
               Ver Catálogo
-            </a>
+            </Link>
           </div>
 
           {/* Popular Links */}
@@ -65,30 +66,30 @@ export default function NotFound() {
               Enlaces Populares
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <a
+              <Link
                 href="/colecciones"
                 className="text-platinum-700 hover:text-amber-gold-500 transition-colors"
               >
                 Colecciones
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/sobre-nosotros"
                 className="text-platinum-700 hover:text-amber-gold-500 transition-colors"
               >
                 Sobre Nosotros
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/favoritos"
                 className="text-platinum-700 hover:text-amber-gold-500 transition-colors"
               >
                 Favoritos
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/contacto"
                 className="text-platinum-700 hover:text-amber-gold-500 transition-colors"
               >
                 Contacto
-              </a>
+              </Link>
             </div>
           </div>
         </div>

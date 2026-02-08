@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import toast from 'react-hot-toast';
@@ -39,10 +40,13 @@ export default function ContactoPage() {
       {/* Hero Section */}
       <section className="relative h-[40vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian-900/70 to-obsidian-900/50 z-10" />
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1596009190743-cde170386fae?w=1920&h=800&fit=crop"
           alt="Contacto"
-          className="w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
         />
         <div className="absolute inset-0 z-20 flex items-center justify-center">
           <div className="text-center text-white space-y-4 px-4 animate-fade-in">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { use } from 'react';
+import Link from 'next/link';
 import Header from '@/app/components/Header';
 import RelatedProducts from '@/app/components/RelatedProducts';
 import Footer from '@/app/components/Footer';
@@ -94,12 +95,12 @@ export default function ProductDetailPage({ params }: PageProps) {
           <h1 className="text-3xl font-light text-obsidian-900 mb-4">
             Producto no encontrado
           </h1>
-          <a
+          <Link
             href="/"
             className="text-amber-gold-500 hover:text-amber-gold-600 transition-colors"
           >
             Volver al catalogo
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -117,25 +118,25 @@ export default function ProductDetailPage({ params }: PageProps) {
       <Header />
 
       {/* Breadcrumb */}
-      <div className="container mx-auto px-4 lg:px-8 pt-8">
-        <div className="flex items-center gap-2 text-sm text-platinum-600">
-          <a href="/" className="hover:text-amber-gold-500 transition-colors">
+      <div className="container mx-auto px-4 lg:px-8 pt-4 sm:pt-8">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-platinum-600 overflow-x-auto whitespace-nowrap">
+          <Link href="/" className="hover:text-amber-gold-500 transition-colors">
             Inicio
-          </a>
+          </Link>
           <span>/</span>
-          <a href="/catalogo" className="hover:text-amber-gold-500 transition-colors">
+          <Link href="/catalogo" className="hover:text-amber-gold-500 transition-colors">
             Catalogo
-          </a>
+          </Link>
           <span>/</span>
           <span className="text-obsidian-900">{product.name}</span>
         </div>
       </div>
 
       {/* Product Details */}
-      <div className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+      <div className="container mx-auto px-4 lg:px-8 py-6 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-16">
           {/* Image Gallery */}
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-6">
             {/* Main Image with Advanced Zoom Lens */}
             <ZoomLens
               imageSrc={images[selectedImage]}
@@ -146,7 +147,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 
             {/* Thumbnail Gallery */}
             {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-2 sm:gap-4">
                 {images.map((image, index) => (
                   <button
                     key={index}
@@ -169,13 +170,13 @@ export default function ProductDetailPage({ params }: PageProps) {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-8">
+          <div className="space-y-5 sm:space-y-8">
             <div>
-              <p className="text-sm uppercase tracking-widest text-platinum-600 mb-2">
+              <p className="text-xs sm:text-sm uppercase tracking-widest text-platinum-600 mb-2">
                 {product.category?.name || 'Joyeria'}
               </p>
               <h1
-                className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-4"
+                className="text-3xl sm:text-4xl lg:text-5xl font-light text-obsidian-900 mb-3 sm:mb-4"
                 style={{ fontFamily: 'var(--font-cormorant)' }}
               >
                 {product.name}
@@ -309,7 +310,7 @@ export default function ProductDetailPage({ params }: PageProps) {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-platinum-600">Material:</span>
-                <span className="text-obsidian-900">Oro 18k</span>
+                <span className="text-obsidian-900">Plata 925</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-platinum-600">Garantia:</span>
@@ -320,7 +321,7 @@ export default function ProductDetailPage({ params }: PageProps) {
         </div>
 
         {/* Tabs: Description & Reviews */}
-        <div className="mt-24">
+        <div className="mt-12 sm:mt-24">
           <div className="border-b border-pearl-200">
             <div className="flex gap-8">
               <button
@@ -356,22 +357,21 @@ export default function ProductDetailPage({ params }: PageProps) {
             {selectedTab === 'description' ? (
               <div className="max-w-3xl space-y-6 text-platinum-700 leading-relaxed">
                 <p>
-                  Nuestra coleccion de joyeria artesanal combina tecnicas tradicionales
-                  con diseno contemporaneo. Cada pieza es unica y esta elaborada con los
-                  mas altos estandares de calidad.
+                  Cada pieza de AMBER es seleccionada cuidadosamente pensando en calidad,
+                  significado y estilo. Trabajamos con plata fina 925 certificada, bano de
+                  oro de alta durabilidad y materiales hipoalergenicos.
                 </p>
                 <p>
-                  Utilizamos materiales preciosos certificados y piedras seleccionadas
-                  cuidadosamente para garantizar la autenticidad y durabilidad de cada
-                  joya. Nuestros artesanos dedican horas de trabajo meticuloso para
-                  crear piezas que perduraran generaciones.
+                  Nuestros productos son ideales para uso diario gracias a su resistencia
+                  y acabado premium. Perfectos como regalo o para consentirte a ti misma
+                  con una joya que realmente tiene significado.
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Material: Oro 18k certificado</li>
-                  <li>Acabado premium pulido a mano</li>
+                  <li>Material: Plata 925 certificada / Bano de Oro 18K</li>
+                  <li>Acabado premium de alta durabilidad</li>
                   <li>Garantia de 12 meses</li>
-                  <li>Certificado de autenticidad incluido</li>
-                  <li>Estuche de presentacion luxury</li>
+                  <li>Hipoalergenico — apto para uso diario</li>
+                  <li>Envio gratuito sobre $30.000</li>
                 </ul>
               </div>
             ) : (

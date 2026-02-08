@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -76,37 +78,40 @@ export default function LookbookPage() {
       <Header />
 
       {/* Hero */}
-      <section className="relative h-[70vh] overflow-hidden">
+      <section className="relative h-[50vh] sm:h-[70vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian-900/70 via-obsidian-900/50 to-pearl-50 z-10" />
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=1920&h=1080&fit=crop"
           alt="Lookbook"
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
         />
-        <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-6">
           <div className="text-center text-white max-w-4xl">
             <h1
-              className="text-6xl lg:text-8xl font-light tracking-wider mb-6"
+              className="text-4xl sm:text-6xl lg:text-8xl font-light tracking-wider mb-4 sm:mb-6"
               style={{ fontFamily: 'var(--font-cormorant)' }}
             >
               Lookbook
             </h1>
-            <p className="text-xl lg:text-2xl font-light max-w-2xl mx-auto">
-              Descubre cómo combinar nuestras piezas para crear looks inolvidables
+            <p className="text-base sm:text-xl lg:text-2xl font-light max-w-2xl mx-auto">
+              Descubre como combinar nuestras piezas para crear looks inolvidables
             </p>
           </div>
         </div>
       </section>
 
       {/* Category Filter */}
-      <section className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-pearl-200 py-6">
+      <section className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-pearl-200 py-3 sm:py-6">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex overflow-x-auto gap-4 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-2 sm:gap-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`flex-shrink-0 px-6 py-3 rounded-full text-sm uppercase tracking-wider font-medium transition-all ${
+                className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm uppercase tracking-wider font-medium transition-all ${
                   selectedCategory === category.id
                     ? 'bg-obsidian-900 text-white'
                     : 'bg-pearl-100 text-platinum-700 hover:bg-pearl-200'
@@ -121,9 +126,9 @@ export default function LookbookPage() {
       </section>
 
       {/* Lookbooks Grid */}
-      <section className="container mx-auto px-4 lg:px-8 py-16">
+      <section className="container mx-auto px-4 lg:px-8 py-8 sm:py-16">
         {/* Masonry-style grid */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 sm:gap-8 space-y-4 sm:space-y-8">
           {filteredLookbooks.map((lookbook, index) => (
             <div
               key={lookbook.id}
@@ -133,21 +138,24 @@ export default function LookbookPage() {
               <div className="group relative overflow-hidden rounded-lg shadow-luxury hover-lift bg-white">
                 {/* Image */}
                 <div className="relative overflow-hidden">
-                  <img
+                  <Image
                     src={lookbook.image}
                     alt={lookbook.title}
+                    width={800}
+                    height={1200}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-obsidian-900/80 via-obsidian-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                   {/* Quick actions on hover */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <a
+                    <Link
                       href={`/catalogo?lookbook=${lookbook.id}`}
                       className="px-8 py-3 bg-white text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 hover:text-white transition-colors shadow-lg"
                     >
                       Ver Productos
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
@@ -191,31 +199,31 @@ export default function LookbookPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center bg-gradient-to-br from-amber-gold-50 to-amber-gold-100 rounded-lg p-12">
+        <div className="mt-12 sm:mt-24 text-center bg-gradient-to-br from-amber-gold-50 to-amber-gold-100 rounded-lg p-6 sm:p-12">
           <h2
-            className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-4"
+            className="text-2xl sm:text-4xl lg:text-5xl font-light text-obsidian-900 mb-3 sm:mb-4"
             style={{ fontFamily: 'var(--font-cormorant)' }}
           >
-            ¿Necesitas Asesoría Personalizada?
+            Asesoria Personalizada
           </h2>
-          <p className="text-lg text-platinum-700 mb-8 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-platinum-700 mb-6 sm:mb-8 max-w-2xl mx-auto">
             Nuestros expertos en estilo pueden ayudarte a crear el look perfecto para cualquier ocasión
           </p>
-          <a
+          <Link
             href="/contacto"
             className="inline-block px-12 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors shadow-luxury"
           >
             Agendar Consulta
-          </a>
+          </Link>
         </div>
       </section>
 
       {/* Instagram-style section */}
-      <section className="bg-white py-24">
+      <section className="bg-white py-12 sm:py-24">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <h2
-              className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-4"
+              className="text-3xl sm:text-4xl lg:text-5xl font-light text-obsidian-900 mb-3 sm:mb-4"
               style={{ fontFamily: 'var(--font-cormorant)' }}
             >
               Síguenos en Instagram
@@ -223,7 +231,7 @@ export default function LookbookPage() {
             <p className="text-platinum-600">@amber.joyeria</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-4">
             {Array.from({ length: 12 }).map((_, i) => (
               <a
                 key={i}
@@ -232,7 +240,7 @@ export default function LookbookPage() {
                 rel="noopener noreferrer"
                 className="group relative aspect-square overflow-hidden rounded-lg"
               >
-                <img
+                <Image
                   src={`https://images.unsplash.com/photo-${[
                     '1515562141207-7a88fb7ce338',
                     '1605100804763-247f67b3557e',
@@ -242,7 +250,9 @@ export default function LookbookPage() {
                     '1602173574767-37ac01994b2a',
                   ][i % 6]}?w=300&h=300&fit=crop`}
                   alt={`Instagram ${i + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  fill
+                  sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-obsidian-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">

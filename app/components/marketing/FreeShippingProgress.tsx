@@ -11,7 +11,7 @@ interface FreeShippingProgressProps {
 
 export default function FreeShippingProgress({
   cartTotal,
-  threshold = 50000,
+  threshold = 30000,
 }: FreeShippingProgressProps) {
   const remaining = threshold - cartTotal;
   const progress = Math.min((cartTotal / threshold) * 100, 100);

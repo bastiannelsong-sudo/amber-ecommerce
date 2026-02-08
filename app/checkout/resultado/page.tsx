@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -108,18 +109,18 @@ function ResultContent() {
       )}
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-        <a
+        <Link
           href="/"
           className="px-8 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
         >
           Ir al Inicio
-        </a>
-        <a
+        </Link>
+        <Link
           href="/catalogo"
           className="px-8 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
         >
           Seguir Comprando
-        </a>
+        </Link>
       </div>
     </div>
   );

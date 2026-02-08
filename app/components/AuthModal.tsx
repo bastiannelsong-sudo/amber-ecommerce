@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../lib/stores/auth.store';
 import toast from 'react-hot-toast';
@@ -108,21 +109,22 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-obsidian-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-obsidian-900/70 backdrop-blur-sm z-[100] overflow-y-auto"
         onClick={handleClose}
       >
+        <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white w-full max-w-md shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto"
+            className="bg-white w-full sm:max-w-md shadow-2xl overflow-hidden relative rounded-t-2xl sm:rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
@@ -136,7 +138,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             </button>
 
             {/* Header */}
-            <div className="bg-gradient-to-br from-obsidian-950 to-obsidian-800 text-white px-8 pt-10 pb-8">
+            <div className="bg-gradient-to-br from-obsidian-950 to-obsidian-800 text-white px-6 sm:px-8 pt-8 sm:pt-10 pb-6 sm:pb-8">
               <div className="w-10 h-[1px] bg-amber-gold-500 mb-6"></div>
               <h2
                 className="text-3xl lg:text-4xl font-light"
@@ -154,7 +156,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5 sm:space-y-6">
             {/* Name field - only for register */}
             {mode === 'register' && (
               <div>
@@ -313,7 +315,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             </div>
           </form>
           </motion.div>
+        </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

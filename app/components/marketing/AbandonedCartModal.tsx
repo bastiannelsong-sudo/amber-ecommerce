@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../lib/stores/cart.store';
 
@@ -114,11 +115,13 @@ export default function AbandonedCartModal() {
                 <div className="space-y-4 mb-6">
                   {items.slice(0, 3).map((item) => (
                     <div key={item.product.product_id} className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-pearl-100 flex-shrink-0 overflow-hidden">
-                        <img
+                      <div className="w-14 h-14 bg-pearl-100 flex-shrink-0 overflow-hidden relative">
+                        <Image
                           src={item.product.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop'}
                           alt={item.product.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="56px"
+                          className="object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">

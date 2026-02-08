@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SizeGuideModalProps {
@@ -169,12 +170,12 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'anillos' }
               <p className="text-sm text-platinum-600 mb-4">
                 ¿Necesitas ayuda con tu talla? Nuestro equipo está aquí para asistirte
               </p>
-              <a
+              <Link
                 href="/contacto"
                 className="inline-block px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
               >
                 Contactar Asesor
-              </a>
+              </Link>
             </div>
           </div>
         </motion.div>

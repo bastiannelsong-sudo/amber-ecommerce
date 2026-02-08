@@ -2,14 +2,28 @@ import { apiClient } from '../api-client';
 import { dummyProducts, getDummyProductById } from '../data/dummy-products';
 import type { Product } from '../types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendProduct(raw: any): Product {
+  return {
+    ...raw,
+    category: raw.category
+      ? {
+          category_id: raw.category.category_id ?? raw.category.platform_id,
+          name: raw.category.name ?? raw.category.platform_name,
+          description: raw.category.description,
+        }
+      : undefined,
+  };
+}
+
 export const productsService = {
   /**
    * Get all products - falls back to dummy data if API is unavailable
    */
   async getAll(): Promise<Product[]> {
     try {
-      const response = await apiClient.get<Product[]>('/products');
-      return response.data;
+      const response = await apiClient.get('/products');
+      return (response.data as any[]).map(mapBackendProduct);
     } catch {
       return dummyProducts;
     }
@@ -20,8 +34,8 @@ export const productsService = {
    */
   async getById(id: number): Promise<Product> {
     try {
-      const response = await apiClient.get<Product>(`/products/${id}`);
-      return response.data;
+      const response = await apiClient.get(`/products/${id}`);
+      return mapBackendProduct(response.data);
     } catch {
       const product = getDummyProductById(id);
       if (!product) throw new Error('Product not found');
@@ -34,10 +48,10 @@ export const productsService = {
    */
   async getLowStock(threshold: number = 10): Promise<Product[]> {
     try {
-      const response = await apiClient.get<Product[]>('/products/low-stock', {
+      const response = await apiClient.get('/products/low-stock', {
         params: { threshold },
       });
-      return response.data;
+      return (response.data as any[]).map(mapBackendProduct);
     } catch {
       return dummyProducts.filter((p) => p.stock <= threshold);
     }

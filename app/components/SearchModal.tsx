@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import type { Product } from '../lib/types';
@@ -15,33 +16,33 @@ const mockProducts: Product[] = [
   {
     product_id: 1,
     internal_sku: 'AMB-COL-001',
-    name: 'Collar Solitario Diamante',
+    name: 'Collar Metatron Plata Fina Amuleto',
     stock: 5,
     stock_bodega: 2,
-    cost: 800000,
-    price: 1250000,
+    cost: 5990,
+    price: 29990,
     image_url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop',
     category: { category_id: 1, name: 'Collares' },
   },
   {
     product_id: 2,
     internal_sku: 'AMB-ANI-001',
-    name: 'Anillo Eternidad Oro Rosa',
+    name: 'Conjunto Collar y Aros Plata 925',
     stock: 8,
     stock_bodega: 3,
-    cost: 550000,
-    price: 890000,
+    cost: 7990,
+    price: 39990,
     image_url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200&h=200&fit=crop',
     category: { category_id: 2, name: 'Anillos' },
   },
   {
     product_id: 3,
     internal_sku: 'AMB-ARE-001',
-    name: 'Aretes Perla Cultivada',
+    name: 'Aros Argolla Tendencia Bano de Oro',
     stock: 12,
     stock_bodega: 5,
-    cost: 420000,
-    price: 680000,
+    cost: 4990,
+    price: 19990,
     image_url: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=200&h=200&fit=crop',
     category: { category_id: 3, name: 'Aretes' },
   },
@@ -81,7 +82,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start sm:items-start justify-center pt-0 sm:pt-24"
         onClick={onClose}
       >
         <motion.div
@@ -89,11 +90,11 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -50, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white w-full max-w-2xl mx-4 rounded-lg shadow-2xl overflow-hidden"
+          className="bg-white w-full sm:max-w-2xl sm:mx-4 sm:rounded-lg shadow-2xl overflow-hidden h-full sm:h-auto sm:max-h-[80vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Search Input */}
-          <div className="p-6 border-b border-pearl-200">
+          <div className="p-4 sm:p-6 border-b border-pearl-200">
             <div className="relative">
               <svg
                 className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-platinum-600"
@@ -190,10 +191,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     className="w-full p-4 flex items-center gap-4 hover:bg-pearl-50 transition-colors text-left"
                   >
                     <div className="w-16 h-16 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
-                      <img
+                      <Image
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        width={64}
+                        height={64}
+                        className="object-cover"
                       />
                     </div>
                     <div className="flex-1">
@@ -214,7 +217,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-pearl-200 bg-pearl-50">
+          <div className="hidden sm:block p-4 border-t border-pearl-200 bg-pearl-50">
             <div className="flex items-center justify-between text-xs text-platinum-600">
               <div className="flex gap-4">
                 <span>↑↓ navegar</span>
@@ -222,6 +225,15 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <span>esc cerrar</span>
               </div>
             </div>
+          </div>
+          {/* Mobile close button */}
+          <div className="sm:hidden p-4 border-t border-pearl-200 bg-pearl-50">
+            <button
+              onClick={onClose}
+              className="w-full py-3 text-center text-sm text-platinum-600 uppercase tracking-wide"
+            >
+              Cerrar
+            </button>
           </div>
         </motion.div>
       </motion.div>

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCartStore } from '../lib/stores/cart.store';
@@ -13,7 +15,7 @@ export default function CarritoPage() {
   const getTotal = useCartStore((state) => state.getTotal());
 
   const subtotal = getTotal;
-  const shipping = subtotal > 50000 ? 0 : 5000;
+  const shipping = subtotal > 30000 ? 0 : 5000;
   const total = subtotal + shipping;
 
   const handleRemoveItem = (productId: number, name: string) => {
@@ -28,7 +30,7 @@ export default function CarritoPage() {
       <div className="container mx-auto px-4 lg:px-8 py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-platinum-600 mb-8">
-          <a href="/" className="hover:text-amber-gold-500 transition-colors">Inicio</a>
+          <Link href="/" className="hover:text-amber-gold-500 transition-colors">Inicio</Link>
           <span>/</span>
           <span className="text-obsidian-900">Carrito</span>
         </div>
@@ -65,12 +67,12 @@ export default function CarritoPage() {
               Tu carrito está vacío
             </h2>
             <p className="text-platinum-600 mb-8">Agrega productos para continuar comprando</p>
-            <a
+            <Link
               href="/"
               className="px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
             >
               Explorar Productos
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -83,10 +85,12 @@ export default function CarritoPage() {
                 >
                   {/* Image */}
                   <div className="w-32 h-32 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
-                    <img
+                    <Image
                       src={item.product.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop'}
                       alt={item.product.name}
-                      className="w-full h-full object-cover"
+                      width={128}
+                      height={128}
+                      className="object-cover"
                     />
                   </div>
 
@@ -94,11 +98,11 @@ export default function CarritoPage() {
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <a href={`/producto/${item.product.product_id}`}>
+                        <Link href={`/producto/${item.product.product_id}`}>
                           <h3 className="text-lg font-medium text-obsidian-900 hover:text-amber-gold-600 transition-colors cursor-pointer">
                             {item.product.name}
                           </h3>
-                        </a>
+                        </Link>
                         <p className="text-sm text-platinum-600 mt-1">
                           SKU: {item.product.internal_sku}
                         </p>
@@ -190,7 +194,7 @@ export default function CarritoPage() {
                   )}
                   {shipping > 0 && (
                     <div className="text-xs text-platinum-600 bg-pearl-100 p-2 rounded">
-                      Agrega ${(50000 - subtotal).toLocaleString('es-CL')} más para envío gratis
+                      Agrega ${(30000 - subtotal).toLocaleString('es-CL')} más para envío gratis
                     </div>
                   )}
                 </div>
@@ -202,19 +206,19 @@ export default function CarritoPage() {
                   </div>
                 </div>
 
-                <a
+                <Link
                   href="/checkout"
                   className="block w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors mb-4"
                 >
                   Finalizar Compra
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/"
                   className="block w-full py-4 border-2 border-obsidian-900 text-obsidian-900 text-center text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
                 >
                   Continuar Comprando
-                </a>
+                </Link>
               </div>
             </div>
           </div>

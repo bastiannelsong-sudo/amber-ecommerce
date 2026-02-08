@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '../lib/types';
 
@@ -109,11 +110,13 @@ export default function ProductComparator({ isOpen, onClose, products, onRemove 
                             >
                               ×
                             </button>
-                            <div className="aspect-square bg-white rounded overflow-hidden mb-3">
-                              <img
-                                src={product.image_url}
+                            <div className="aspect-square bg-white rounded overflow-hidden mb-3 relative">
+                              <Image
+                                src={product.image_url || '/logo_oscuro.jpeg'}
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                fill
+                                sizes="250px"
+                                className="object-cover"
                               />
                             </div>
                             <p className="font-medium text-obsidian-900 text-sm line-clamp-2">

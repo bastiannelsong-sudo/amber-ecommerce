@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../lib/stores/cart.store';
 import { useWishlistStore } from '../lib/stores/wishlist.store';
@@ -49,7 +50,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
         onClick={onClose}
       >
         <motion.div
@@ -57,12 +58,12 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white w-full max-w-5xl rounded-lg shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+          className="bg-white w-full sm:max-w-5xl sm:rounded-lg shadow-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-t-lg"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Image Gallery */}
-            <div className="relative bg-pearl-50 p-8">
+            <div className="relative bg-pearl-50 p-4 sm:p-8">
               {/* Close button */}
               <button
                 onClick={onClose}
@@ -74,11 +75,13 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
               </button>
 
               {/* Main Image */}
-              <div className="aspect-square bg-white rounded-lg overflow-hidden mb-4 shadow-md">
-                <img
+              <div className="aspect-square bg-white rounded-lg overflow-hidden mb-4 shadow-md relative">
+                <Image
                   src={images[selectedImage]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
                 />
               </div>
 
@@ -95,10 +98,12 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                           : 'border-pearl-200 hover:border-amber-gold-300'
                       }`}
                     >
-                      <img
+                      <Image
                         src={image}
                         alt={`${product.name} - Vista ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
                       />
                     </button>
                   ))}
@@ -107,7 +112,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
             </div>
 
             {/* Product Info */}
-            <div className="p-8 flex flex-col">
+            <div className="p-5 sm:p-8 flex flex-col">
               <div className="flex-1">
                 <p className="text-xs uppercase tracking-widest text-platinum-600 mb-2">
                   {product.category?.name || 'Joyería'}
@@ -219,7 +224,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                   </div>
                   <div className="flex justify-between">
                     <span className="text-platinum-600">Material:</span>
-                    <span className="text-obsidian-900">Oro 18k</span>
+                    <span className="text-obsidian-900">Plata 925</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-platinum-600">Garantía:</span>

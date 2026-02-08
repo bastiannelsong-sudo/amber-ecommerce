@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
@@ -133,7 +134,7 @@ export default function ImageLightbox({ images, initialIndex = 0, isOpen, onClos
                     : 'border-white/30 hover:border-white/60 opacity-60 hover:opacity-100'
                 }`}
               >
-                <img src={image} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                <Image src={image} alt={`Thumbnail ${index + 1}`} fill sizes="64px" className="object-cover" />
               </button>
             ))}
           </div>

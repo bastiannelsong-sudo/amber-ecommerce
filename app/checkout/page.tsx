@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CheckoutProgressBar from '../components/marketing/CheckoutProgressBar';
@@ -36,7 +38,7 @@ export default function CheckoutPage() {
   });
 
   const subtotal = getTotal;
-  const shipping = subtotal > 50000 ? 0 : 5000;
+  const shipping = subtotal > 30000 ? 0 : 5000;
   const total = subtotal + shipping;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -104,9 +106,9 @@ export default function CheckoutPage() {
             Tu carrito esta vacio
           </h2>
           <p className="text-platinum-600 mb-8">Agrega productos antes de continuar al checkout</p>
-          <a href="/catalogo" className="px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors">
+          <Link href="/catalogo" className="px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors">
             Explorar Productos
-          </a>
+          </Link>
         </div>
         <Footer />
       </div>
@@ -117,12 +119,12 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-pearl-50">
       <Header />
 
-      <div className="container mx-auto px-4 lg:px-8 py-12">
+      <div className="container mx-auto px-4 lg:px-8 py-6 sm:py-12">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-platinum-600 mb-8">
-          <a href="/" className="hover:text-amber-gold-500 transition-colors">Inicio</a>
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-platinum-600 mb-4 sm:mb-8">
+          <Link href="/" className="hover:text-amber-gold-500 transition-colors">Inicio</Link>
           <span>/</span>
-          <a href="/carrito" className="hover:text-amber-gold-500 transition-colors">Carrito</a>
+          <Link href="/carrito" className="hover:text-amber-gold-500 transition-colors">Carrito</Link>
           <span>/</span>
           <span className="text-obsidian-900">Checkout</span>
         </div>
@@ -130,14 +132,14 @@ export default function CheckoutPage() {
         {/* Progress Steps */}
         <CheckoutProgressBar currentStep={step} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
           {/* Forms */}
           <div className="lg:col-span-2">
             {/* Shipping Form */}
             {step === 'shipping' && (
-              <form onSubmit={handleSubmitShipping} className="bg-white p-8 shadow-luxury">
+              <form onSubmit={handleSubmitShipping} className="bg-white p-5 sm:p-8 shadow-luxury">
                 <h2
-                  className="text-3xl font-light text-obsidian-900 mb-8 pb-4 border-b border-pearl-200"
+                  className="text-2xl sm:text-3xl font-light text-obsidian-900 mb-5 sm:mb-8 pb-4 border-b border-pearl-200"
                   style={{ fontFamily: 'var(--font-cormorant)' }}
                 >
                   Información de Envío
@@ -301,9 +303,9 @@ export default function CheckoutPage() {
 
             {/* Payment Form */}
             {step === 'payment' && (
-              <form onSubmit={handleSubmitPayment} className="bg-white p-8 shadow-luxury">
+              <form onSubmit={handleSubmitPayment} className="bg-white p-5 sm:p-8 shadow-luxury">
                 <h2
-                  className="text-3xl font-light text-obsidian-900 mb-8 pb-4 border-b border-pearl-200"
+                  className="text-2xl sm:text-3xl font-light text-obsidian-900 mb-5 sm:mb-8 pb-4 border-b border-pearl-200"
                   style={{ fontFamily: 'var(--font-cormorant)' }}
                 >
                   Información de Pago
@@ -428,10 +430,10 @@ export default function CheckoutPage() {
                   </div>
 
                   <h2
-                    className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-4"
+                    className="text-3xl sm:text-4xl lg:text-5xl font-light text-obsidian-900 mb-3 sm:mb-4"
                     style={{ fontFamily: 'var(--font-cormorant)' }}
                   >
-                    ¡Pedido Confirmado!
+                    Pedido Confirmado
                   </h2>
 
                   <p className="text-lg text-platinum-700 mb-2">
@@ -547,11 +549,13 @@ export default function CheckoutPage() {
                     <div className="border border-pearl-200 rounded-lg divide-y divide-pearl-200">
                       {displayItems.map((item) => (
                         <div key={item.product.product_id} className="p-4 flex items-center gap-4">
-                          <div className="w-20 h-20 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
-                            <img
-                              src={item.product.image_url || ''}
+                          <div className="w-20 h-20 bg-pearl-100 flex-shrink-0 rounded overflow-hidden relative">
+                            <Image
+                              src={item.product.image_url || '/logo_oscuro.jpeg'}
                               alt={item.product.name}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="80px"
+                              className="object-cover"
                             />
                           </div>
                           <div className="flex-1">
@@ -589,27 +593,27 @@ export default function CheckoutPage() {
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <a
+                    <Link
                       href="/"
                       className="flex-1 py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
                     >
                       Ir al Inicio
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/catalogo"
                       className="flex-1 py-4 text-center border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
                     >
                       Seguir Comprando
-                    </a>
+                    </Link>
                   </div>
 
                   {/* Help Section */}
                   <div className="border-t border-pearl-200 pt-6 text-center">
                     <p className="text-sm text-platinum-600 mb-3">¿Necesitas ayuda con tu pedido?</p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
-                      <a href="/contacto" className="text-amber-gold-600 hover:text-amber-gold-700 font-medium">
+                      <Link href="/contacto" className="text-amber-gold-600 hover:text-amber-gold-700 font-medium">
                         Contáctanos
-                      </a>
+                      </Link>
                       <span className="hidden sm:inline text-platinum-400">•</span>
                       <a href="mailto:contacto@amber.cl" className="text-amber-gold-600 hover:text-amber-gold-700 font-medium">
                         contacto@amber.cl
@@ -638,11 +642,13 @@ export default function CheckoutPage() {
               <div className="space-y-4 mb-6">
                 {displayItems.map((item) => (
                   <div key={item.product.product_id} className="flex gap-4">
-                    <div className="w-16 h-16 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
-                      <img
-                        src={item.product.image_url || ''}
+                    <div className="w-16 h-16 bg-pearl-100 flex-shrink-0 rounded overflow-hidden relative">
+                      <Image
+                        src={item.product.image_url || '/logo_oscuro.jpeg'}
                         alt={item.product.name}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="64px"
+                        className="object-cover"
                       />
                     </div>
                     <div className="flex-1">

@@ -21,27 +21,27 @@ const filterSections: FilterSection[] = [
   {
     title: 'Material',
     options: [
-      { label: 'Oro 18k', value: 'oro-18k', count: 45 },
       { label: 'Plata 925', value: 'plata-925', count: 67 },
-      { label: 'Oro Rosa', value: 'oro-rosa', count: 32 },
-      { label: 'Platino', value: 'platino', count: 18 },
+      { label: 'Bano de Oro', value: 'bano-oro', count: 32 },
+      { label: 'Acero Quirurgico', value: 'acero', count: 25 },
+      { label: 'Cristales', value: 'cristales', count: 18 },
     ],
   },
   {
-    title: 'Piedras',
+    title: 'Estilo',
     options: [
-      { label: 'Diamantes', value: 'diamantes', count: 38 },
-      { label: 'Esmeraldas', value: 'esmeraldas', count: 15 },
-      { label: 'Rubíes', value: 'rubies', count: 22 },
-      { label: 'Zafiros', value: 'zafiros', count: 19 },
-      { label: 'Perlas', value: 'perlas', count: 24 },
+      { label: 'Circones', value: 'circones', count: 38 },
+      { label: 'Moissanita', value: 'moissanita', count: 15 },
+      { label: 'Proteccion', value: 'proteccion', count: 22 },
+      { label: 'Tendencia', value: 'tendencia', count: 19 },
+      { label: 'Minimalista', value: 'minimalista', count: 24 },
     ],
   },
 ];
 
 export default function FilterSidebar() {
   const [openSections, setOpenSections] = useState<string[]>(['Categoría']);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 5000000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
 
   const toggleSection = (title: string) => {
     setOpenSections((prev) =>
@@ -77,24 +77,24 @@ export default function FilterSidebar() {
                 type="number"
                 value={priceRange.min}
                 onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none text-sm"
+                className="w-full px-3 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none text-sm rounded"
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-platinum-600 mb-1 block">Máximo</label>
+              <label className="text-xs text-platinum-600 mb-1 block">Maximo</label>
               <input
                 type="number"
                 value={priceRange.max}
                 onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none text-sm"
+                className="w-full px-3 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none text-sm rounded"
               />
             </div>
           </div>
           <input
             type="range"
             min="0"
-            max="5000000"
-            step="50000"
+            max="100000"
+            step="5000"
             value={priceRange.max}
             onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
             className="w-full h-1 bg-pearl-200 rounded-lg appearance-none cursor-pointer accent-amber-gold-500"
@@ -132,11 +132,11 @@ export default function FilterSidebar() {
             {section.options.map((option) => (
               <label
                 key={option.value}
-                className="flex items-center gap-3 cursor-pointer group/option"
+                className="flex items-center gap-3 cursor-pointer group/option py-1"
               >
                 <input
                   type="checkbox"
-                  className="w-4 h-4 border-2 border-pearl-300 rounded text-amber-gold-500 focus:ring-amber-gold-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-5 h-5 border-2 border-pearl-300 rounded text-amber-gold-500 focus:ring-amber-gold-500 focus:ring-offset-0 cursor-pointer flex-shrink-0"
                 />
                 <span className="text-sm text-obsidian-700 group-hover/option:text-amber-gold-600 transition-colors flex-1">
                   {option.label}
@@ -166,7 +166,7 @@ export default function FilterSidebar() {
             <button
               key={color.name}
               aria-label={`Color ${color.name}`}
-              className="w-10 h-10 rounded-full border-2 border-pearl-300 hover:border-amber-gold-500 transition-all hover:scale-110"
+              className="w-11 h-11 rounded-full border-2 border-pearl-300 hover:border-amber-gold-500 transition-all hover:scale-110"
               style={{ backgroundColor: color.color }}
               title={color.name}
             />
