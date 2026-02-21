@@ -1,3 +1,6 @@
+// TODO: Separar en Server Component wrapper para generateMetadata
+// Actualmente es un Client Component completo, lo que impide generar
+// metadata dinámica (og:title, og:image, etc.) para SEO y compartir en redes.
 'use client';
 
 import { useState, useEffect, useRef } from 'react';

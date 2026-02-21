@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types';
 
+// TODO: Implementar encriptación de tokens antes de almacenarlos en localStorage.
+// Los tokens se almacenan actualmente en texto plano, lo cual es vulnerable a XSS.
+// Considerar: 1) Usar httpOnly cookies desde el backend, o
+//             2) Encriptar con Web Crypto API antes de persistir.
+
 interface AuthStore {
   user: User | null;
   token: string | null;
@@ -21,7 +26,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
 
       login: (user, token) => {
-        // Save token to localStorage for API client
+        // Guardar token en localStorage para el API client
         if (typeof window !== 'undefined') {
           localStorage.setItem('auth_token', token);
         }
@@ -34,9 +39,11 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        // Clear token from localStorage
+        // Limpiar todos los datos de autenticación
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth_token');
+          localStorage.removeItem('amber-auth-storage');
+          sessionStorage.clear();
         }
 
         set({

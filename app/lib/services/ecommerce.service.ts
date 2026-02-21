@@ -20,12 +20,12 @@ export const ecommerceService = {
       image_url?: string;
     }[];
     coupon_code?: string;
-  }): Promise<{ order: any; init_point: string }> {
+  }): Promise<{ order: Record<string, unknown>; init_point: string }> {
     const response = await apiClient.post('/ecommerce/orders', data);
     return response.data;
   },
 
-  async getOrder(orderNumber: string): Promise<any> {
+  async getOrder(orderNumber: string): Promise<Record<string, unknown>> {
     const response = await apiClient.get(`/ecommerce/orders/${orderNumber}`);
     return response.data;
   },
@@ -33,7 +33,16 @@ export const ecommerceService = {
   // ─── REVIEWS ───────────────────────────────────────
 
   async getProductReviews(productId: number): Promise<{
-    reviews: any[];
+    reviews: {
+      review_id: number;
+      customer_name: string;
+      rating: number;
+      title: string;
+      comment: string;
+      verified_purchase: boolean;
+      helpful_count: number;
+      created_at: string;
+    }[];
     average_rating: number;
     total_reviews: number;
     rating_distribution: Record<number, number>;
@@ -50,12 +59,12 @@ export const ecommerceService = {
     title?: string;
     comment: string;
     order_number?: string;
-  }): Promise<any> {
+  }): Promise<Record<string, unknown>> {
     const response = await apiClient.post('/ecommerce/reviews', data);
     return response.data;
   },
 
-  async markReviewHelpful(reviewId: number): Promise<any> {
+  async markReviewHelpful(reviewId: number): Promise<Record<string, unknown>> {
     const response = await apiClient.patch(`/ecommerce/reviews/${reviewId}/helpful`);
     return response.data;
   },

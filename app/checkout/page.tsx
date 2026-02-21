@@ -20,7 +20,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
   const orderSnapshot = useRef<{ items: CartItem[]; subtotal: number; shipping: number; total: number } | null>(null);
   const [formData, setFormData] = useState({
-    // Shipping
+    // Datos personales y envío
     email: '',
     firstName: '',
     lastName: '',
@@ -30,11 +30,9 @@ export default function CheckoutPage() {
     city: '',
     region: '',
     postalCode: '',
-    // Payment
-    cardNumber: '',
-    cardName: '',
-    cardExpiry: '',
-    cardCvv: '',
+    // NOTA: Los datos de tarjeta NO deben almacenarse en estado del cliente.
+    // Se debe integrar una pasarela de pago (MercadoPago/Stripe) que maneje
+    // los datos sensibles de forma segura mediante tokenización.
   });
 
   const subtotal = getTotal;
@@ -44,14 +42,7 @@ export default function CheckoutPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
 
-    if (name === 'cardNumber') {
-      value = value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
-    } else if (name === 'cardExpiry') {
-      value = value.replace(/\D/g, '');
-      if (value.length >= 2) value = value.slice(0, 2) + '/' + value.slice(2, 4);
-    } else if (name === 'cardCvv') {
-      value = value.replace(/\D/g, '').slice(0, 4);
-    } else if (name === 'phone') {
+    if (name === 'phone') {
       value = value.replace(/[^\d+\s]/g, '');
     }
 
@@ -70,22 +61,10 @@ export default function CheckoutPage() {
 
   const handleSubmitPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.cardNumber || !formData.cardName || !formData.cardExpiry || !formData.cardCvv) {
-      toast.error('Por favor completa todos los campos de pago');
-      return;
-    }
 
-    // Snapshot the order before clearing cart
-    orderSnapshot.current = { items: [...items], subtotal, shipping, total };
-
-    // Simulate payment processing
-    toast.loading('Procesando pago...', { duration: 2000 });
-
-    setTimeout(() => {
-      clearCart();
-      setStep('confirmation');
-      toast.success('¡Pago procesado exitosamente!');
-    }, 2000);
+    // TODO: Aquí se debe iniciar el flujo de pago con MercadoPago/Stripe
+    // La pasarela de pago manejará los datos sensibles de tarjeta
+    toast.error('Pasarela de pago pendiente de integración');
   };
 
   // Get display data: use snapshot for confirmation, live cart otherwise
@@ -312,68 +291,10 @@ export default function CheckoutPage() {
                 </h2>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                      Número de Tarjeta *
-                    </label>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={19}
-                      className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
-                      placeholder="1234 5678 9012 3456"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                      Nombre en la Tarjeta *
-                    </label>
-                    <input
-                      type="text"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
-                      placeholder="JUAN PÉREZ"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                        Fecha de Expiración *
-                      </label>
-                      <input
-                        type="text"
-                        name="cardExpiry"
-                        value={formData.cardExpiry}
-                        onChange={handleInputChange}
-                        required
-                        maxLength={5}
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
-                        placeholder="MM/AA"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                        CVV *
-                      </label>
-                      <input
-                        type="text"
-                        name="cardCvv"
-                        value={formData.cardCvv}
-                        onChange={handleInputChange}
-                        required
-                        maxLength={4}
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
-                        placeholder="123"
-                      />
-                    </div>
+                  {/* Pasarela de pago - reemplazar con MercadoPago/Stripe */}
+                  <div className="p-8 text-center border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-lg font-medium text-gray-600">Integración de pasarela de pago pendiente</p>
+                    <p className="text-sm text-gray-400 mt-2">Aquí se integrará MercadoPago o Stripe para procesamiento seguro de pagos</p>
                   </div>
 
                   <div className="flex gap-4">
@@ -390,29 +311,6 @@ export default function CheckoutPage() {
                     >
                       Finalizar Compra
                     </button>
-                  </div>
-
-                  {/* Payment security badges */}
-                  <div className="mt-6 pt-6 border-t border-pearl-200">
-                    <div className="flex items-center justify-center gap-6 text-platinum-500">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                        <span className="text-xs">SSL Encriptado</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                        </svg>
-                        <span className="text-xs">Pago Seguro</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-center gap-3 mt-4">
-                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">VISA</div>
-                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">MC</div>
-                      <div className="w-12 h-8 bg-pearl-100 rounded flex items-center justify-center text-[10px] text-platinum-600 font-medium">AMEX</div>
-                    </div>
                   </div>
                 </div>
               </form>
@@ -522,7 +420,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* Payment Method */}
+                    {/* Método de Pago */}
                     <div className="border border-pearl-200 p-6 rounded-lg">
                       <h3 className="text-lg font-medium text-obsidian-900 mb-4 flex items-center gap-2">
                         <svg className="w-5 h-5 text-amber-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,13 +429,11 @@ export default function CheckoutPage() {
                         Método de Pago
                       </h3>
                       <div className="text-sm text-platinum-700 space-y-2">
-                        <p className="font-medium">Tarjeta de Crédito</p>
-                        <p>•••• •••• •••• {formData.cardNumber.slice(-4)}</p>
                         <p className="text-green-600 flex items-center gap-1">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
-                          Pago Procesado
+                          Pago procesado via pasarela de pago
                         </p>
                       </div>
                     </div>

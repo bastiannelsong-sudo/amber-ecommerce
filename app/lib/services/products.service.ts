@@ -60,7 +60,7 @@ export const productsService = {
   /**
    * Get product history
    */
-  async getHistory(id: number, limit: number = 50): Promise<any[]> {
+  async getHistory(id: number, limit: number = 50): Promise<Record<string, unknown>[]> {
     try {
       const response = await apiClient.get(`/products/${id}/history`, {
         params: { limit },

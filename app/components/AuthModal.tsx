@@ -70,34 +70,39 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
 
     if (!validateForm()) return;
 
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (mode === 'login') {
-        login({
-          id: '1',
-          email: formData.email,
-          name: formData.name || 'Usuario',
-        }, 'mock-token-login');
-        toast.success('Bienvenido de vuelta!');
-        onClose();
-      } else if (mode === 'register') {
-        login({
-          id: '1',
-          email: formData.email,
-          name: formData.name,
-        }, 'mock-token-register');
-        toast.success('¡Cuenta creada exitosamente!');
-        onClose();
-      } else if (mode === 'forgot') {
-        toast.success('Se ha enviado un email para restablecer tu contraseña');
-        setMode('login');
+    if (mode === 'login') {
+      try {
+        setIsLoading(true);
+        // TODO: Integrar con backend real - POST /auth/login
+        // Por ahora mostrar mensaje de que la integración está pendiente
+        toast.error('Autenticación con backend pendiente de integración');
+        setIsLoading(false);
+      } catch {
+        toast.error('Error al iniciar sesión');
+        setIsLoading(false);
       }
-
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-      setIsLoading(false);
-    }, 1000);
+    } else if (mode === 'register') {
+      try {
+        setIsLoading(true);
+        // TODO: Integrar con backend real - POST /auth/register
+        // Por ahora mostrar mensaje de que la integración está pendiente
+        toast.error('Registro con backend pendiente de integración');
+        setIsLoading(false);
+      } catch {
+        toast.error('Error al crear cuenta');
+        setIsLoading(false);
+      }
+    } else if (mode === 'forgot') {
+      try {
+        setIsLoading(true);
+        // TODO: Integrar con backend real - POST /auth/forgot-password
+        toast.error('Recuperación de contraseña pendiente de integración');
+        setIsLoading(false);
+      } catch {
+        toast.error('Error al enviar email de recuperación');
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleClose = () => {
