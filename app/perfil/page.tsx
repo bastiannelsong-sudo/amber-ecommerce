@@ -12,8 +12,10 @@ export default function PerfilPage() {
 
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const fullName = user ? `${user.first_name} ${user.last_name}` : 'Usuario Demo';
   const [formData, setFormData] = useState({
-    name: user?.name || 'Usuario Demo',
+    first_name: user?.first_name || 'Usuario',
+    last_name: user?.last_name || 'Demo',
     email: user?.email || 'usuario@example.com',
     phone: user?.phone || '+56 9 1234 5678',
   });
@@ -75,9 +77,9 @@ export default function PerfilPage() {
               <div className="bg-white shadow-luxury rounded-lg overflow-hidden">
                 <div className="p-6 bg-gradient-to-br from-obsidian-900 to-obsidian-800 text-white">
                   <div className="w-20 h-20 bg-amber-gold-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    {formData.name.charAt(0).toUpperCase()}
+                    {formData.first_name.charAt(0).toUpperCase()}
                   </div>
-                  <h3 className="text-center font-medium">{formData.name}</h3>
+                  <h3 className="text-center font-medium">{fullName}</h3>
                   <p className="text-center text-sm text-pearl-300 mt-1">{formData.email}</p>
                 </div>
 
@@ -184,18 +186,33 @@ export default function PerfilPage() {
                   </div>
 
                   <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                        Nombre Completo
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors disabled:bg-pearl-100 disabled:text-platinum-600"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-obsidian-900 mb-2">
+                          Nombre
+                        </label>
+                        <input
+                          type="text"
+                          name="first_name"
+                          value={formData.first_name}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors disabled:bg-pearl-100 disabled:text-platinum-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-obsidian-900 mb-2">
+                          Apellido
+                        </label>
+                        <input
+                          type="text"
+                          name="last_name"
+                          value={formData.last_name}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors disabled:bg-pearl-100 disabled:text-platinum-600"
+                        />
+                      </div>
                     </div>
 
                     <div>

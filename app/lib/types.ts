@@ -3,20 +3,68 @@ export interface Product {
   product_id: number;
   internal_sku: string;
   name: string;
+  display_name?: string;
+  description?: string;
+  slug?: string;
   stock: number;
   stock_bodega: number;
   cost: number;
   price: number;
+  compare_at_price?: number;
   image_url: string;
   images?: string[];
+  material?: string;
+  style?: string;
+  tags?: string[];
+  is_published?: boolean;
+  display_order?: number;
   category?: Category;
   secondarySkus?: SecondarySku[];
+  productCollections?: ProductCollectionRelation[];
 }
 
 export interface Category {
   category_id: number;
   name: string;
   description?: string;
+}
+
+// Collection types (e-commerce categories)
+export interface Collection {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+  parent_id?: number;
+  parent?: Collection;
+  children?: Collection[];
+  display_order: number;
+  is_active: boolean;
+}
+
+export interface ProductCollectionRelation {
+  id: number;
+  collection_id: number;
+  is_primary: boolean;
+  display_order: number;
+  collection?: Collection;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface SearchResponse extends PaginatedResponse<Product> {
+  query: string;
+}
+
+export interface SearchSuggestions {
+  products: { name: string; slug: string; image_url: string; price: number }[];
+  collections: { name: string; slug: string }[];
 }
 
 export interface SecondarySku {
@@ -54,9 +102,25 @@ export interface Cart {
 export interface User {
   id: string;
   email: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   phone?: string;
-  address?: Address;
+  auth_providers: string[];
+  google_id?: string;
+  is_verified: boolean;
+  addresses?: CustomerAddress[];
+  created_at?: string;
+}
+
+export interface CustomerAddress {
+  id: string;
+  label: string;
+  street: string;
+  apartment?: string;
+  city: string;
+  region: string;
+  postal_code?: string;
+  is_default: boolean;
 }
 
 export interface Address {
@@ -67,6 +131,20 @@ export interface Address {
   region: string;
   postal_code: string;
   country: string;
+}
+
+export interface AuthResponse {
+  customer: User;
+  access_token: string;
+  refresh_token: string;
+  is_new_account?: boolean;
+  was_linked?: boolean;
+}
+
+export interface ForgotPasswordResponse {
+  sent: boolean;
+  provider?: string;
+  message?: string;
 }
 
 // Order types
@@ -125,13 +203,23 @@ export enum PaymentStatus {
 export interface Review {
   review_id: number;
   product_id: number;
-  user: User;
+  customer_name: string;
+  customer_email: string;
   rating: number;
   title: string;
   comment: string;
-  images?: string[];
-  created_at: string;
+  verified_purchase: boolean;
+  order_number?: string;
   helpful_count: number;
+  is_approved: boolean;
+  created_at: string;
+}
+
+export interface ReviewSummary {
+  reviews: Review[];
+  average_rating: number;
+  total_reviews: number;
+  rating_distribution: Record<number, number>;
 }
 
 // Wishlist types

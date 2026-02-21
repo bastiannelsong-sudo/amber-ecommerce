@@ -41,7 +41,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
   };
 
   const handleViewFull = () => {
-    window.location.href = `/producto/${product.product_id}`;
+    window.location.href = `/producto/${product.slug || product.product_id}`;
   };
 
   return (

@@ -1,6 +1,6 @@
 import { apiClient } from '../api-client';
 import { dummyProducts, getDummyProductById } from '../data/dummy-products';
-import type { Product } from '../types';
+import type { Product, SearchResponse, SearchSuggestions } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapBackendProduct(raw: any): Product {
@@ -44,6 +44,23 @@ export const productsService = {
   },
 
   /**
+   * Get a single product by slug
+   */
+  async getBySlug(slug: string): Promise<Product> {
+    try {
+      const response = await apiClient.get(`/products/by-slug/${slug}`);
+      return mapBackendProduct(response.data);
+    } catch {
+      // Fallback: try to extract ID from slug suffix (format: name-123)
+      const idMatch = slug.match(/-(\d+)$/);
+      if (idMatch) {
+        return this.getById(Number(idMatch[1]));
+      }
+      throw new Error('Product not found');
+    }
+  },
+
+  /**
    * Get products with low stock
    */
   async getLowStock(threshold: number = 10): Promise<Product[]> {
@@ -72,15 +89,50 @@ export const productsService = {
   },
 
   /**
-   * Search products by name or SKU
+   * Search published products via backend API
    */
-  async search(query: string): Promise<Product[]> {
-    const allProducts = await this.getAll();
-    return allProducts.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.internal_sku.toLowerCase().includes(query.toLowerCase())
-    );
+  async search(
+    query: string,
+    params: { page?: number; limit?: number; material?: string; style?: string; collection?: string; sort?: string } = {},
+  ): Promise<SearchResponse> {
+    try {
+      const response = await apiClient.get('/products/ecommerce/search', {
+        params: { q: query, ...params },
+      });
+      const res = response.data as SearchResponse;
+      res.data = res.data.map(mapBackendProduct);
+      return res;
+    } catch {
+      // Fallback: client-side filter
+      const allProducts = await this.getAll();
+      const q = query.toLowerCase();
+      const filtered = allProducts.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.internal_sku.toLowerCase().includes(q),
+      );
+      return {
+        data: filtered.slice(0, params.limit || 20),
+        total: filtered.length,
+        page: params.page || 1,
+        limit: params.limit || 20,
+        query,
+      };
+    }
+  },
+
+  /**
+   * Get search suggestions (autocomplete)
+   */
+  async getSuggestions(query: string): Promise<SearchSuggestions> {
+    try {
+      const response = await apiClient.get('/products/ecommerce/suggestions', {
+        params: { q: query },
+      });
+      return response.data as SearchSuggestions;
+    } catch {
+      return { products: [], collections: [] };
+    }
   },
 
   /**

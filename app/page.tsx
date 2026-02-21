@@ -3,8 +3,39 @@ import Link from 'next/link';
 import Header from './components/Header';
 import FeaturedProducts from './components/FeaturedProducts';
 import Footer from './components/Footer';
+import type { Collection } from './lib/types';
 
-export default function Home() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+const universeStyles: Record<string, { gradient: string; fallbackImage: string }> = {
+  'proteccion-y-energia': {
+    gradient: 'from-purple-950/80 via-purple-900/30 to-transparent',
+    fallbackImage: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=600&fit=crop',
+  },
+  'moda-y-tendencia': {
+    gradient: 'from-slate-950/80 via-slate-900/30 to-transparent',
+    fallbackImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=600&fit=crop',
+  },
+  'cuidado-de-joyas': {
+    gradient: 'from-emerald-950/80 via-emerald-900/30 to-transparent',
+    fallbackImage: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800&h=600&fit=crop',
+  },
+};
+
+async function getCollections(): Promise<Collection[]> {
+  try {
+    const res = await fetch(`${API_URL}/collections/tree`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const collections = await getCollections();
   return (
     <div className="min-h-screen">
       <Header />
@@ -134,29 +165,29 @@ export default function Home() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {[
             {
-              name: 'Collares',
-              image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=700&fit=crop',
-              count: 35,
+              name: 'Pulseras',
+              slug: 'pulseras',
+              image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=700&fit=crop',
             },
             {
               name: 'Aros',
+              slug: 'aros',
               image: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&h=700&fit=crop',
-              count: 28,
             },
             {
-              name: 'Pulseras',
-              image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=700&fit=crop',
-              count: 22,
+              name: 'Anillos',
+              slug: 'anillos',
+              image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=700&fit=crop',
             },
             {
-              name: 'Conjuntos',
+              name: 'Cadenas',
+              slug: 'cadenas',
               image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=700&fit=crop',
-              count: 18,
             },
           ].map((category, index) => (
             <Link
               key={category.name}
-              href="/catalogo"
+              href={`/colecciones/${category.slug}`}
               className="group relative aspect-[3/4] overflow-hidden cursor-pointer animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -177,7 +208,7 @@ export default function Home() {
                 </h3>
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-xs uppercase tracking-wider text-pearl-300">
-                    {category.count} productos
+                    Ver coleccion
                   </span>
                   <svg className="w-3 h-3 text-pearl-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -280,62 +311,51 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {[
-            {
-              name: 'Proteccion y Energia',
-              description: 'Amuletos con significado: Metatron, Nudo de Brujas, Ojo Turco y mas',
-              image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=600&fit=crop',
-              items: 15,
-            },
-            {
-              name: 'Plata Fina 925',
-              description: 'Collares, aros y pulseras en plata certificada para uso diario',
-              image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=600&fit=crop',
-              items: 32,
-            },
-            {
-              name: 'Tendencia',
-              description: 'Lo mas trendy en bano de oro, acero quirurgico y disenos del momento',
-              image: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=800&h=600&fit=crop',
-              items: 24,
-            },
-          ].map((collection, index) => (
-            <Link
-              key={collection.name}
-              href="/colecciones"
-              className="group relative h-[400px] lg:h-[500px] overflow-hidden cursor-pointer animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <Image
-                src={collection.image}
-                alt={collection.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 33vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950/80 via-obsidian-900/30 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                <p className="text-xs uppercase tracking-widest text-amber-gold-400 mb-2">
-                  {collection.items} productos
-                </p>
-                <h3
-                  className="text-3xl lg:text-4xl font-light mb-2"
-                  style={{ fontFamily: 'var(--font-cormorant)' }}
-                >
-                  {collection.name}
-                </h3>
-                <p className="text-sm text-pearl-300 mb-4">
-                  {collection.description}
-                </p>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span>Explorar</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+          {collections.map((collection, index) => {
+            const style = universeStyles[collection.slug] || {
+              gradient: 'from-obsidian-950/80 via-obsidian-900/30 to-transparent',
+              fallbackImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=600&fit=crop',
+            };
+            return (
+              <Link
+                key={collection.id}
+                href={`/colecciones/${collection.slug}`}
+                className="group relative h-[400px] lg:h-[500px] overflow-hidden cursor-pointer animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <Image
+                  src={collection.image_url || style.fallbackImage}
+                  alt={collection.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t ${style.gradient}`} />
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                  <p className="text-xs uppercase tracking-widest text-amber-gold-400 mb-2">
+                    {collection.children?.length || 0} categorias
+                  </p>
+                  <h3
+                    className="text-3xl lg:text-4xl font-light mb-2"
+                    style={{ fontFamily: 'var(--font-cormorant)' }}
+                  >
+                    {collection.name}
+                  </h3>
+                  {collection.description && (
+                    <p className="text-sm text-pearl-300 mb-4">
+                      {collection.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span>Explorar</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

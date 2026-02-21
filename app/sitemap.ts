@@ -49,8 +49,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const productPages: MetadataRoute.Sitemap = dummyProducts.map((product) => ({
-    url: `${SITE_URL}/producto/${product.product_id}`,
+  // Fetch real products for slug-based URLs; fall back to dummy data
+  let products = dummyProducts;
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/products/ecommerce?limit=500`, {
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      products = json.data || json;
+    }
+  } catch {}
+
+  const productPages: MetadataRoute.Sitemap = products.map((product: any) => ({
+    url: `${SITE_URL}/producto/${product.slug || product.product_id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,

@@ -174,7 +174,7 @@ export default function ProductComparator({ isOpen, onClose, products, onRemove 
                       {products.map((product) => (
                         <td key={product.product_id} className="p-4">
                           <a
-                            href={`/producto/${product.product_id}`}
+                            href={`/producto/${product.slug || product.product_id}`}
                             className="block w-full py-3 bg-obsidian-900 text-white text-sm uppercase tracking-wider font-medium hover:bg-amber-gold-500 transition-colors text-center"
                           >
                             Ver Detalle

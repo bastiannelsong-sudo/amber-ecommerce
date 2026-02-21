@@ -69,6 +69,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${cormorant.variable} ${montserrat.variable}`}>
+      <head>
+        <script src="https://accounts.google.com/gsi/client" async defer />
+      </head>
       <body
         className="antialiased"
         style={{ fontFamily: 'var(--font-montserrat)' }}

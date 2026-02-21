@@ -26,7 +26,11 @@ export default function ProductCard({
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.product_id));
 
-  const { name, price, image_url: image, category, stock } = product;
+  const { display_name, name: rawName, price, image_url, category, stock } = product;
+  const name = display_name || rawName;
+  // Upgrade MercadoLibre images from thumbnail (-O) to full size (-F)
+  const rawImage = image_url || '/placeholder-product.svg';
+  const image = rawImage.replace(/-O\.jpg$/, '-F.jpg');
 
   return (
     <div
@@ -36,8 +40,8 @@ export default function ProductCard({
     >
       {/* Image container */}
       <Link
-        href={`/producto/${product.product_id}`}
-        className="block relative aspect-[3/4] bg-pearl-100 overflow-hidden mb-3 sm:mb-5 cursor-pointer"
+        href={`/producto/${product.slug || product.product_id}`}
+        className="block relative aspect-square bg-white overflow-hidden mb-3 sm:mb-5 cursor-pointer"
       >
         {/* Main image */}
         <Image
@@ -45,7 +49,7 @@ export default function ProductCard({
           alt={name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className={`object-cover transition-all duration-700 ${
+          className={`object-contain p-2 transition-all duration-700 ${
             isHovered && hoverImage ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
           }`}
         />
@@ -57,7 +61,7 @@ export default function ProductCard({
             alt={`${name} - Vista alternativa`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className={`absolute inset-0 object-cover transition-all duration-700 ${
+            className={`absolute inset-0 object-contain p-2 transition-all duration-700 ${
               isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
           />
@@ -136,7 +140,7 @@ export default function ProductCard({
           {category?.name || 'Joyeria'}
         </p>
 
-        <Link href={`/producto/${product.product_id}`} className="cursor-pointer">
+        <Link href={`/producto/${product.slug || product.product_id}`} className="cursor-pointer">
           <h3
             className="text-sm sm:text-lg text-obsidian-900 font-light group-hover:text-amber-gold-600 transition-colors duration-300 line-clamp-2"
             style={{ fontFamily: 'var(--font-cormorant)' }}

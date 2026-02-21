@@ -98,7 +98,7 @@ export default function CarritoPage() {
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <Link href={`/producto/${item.product.product_id}`}>
+                        <Link href={`/producto/${item.product.slug || item.product.product_id}`}>
                           <h3 className="text-lg font-medium text-obsidian-900 hover:text-amber-gold-600 transition-colors cursor-pointer">
                             {item.product.name}
                           </h3>

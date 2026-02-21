@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '../lib/stores/cart.store';
 import { useWishlistStore } from '../lib/stores/wishlist.store';
 import { useAuthStore } from '../lib/stores/auth.store';
+import { collectionsService } from '../lib/services/collections.service';
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchModal from './SearchModal';
 import AuthModal from './AuthModal';
+import type { Collection } from '../lib/types';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,6 +17,7 @@ export default function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [navCollections, setNavCollections] = useState<Collection[]>([]);
   const openCart = useCartStore((state) => state.openCart);
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const wishlistItemCount = useWishlistStore((state) => state.getItemCount());
@@ -23,9 +26,13 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const y = window.scrollY;
+      // Hysteresis: only toggle at well-separated thresholds to prevent jitter
+      if (y > 60) setIsScrolled(true);
+      else if (y < 10) setIsScrolled(false);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
+    collectionsService.getTree().then(setNavCollections);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -75,9 +82,41 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-10 flex-1 justify-center">
+            <Link
+              href="/catalogo"
+              className="luxury-underline text-xs uppercase tracking-widest text-obsidian-700 hover:text-amber-gold-500 transition-colors duration-300 font-medium py-1"
+            >
+              Catalogo
+            </Link>
+
+            {/* Colecciones with dropdown */}
+            <div className="relative group">
+              <Link
+                href="/colecciones"
+                className="luxury-underline text-xs uppercase tracking-widest text-obsidian-700 hover:text-amber-gold-500 transition-colors duration-300 font-medium py-1"
+              >
+                Colecciones
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <div className="bg-white shadow-luxury-lg p-6 min-w-[320px]">
+                  <div className="grid gap-4">
+                    {navCollections.map((col) => (
+                      <Link key={col.id} href={`/colecciones/${col.slug}`} className="flex items-center gap-3 group/item">
+                        <div className="w-2 h-2 rounded-full bg-amber-gold-500"></div>
+                        <span className="text-sm text-obsidian-700 group-hover/item:text-amber-gold-500 transition-colors">{col.name}</span>
+                      </Link>
+                    ))}
+                    <div className="border-t border-pearl-200 pt-3 mt-1">
+                      <Link href="/colecciones" className="text-xs uppercase tracking-widest text-amber-gold-500 hover:text-amber-gold-600 font-medium transition-colors">
+                        Ver todas
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {[
-              { label: 'Catalogo', href: '/catalogo' },
-              { label: 'Colecciones', href: '/colecciones' },
               { label: 'Lookbook', href: '/lookbook' },
               { label: 'Sobre Nosotros', href: '/sobre-nosotros' },
             ].map((link) => (

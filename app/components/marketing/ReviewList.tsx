@@ -4,28 +4,26 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ecommerceService } from '../../lib/services/ecommerce.service';
 import ReviewForm from './ReviewForm';
+import type { Review } from '../../lib/types';
 
 interface ReviewListProps {
   productId: number;
 }
 
-interface ReviewData {
-  review_id: number;
-  customer_name: string;
-  rating: number;
-  title: string;
-  comment: string;
-  verified_purchase: boolean;
-  helpful_count: number;
-  created_at: string;
-}
-
 export default function ReviewList({ productId }: ReviewListProps) {
-  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [ratingDistribution, setRatingDistribution] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
+  const [helpedReviews, setHelpedReviews] = useState<Set<number>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      return new Set(JSON.parse(localStorage.getItem('amber_helpful_reviews') || '[]'));
+    } catch {
+      return new Set();
+    }
+  });
 
   const loadReviews = async () => {
     try {
@@ -46,6 +44,7 @@ export default function ReviewList({ productId }: ReviewListProps) {
   }, [productId]);
 
   const handleMarkHelpful = async (reviewId: number) => {
+    if (helpedReviews.has(reviewId)) return;
     try {
       await ecommerceService.markReviewHelpful(reviewId);
       setReviews((prev) =>
@@ -55,6 +54,10 @@ export default function ReviewList({ productId }: ReviewListProps) {
             : r,
         ),
       );
+      const updated = new Set(helpedReviews);
+      updated.add(reviewId);
+      setHelpedReviews(updated);
+      localStorage.setItem('amber_helpful_reviews', JSON.stringify([...updated]));
     } catch {
       // Silently fail
     }
@@ -76,21 +79,48 @@ export default function ReviewList({ productId }: ReviewListProps) {
           {/* Average */}
           <div className="text-center md:text-left">
             <p className="text-5xl font-light text-obsidian-900" style={{ fontFamily: 'var(--font-cormorant)' }}>
-              {averageRating}
+              {averageRating.toFixed(1)}
             </p>
             <div className="flex gap-0.5 mt-2 justify-center md:justify-start">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <svg
-                  key={star}
-                  className={`w-4 h-4 ${star <= averageRating ? 'text-amber-gold-500' : 'text-pearl-300'}`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
+              {[1, 2, 3, 4, 5].map((star) => {
+                const isFull = star <= Math.floor(averageRating);
+                const isHalf = !isFull && star === Math.ceil(averageRating) && averageRating % 1 >= 0.25;
+                return (
+                  <svg
+                    key={star}
+                    className="w-4 h-4"
+                    viewBox="0 0 20 20"
+                  >
+                    {isHalf ? (
+                      <>
+                        <defs>
+                          <clipPath id={`avg-half-${star}`}>
+                            <rect x="0" y="0" width="10" height="20" />
+                          </clipPath>
+                        </defs>
+                        {/* Gray full star as background */}
+                        <path
+                          d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          fill="#e8e8e8"
+                        />
+                        {/* Gold half star on top */}
+                        <path
+                          d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                          fill="#c5a028"
+                          clipPath={`url(#avg-half-${star})`}
+                        />
+                      </>
+                    ) : (
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                        fill={isFull ? '#c5a028' : '#e8e8e8'}
+                      />
+                    )}
+                  </svg>
+                );
+              })}
             </div>
-            <p className="text-xs text-platinum-600 mt-1">{totalReviews} reviews</p>
+            <p className="text-xs text-platinum-600 mt-1">{totalReviews} {totalReviews === 1 ? 'resena' : 'resenas'}</p>
           </div>
 
           {/* Distribution bars */}
@@ -160,8 +190,16 @@ export default function ReviewList({ productId }: ReviewListProps) {
               <p className="text-platinum-700 mb-4 leading-relaxed">{review.comment}</p>
               <button
                 onClick={() => handleMarkHelpful(review.review_id)}
-                className="text-sm text-platinum-600 hover:text-amber-gold-500 transition-colors cursor-pointer"
+                disabled={helpedReviews.has(review.review_id)}
+                className={`inline-flex items-center gap-1.5 text-sm transition-colors cursor-pointer ${
+                  helpedReviews.has(review.review_id)
+                    ? 'text-amber-gold-500 cursor-default'
+                    : 'text-platinum-600 hover:text-amber-gold-500'
+                }`}
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 0 1-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 0 0-1.302 4.665c0 1.194.232 2.333.654 3.375Z" />
+                </svg>
                 Util ({review.helpful_count})
               </button>
             </div>
@@ -169,7 +207,7 @@ export default function ReviewList({ productId }: ReviewListProps) {
         </div>
       ) : (
         <p className="text-center text-platinum-600 py-8">
-          Se el primero en dejar una review de este producto.
+          Se la primera persona en compartir tu experiencia con esta pieza.
         </p>
       )}
 

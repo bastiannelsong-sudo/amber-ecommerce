@@ -41,13 +41,13 @@ export default function ReviewForm({ productId, onReviewAdded }: ReviewFormProps
         rating,
         ...form,
       });
-      toast.success('Review enviada exitosamente');
+      toast.success('Resena enviada exitosamente');
       setIsOpen(false);
       setRating(0);
       setForm({ customer_name: '', customer_email: '', title: '', comment: '', order_number: '' });
       onReviewAdded();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al enviar review');
+      toast.error(err?.response?.data?.message || 'Error al enviar resena');
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function ReviewForm({ productId, onReviewAdded }: ReviewFormProps
           onClick={() => setIsOpen(true)}
           className="w-full py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors cursor-pointer"
         >
-          Escribir una review
+          Escribir una resena
         </button>
       ) : (
         <AnimatePresence>
@@ -185,7 +185,7 @@ export default function ReviewForm({ productId, onReviewAdded }: ReviewFormProps
             {/* Comment */}
             <div>
               <label className="block text-sm font-medium text-obsidian-900 mb-1.5">
-                Tu review *
+                Tu resena *
               </label>
               <textarea
                 value={form.comment}
@@ -202,7 +202,7 @@ export default function ReviewForm({ productId, onReviewAdded }: ReviewFormProps
               disabled={loading}
               className="w-full py-3.5 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors disabled:opacity-50 cursor-pointer"
             >
-              {loading ? 'Enviando...' : 'Enviar review'}
+              {loading ? 'Enviando...' : 'Enviar resena'}
             </button>
           </motion.form>
         </AnimatePresence>

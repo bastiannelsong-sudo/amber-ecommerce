@@ -1,20 +1,22 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CatalogClient from '../components/CatalogClient';
 import { dummyProducts } from '../lib/data/dummy-products';
-import type { Product } from '../lib/types';
+import type { Product, Collection } from '../lib/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(`${API_URL}/products`, {
+    const res = await fetch(`${API_URL}/products/ecommerce?limit=200`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error('API error');
-    const data = await res.json();
+    const json = await res.json();
+    const data = json.data || json;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.map((raw: any) => ({
       ...raw,
@@ -31,8 +33,23 @@ async function getProducts(): Promise<Product[]> {
   }
 }
 
+async function getCollections(): Promise<Collection[]> {
+  try {
+    const res = await fetch(`${API_URL}/collections/tree`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export default async function CatalogoPage() {
-  const products = await getProducts();
+  const [products, collections] = await Promise.all([
+    getProducts(),
+    getCollections(),
+  ]);
 
   return (
     <div className="min-h-screen bg-pearl-50">
@@ -78,11 +95,30 @@ export default async function CatalogoPage() {
           <span className="text-obsidian-900">Catalogo</span>
         </div>
 
-        <CatalogClient products={products} />
+        <Suspense fallback={<CatalogSkeleton />}>
+          <CatalogClient products={products} collections={collections} />
+        </Suspense>
       </section>
 
       {/* Footer */}
       <Footer />
+    </div>
+  );
+}
+
+function CatalogSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="bg-pearl-200 rounded-lg h-16 mb-8" />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i}>
+            <div className="aspect-[3/4] bg-pearl-200 rounded mb-4" />
+            <div className="h-3 w-20 bg-pearl-200 rounded mx-auto mb-2" />
+            <div className="h-4 w-3/4 bg-pearl-200 rounded mx-auto" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -29,12 +29,15 @@ export default function RelatedProducts({ currentProductId, categoryId }: Relate
   if (loading) {
     return (
       <section className="mt-24">
-        <h2
-          className="text-3xl lg:text-4xl font-light text-obsidian-900 mb-12 text-center"
-          style={{ fontFamily: 'var(--font-cormorant)' }}
-        >
-          También te Puede Gustar
-        </h2>
+        <div className="text-center mb-12">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-amber-gold-500 font-semibold mb-3">Completa tu Look</p>
+          <h2
+            className="text-3xl lg:text-4xl font-light text-obsidian-900"
+            style={{ fontFamily: 'var(--font-cormorant)' }}
+          >
+            Tambien te Puede Gustar
+          </h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="animate-pulse">
@@ -57,12 +60,15 @@ export default function RelatedProducts({ currentProductId, categoryId }: Relate
 
   return (
     <section className="mt-24">
-      <h2
-        className="text-3xl lg:text-4xl font-light text-obsidian-900 mb-12 text-center"
-        style={{ fontFamily: 'var(--font-cormorant)' }}
-      >
-        También te Puede Gustar
-      </h2>
+      <div className="text-center mb-12">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-amber-gold-500 font-semibold mb-3">Completa tu Look</p>
+        <h2
+          className="text-3xl lg:text-4xl font-light text-obsidian-900"
+          style={{ fontFamily: 'var(--font-cormorant)' }}
+        >
+          Tambien te Puede Gustar
+        </h2>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {products.map((product) => (
           <ProductCard
