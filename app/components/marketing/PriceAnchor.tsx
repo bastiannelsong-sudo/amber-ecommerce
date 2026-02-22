@@ -12,6 +12,11 @@ interface PriceAnchorProps {
   compact?: boolean;
 }
 
+/** Formatea precio como entero (en Chile no se usan decimales) */
+function fmt(value: number): string {
+  return Math.round(Number(value) || 0).toLocaleString('es-CL');
+}
+
 export default function PriceAnchor({
   price,
   secondarySkus,
@@ -28,7 +33,7 @@ export default function PriceAnchor({
     // No comparison available - just show the price
     return (
       <p className={`font-medium text-obsidian-900 ${compact ? 'text-sm tracking-wide' : 'text-3xl mb-6'}`}>
-        ${price?.toLocaleString('es-CL')}
+        ${fmt(price)}
       </p>
     );
   }
@@ -42,14 +47,14 @@ export default function PriceAnchor({
       <div className="space-y-0.5">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-obsidian-900">
-            ${price?.toLocaleString('es-CL')}
+            ${fmt(price)}
           </span>
           <span className="text-xs text-platinum-500 line-through">
-            ${highestPlatformPrice.platform_price.toLocaleString('es-CL')}
+            ${fmt(highestPlatformPrice.platform_price)}
           </span>
         </div>
         <p className="text-[10px] text-green-600 font-medium">
-          Ahorras ${savings.toLocaleString('es-CL')} vs {platformName}
+          Ahorras ${fmt(savings)} vs {platformName}
         </p>
       </div>
     );
@@ -64,10 +69,10 @@ export default function PriceAnchor({
       {/* Main price */}
       <div className="flex items-baseline gap-3">
         <p className="text-3xl font-medium text-obsidian-900">
-          ${price?.toLocaleString('es-CL')}
+          ${fmt(price)}
         </p>
         <p className="text-lg text-platinum-500 line-through">
-          ${highestPlatformPrice.platform_price.toLocaleString('es-CL')}
+          ${fmt(highestPlatformPrice.platform_price)}
         </p>
         <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-semibold border border-green-200">
           -{savingsPercent}%
@@ -80,7 +85,7 @@ export default function PriceAnchor({
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span className="text-green-700">
-          Ahorras <span className="font-semibold">${savings.toLocaleString('es-CL')}</span> comprando aqui vs {platformName}
+          Ahorras <span className="font-semibold">${fmt(savings)}</span> comprando aqui vs {platformName}
         </span>
       </div>
 

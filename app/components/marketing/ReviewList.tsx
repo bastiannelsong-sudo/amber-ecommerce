@@ -28,7 +28,7 @@ export default function ReviewList({ productId }: ReviewListProps) {
   const loadReviews = async () => {
     try {
       const data = await ecommerceService.getProductReviews(productId);
-      setReviews(data.reviews);
+      setReviews(data.reviews as Review[]);
       setAverageRating(data.average_rating);
       setTotalReviews(data.total_reviews);
       setRatingDistribution(data.rating_distribution);

@@ -93,7 +93,7 @@ export default function ContactoPage() {
       <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian-900/80 via-obsidian-900/60 to-obsidian-900/40 z-10" />
         <Image
-          src="https://images.unsplash.com/photo-1596009190743-cde170386fae?w=1920&h=800&fit=crop"
+          src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=1920&h=800&fit=crop"
           alt="AMBER Joyas — Atención personalizada"
           fill
           sizes="100vw"

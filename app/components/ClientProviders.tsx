@@ -1,13 +1,11 @@
 'use client';
 
-import CartDrawer from './CartDrawer';
-import AbandonedCartModal from './marketing/AbandonedCartModal';
+import WhatsAppFloat from './WhatsAppFloat';
 
 export default function ClientProviders() {
   return (
     <>
-      <CartDrawer />
-      <AbandonedCartModal />
+      <WhatsAppFloat />
     </>
   );
 }

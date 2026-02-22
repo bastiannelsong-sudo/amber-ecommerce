@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name = product.display_name || product.name;
   const description = product.description
     || `${name} - Joyeria con garantia 12 meses. Envio gratuito sobre $30.000.`;
-  const priceText = product.price ? ` $${Number(product.price).toLocaleString('es-CL')}` : '';
+  const priceText = product.price ? ` $${Math.round(Number(product.price)).toLocaleString('es-CL')}` : '';
   const imageUrl = product.image_url || '/logo_oscuro.jpeg';
   const productSlug = product.slug || slug;
 

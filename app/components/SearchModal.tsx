@@ -353,7 +353,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           {product.name}
                         </span>
                         <span className="text-sm font-medium text-obsidian-800 tabular-nums">
-                          ${product.price.toLocaleString('es-CL')}
+                          ${Math.round(Number(product.price) || 0).toLocaleString('es-CL')}
                         </span>
                       </button>
                     ))}

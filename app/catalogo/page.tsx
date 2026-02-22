@@ -11,23 +11,24 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(`${API_URL}/products/ecommerce?limit=200`, {
+    const res = await fetch(`${API_URL}/products`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error('API error');
-    const json = await res.json();
-    const data = json.data || json;
+    const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data.map((raw: any) => ({
-      ...raw,
-      category: raw.category
-        ? {
-            category_id: raw.category.category_id ?? raw.category.platform_id,
-            name: raw.category.name ?? raw.category.platform_name,
-            description: raw.category.description,
-          }
-        : undefined,
-    }));
+    return data
+      .map((raw: any) => ({
+        ...raw,
+        category: raw.category
+          ? {
+              category_id: raw.category.category_id ?? raw.category.platform_id,
+              name: raw.category.name ?? raw.category.platform_name,
+              description: raw.category.description,
+            }
+          : undefined,
+      }))
+      .filter((p: any) => p.image_url);
   } catch {
     return dummyProducts;
   }
