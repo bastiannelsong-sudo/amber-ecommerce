@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   images: {
@@ -34,6 +36,18 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' accounts.google.com",
+              "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
+              "font-src 'self' fonts.gstatic.com",
+              "img-src 'self' data: blob: images.unsplash.com http2.mlstatic.com *.mlstatic.com",
+              `connect-src 'self' ${isDev ? 'http://localhost:* ws://localhost:*' : ''} api.ambernelson.cl accounts.google.com wa.me`,
+              "frame-src accounts.google.com",
+            ].join('; '),
           },
         ],
       },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCartStore } from '../lib/stores/cart.store';
 import { useWishlistStore } from '../lib/stores/wishlist.store';
 import type { Product } from '../lib/types';

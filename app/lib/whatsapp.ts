@@ -23,3 +23,23 @@ export function buildWhatsAppUrl(message?: string): string {
   const text = message || 'Hola! Me comunico desde la web de AMBER Joyas.';
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
+
+/** Genera URL de WhatsApp con el resumen completo del carrito */
+export function buildCartWhatsAppUrl(
+  items: { name: string; quantity: number; price: number }[],
+  total: number,
+): string {
+  const lines = [
+    'Hola! Quiero realizar el siguiente pedido desde AMBER Joyas:',
+    '',
+    ...items.map(
+      (item) =>
+        `- *${item.name}* x${item.quantity} — $${Math.round(item.price * item.quantity).toLocaleString('es-CL')}`,
+    ),
+    '',
+    `*Total: $${Math.round(total).toLocaleString('es-CL')}*`,
+    '',
+    'Quedo atenta a la confirmacion!',
+  ];
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CatalogClient from '../components/CatalogClient';
+import MvpToast from '../components/MvpToast';
 import { dummyProducts } from '../lib/data/dummy-products';
 import type { Product, Collection } from '../lib/types';
 
@@ -28,7 +29,7 @@ async function getProducts(): Promise<Product[]> {
             }
           : undefined,
       }))
-      .filter((p: any) => p.image_url);
+      .filter((p: any) => p.image_url && p.stock > 0);
   } catch {
     return dummyProducts;
   }
@@ -55,6 +56,7 @@ export default async function CatalogoPage() {
   return (
     <div className="min-h-screen bg-pearl-50">
       <Header />
+      <Suspense><MvpToast /></Suspense>
 
       {/* Hero Banner */}
       <section className="relative h-[30vh] sm:h-[40vh] overflow-hidden">

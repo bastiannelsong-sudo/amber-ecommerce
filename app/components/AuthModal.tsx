@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
 import toast from 'react-hot-toast';

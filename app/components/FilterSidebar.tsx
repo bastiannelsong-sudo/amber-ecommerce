@@ -170,10 +170,11 @@ export default function FilterSidebar({
         <div className="space-y-4">
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="text-xs text-platinum-600 mb-1 block">Desde</label>
+              <label htmlFor="price-min" className="text-xs text-platinum-600 mb-1 block">Desde</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-platinum-500">$</span>
                 <input
+                  id="price-min"
                   type="number"
                   value={activeFilters.priceMin || ''}
                   placeholder={minPrice.toLocaleString('es-CL')}
@@ -184,10 +185,11 @@ export default function FilterSidebar({
             </div>
             <span className="text-platinum-400 pb-3">—</span>
             <div className="flex-1">
-              <label className="text-xs text-platinum-600 mb-1 block">Hasta</label>
+              <label htmlFor="price-max" className="text-xs text-platinum-600 mb-1 block">Hasta</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-platinum-500">$</span>
                 <input
+                  id="price-max"
                   type="number"
                   value={activeFilters.priceMax || ''}
                   placeholder={maxPrice.toLocaleString('es-CL')}
@@ -199,6 +201,7 @@ export default function FilterSidebar({
           </div>
           <input
             type="range"
+            aria-label="Precio máximo"
             min={minPrice}
             max={maxPrice}
             step={Math.max(500, Math.round((maxPrice - minPrice) / 50 / 500) * 500)}

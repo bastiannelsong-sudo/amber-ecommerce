@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { use } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
 import RelatedProducts from '@/app/components/RelatedProducts';

@@ -12,6 +12,16 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+
+# Stryker mutation testing
+reports/
+.stryker-tmp/
+stryker.log
+
+# Keploy
+keploy-logs.txt
 
 # next.js
 /.next/

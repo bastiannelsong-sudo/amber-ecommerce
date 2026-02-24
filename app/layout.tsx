@@ -102,8 +102,7 @@ export default function RootLayout({
           }}
         />
         <Toaster position="top-right" />
-        <ClientProviders />
-        {children}
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

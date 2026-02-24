@@ -252,10 +252,12 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
 
         {/* Right: Sort dropdown */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <label className="text-sm text-platinum-600 uppercase tracking-wide whitespace-nowrap hidden sm:block">
+          <label htmlFor="sort-products" className="text-sm text-platinum-600 uppercase tracking-wide whitespace-nowrap hidden sm:block">
             Ordenar por:
           </label>
           <select
+            id="sort-products"
+            aria-label="Ordenar por"
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value as SortOption)}
             className="px-3 sm:px-4 py-2.5 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none text-sm bg-white rounded-lg min-w-0 sm:min-w-[200px] cursor-pointer"

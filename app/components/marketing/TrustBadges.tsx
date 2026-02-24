@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 interface TrustBadgesProps {
   /** Horizontal layout for product detail */

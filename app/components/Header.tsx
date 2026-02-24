@@ -4,11 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchModal from './SearchModal';
+import { useCartStore } from '../lib/stores/cart.store';
+import { buildWhatsAppUrl } from '../lib/whatsapp';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const openCart = useCartStore((state) => state.openCart);
+  const itemCount = useCartStore((state) => state.getItemCount());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,9 +95,25 @@ export default function Header() {
               </svg>
             </button>
 
+            {/* Carrito */}
+            <button
+              onClick={openCart}
+              aria-label="Carrito"
+              className="relative w-11 h-11 flex items-center justify-center text-obsidian-700 hover:text-amber-gold-500 transition-colors duration-300 cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-amber-gold-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </button>
+
             {/* WhatsApp */}
             <a
-              href="https://wa.me/56932897499"
+              href={buildWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
@@ -141,7 +161,7 @@ export default function Header() {
               ))}
               {/* WhatsApp link en mobile */}
               <a
-                href="https://wa.me/56932897499"
+                href={buildWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3.5 text-sm uppercase tracking-widest text-[#25D366] font-medium flex items-center gap-2"
