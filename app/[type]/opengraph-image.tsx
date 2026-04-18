@@ -11,11 +11,11 @@ export function generateImageMetadata() {
 }
 
 interface Props {
-  params: { type: string };
+  params: Promise<{ type: string }>;
 }
 
-export default function Image({ params }: Props) {
-  const { type } = params;
+export default async function Image({ params }: Props) {
+  const { type } = await params;
   const copy = isProductTypeSlug(type) ? getProductTypeCopy(type) : null;
   const title = copy?.h1 ?? 'AMBER Joyas';
   const subtitle = copy?.lead ?? 'Joyería artesanal en plata 925';

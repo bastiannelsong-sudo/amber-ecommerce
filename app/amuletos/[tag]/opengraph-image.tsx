@@ -11,11 +11,11 @@ export function generateImageMetadata() {
 }
 
 interface Props {
-  params: { tag: string };
+  params: Promise<{ tag: string }>;
 }
 
-export default function Image({ params }: Props) {
-  const { tag } = params;
+export default async function Image({ params }: Props) {
+  const { tag } = await params;
   const copy = getTagCopy(tag);
   const title = copy?.h1 ?? 'Amuletos';
   const subtitle = copy?.lead ?? 'Protección con significado';
