@@ -38,7 +38,9 @@ function clearRecentSearches() {
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchSuggestions | null>(null);
@@ -55,8 +57,15 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   useEffect(() => {
     if (isOpen) {
       setRecentSearches(getRecentSearches());
-      // Focus input after animation
-      requestAnimationFrame(() => inputRef.current?.focus());
+      // Focus the visible input after animation
+      requestAnimationFrame(() => {
+        const isMobile = window.innerWidth < 640;
+        if (isMobile) {
+          inputRef.current?.focus();
+        } else {
+          desktopInputRef.current?.focus();
+        }
+      });
     } else {
       setQuery('');
       setSuggestions(null);
@@ -70,13 +79,25 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         if (!isOpen) {
-          // Parent controls open state, but we can still handle close
+          // Parent controls open state
         }
       }
     }
     document.addEventListener('keydown', handleGlobalKey);
     return () => document.removeEventListener('keydown', handleGlobalKey);
   }, [isOpen]);
+
+  // Desktop: click outside panel to close
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
 
   // Debounced suggestions fetch
   useEffect(() => {
@@ -177,13 +198,291 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const hasResults = suggestions && (suggestions.products.length > 0 || suggestions.collections.length > 0);
   const noResults = hasQuery && !isLoading && suggestions && !hasResults;
 
+  // Contenido compartido de resultados
+  const resultsContent = (
+    <>
+      {/* State: Empty query → show recent searches */}
+      {!hasQuery && recentSearches.length > 0 && (
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-platinum-500 uppercase tracking-wider">Busquedas recientes</span>
+            <button
+              onClick={handleClearRecent}
+              className="text-xs text-platinum-500 hover:text-amber-gold-600 transition-colors"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recentSearches.map((term) => (
+              <button
+                key={term}
+                onClick={() => {
+                  setQuery(term);
+                  goToResults(term);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pearl-50 hover:bg-pearl-100 border border-pearl-200 rounded-full text-sm text-obsidian-800 transition-colors"
+              >
+                <svg className="w-3 h-3 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {term}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* State: Empty query, no recent → prompt */}
+      {!hasQuery && recentSearches.length === 0 && (
+        <div className="p-10 text-center">
+          <svg
+            className="w-12 h-12 text-pearl-300 mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <p className="text-sm text-platinum-500">
+            Escribe para buscar productos, materiales o colecciones
+          </p>
+        </div>
+      )}
+
+      {/* State: Loading */}
+      {hasQuery && isLoading && (
+        <div className="p-8 text-center">
+          <div className="inline-flex items-center gap-2 text-sm text-platinum-500">
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Buscando...
+          </div>
+        </div>
+      )}
+
+      {/* State: Has results */}
+      {hasQuery && !isLoading && hasResults && (
+        <div className="py-2">
+          {/* Product suggestions */}
+          {suggestions!.products.length > 0 && (
+            <div>
+              <p className="px-4 pt-3 pb-1 text-[10px] font-medium text-platinum-500 uppercase tracking-wider">
+                Productos
+              </p>
+              {suggestions!.products.map((product, i) => (
+                <button
+                  key={product.slug}
+                  data-search-item
+                  onClick={() => goToProduct(product.slug)}
+                  className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
+                    activeIndex === i
+                      ? 'bg-amber-gold-50'
+                      : 'hover:bg-pearl-50'
+                  }`}
+                  role="option"
+                  aria-selected={activeIndex === i}
+                >
+                  <div className="w-10 h-10 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
+                    {product.image_url && (
+                      <Image
+                        src={product.image_url}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
+                      />
+                    )}
+                  </div>
+                  <span className="flex-1 text-sm text-obsidian-900 truncate">
+                    {product.name}
+                  </span>
+                  <span className="text-sm font-medium text-obsidian-800 tabular-nums">
+                    ${Math.round(Number(product.price) || 0).toLocaleString('es-CL')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Collection suggestions */}
+          {suggestions!.collections.length > 0 && (
+            <div>
+              <p className="px-4 pt-3 pb-1 text-[10px] font-medium text-platinum-500 uppercase tracking-wider">
+                Colecciones
+              </p>
+              {suggestions!.collections.map((col, i) => {
+                const itemIndex = (suggestions!.products.length) + i;
+                return (
+                  <button
+                    key={col.slug}
+                    data-search-item
+                    onClick={() => goToCollection(col.slug)}
+                    className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
+                      activeIndex === itemIndex
+                        ? 'bg-amber-gold-50'
+                        : 'hover:bg-pearl-50'
+                    }`}
+                    role="option"
+                    aria-selected={activeIndex === itemIndex}
+                  >
+                    <div className="w-10 h-10 bg-pearl-100 flex-shrink-0 rounded flex items-center justify-center">
+                      <svg className="w-5 h-5 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <span className="flex-1 text-sm text-obsidian-900">
+                      {col.name}
+                    </span>
+                    <svg className="w-4 h-4 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* See all results link */}
+          <div className="px-4 py-3 border-t border-pearl-100">
+            <button
+              onClick={() => goToResults(query)}
+              className="w-full text-center text-sm text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors"
+            >
+              Ver todos los resultados para &ldquo;{query.trim()}&rdquo;
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* State: No results */}
+      {noResults && (
+        <div className="p-8 text-center">
+          <svg
+            className="w-12 h-12 text-pearl-300 mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm text-platinum-600 mb-1">
+            No encontramos resultados para &ldquo;{query.trim()}&rdquo;
+          </p>
+          <p className="text-xs text-platinum-400">
+            Intenta con otras palabras o revisa la ortografia
+          </p>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <AnimatePresence>
+      {/* ==================== DESKTOP: Panel desplegable sin overlay ==================== */}
+      <div className="hidden sm:block">
+        <motion.div
+          ref={panelRef}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+          className="absolute top-full left-0 right-0 bg-white border-b border-pearl-200 shadow-luxury-lg z-[70]"
+          role="dialog"
+          aria-modal="false"
+          aria-label="Buscar productos"
+        >
+          <div className="container mx-auto px-4 lg:px-8">
+            {/* Input */}
+            <div className="py-5">
+              <div className="relative max-w-2xl mx-auto">
+                <svg
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-platinum-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  ref={desktopInputRef}
+                  type="search"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  spellCheck={false}
+                  autoComplete="off"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Buscar joyas, collares, anillos..."
+                  aria-label="Buscar productos"
+                  className="w-full pl-12 pr-24 py-3.5 border border-pearl-300 focus:border-amber-gold-500 focus-visible:ring-2 focus-visible:ring-amber-gold-500/30 focus:outline-none text-base rounded-lg transition-colors"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {query && (
+                    <button
+                      onClick={() => {
+                        setQuery('');
+                        desktopInputRef.current?.focus();
+                      }}
+                      className="p-1 text-platinum-500 hover:text-obsidian-900 transition-colors"
+                      aria-label="Limpiar busqueda"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-platinum-500 bg-pearl-100 border border-pearl-300 rounded font-mono">
+                    ESC
+                  </kbd>
+                </div>
+              </div>
+            </div>
+
+            {/* Results */}
+            <div ref={listRef} className="max-w-2xl mx-auto max-h-[60vh] overflow-y-auto overscroll-contain pb-2" role="listbox" aria-label="Resultados de busqueda">
+              {resultsContent}
+            </div>
+
+            {/* Footer con atajos */}
+            <div className="flex items-center justify-between px-0 py-2.5 border-t border-pearl-200 text-[11px] text-platinum-500 max-w-2xl mx-auto">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center gap-1">
+                  <kbd className="px-1 py-0.5 bg-pearl-50 border border-pearl-300 rounded text-[10px] font-mono">↑</kbd>
+                  <kbd className="px-1 py-0.5 bg-pearl-50 border border-pearl-300 rounded text-[10px] font-mono">↓</kbd>
+                  navegar
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-pearl-50 border border-pearl-300 rounded text-[10px] font-mono">↵</kbd>
+                  seleccionar
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-pearl-50 border border-pearl-300 rounded text-[10px] font-mono">esc</kbd>
+                  cerrar
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ==================== MOBILE: Modal fullscreen ==================== */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-0 sm:pt-20"
+        className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-start justify-center"
         onClick={onClose}
         role="presentation"
       >
@@ -192,14 +491,26 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -20, opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-          className="bg-white w-full sm:max-w-2xl sm:mx-4 sm:rounded-xl shadow-2xl overflow-hidden h-full sm:h-auto sm:max-h-[80vh] flex flex-col"
+          className="bg-white w-full shadow-2xl overflow-hidden h-[100dvh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-label="Buscar productos"
         >
-          {/* Search Input */}
-          <div className="p-4 sm:p-5 border-b border-pearl-200">
+          {/* Mobile header */}
+          <div className="p-3 border-b border-pearl-200 safe-top">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-obsidian-700 uppercase tracking-wider">Buscar</span>
+              <button
+                onClick={onClose}
+                className="w-9 h-9 flex items-center justify-center text-platinum-600 hover:text-obsidian-900 transition-colors rounded-full hover:bg-pearl-100"
+                aria-label="Cerrar busqueda"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <div className="relative">
               <svg
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-platinum-500"
@@ -219,6 +530,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 ref={inputRef}
                 type="search"
                 inputMode="search"
+                enterKeyHint="search"
                 spellCheck={false}
                 autoComplete="off"
                 value={query}
@@ -226,236 +538,35 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 onKeyDown={handleKeyDown}
                 placeholder="Buscar joyas, collares, anillos..."
                 aria-label="Buscar productos"
-                className="w-full pl-12 pr-20 py-3.5 border border-pearl-300 focus:border-amber-gold-500 focus-visible:ring-2 focus-visible:ring-amber-gold-500/30 focus:outline-none text-base rounded-lg transition-colors"
+                className="w-full pl-12 pr-16 py-3 border border-pearl-300 focus:border-amber-gold-500 focus-visible:ring-2 focus-visible:ring-amber-gold-500/30 focus:outline-none text-base rounded-lg transition-colors"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                {query && (
-                  <button
-                    onClick={() => {
-                      setQuery('');
-                      inputRef.current?.focus();
-                    }}
-                    className="p-1 text-platinum-500 hover:text-obsidian-900 transition-colors"
-                    aria-label="Limpiar busqueda"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-platinum-500 bg-pearl-100 border border-pearl-300 rounded font-mono">
-                  ESC
-                </kbd>
-              </div>
-            </div>
-          </div>
-
-          {/* Results area */}
-          <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain" role="listbox" aria-label="Resultados de busqueda">
-
-            {/* State: Empty query → show recent searches */}
-            {!hasQuery && recentSearches.length > 0 && (
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-platinum-500 uppercase tracking-wider">Busquedas recientes</span>
-                  <button
-                    onClick={handleClearRecent}
-                    className="text-xs text-platinum-500 hover:text-amber-gold-600 transition-colors"
-                  >
-                    Limpiar
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {recentSearches.map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => {
-                        setQuery(term);
-                        goToResults(term);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pearl-50 hover:bg-pearl-100 border border-pearl-200 rounded-full text-sm text-obsidian-800 transition-colors"
-                    >
-                      <svg className="w-3 h-3 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {term}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* State: Empty query, no recent → prompt */}
-            {!hasQuery && recentSearches.length === 0 && (
-              <div className="p-10 text-center">
-                <svg
-                  className="w-12 h-12 text-pearl-300 mx-auto mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
+              {query && (
+                <button
+                  onClick={() => {
+                    setQuery('');
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-platinum-500 hover:text-obsidian-900 transition-colors"
+                  aria-label="Limpiar busqueda"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <p className="text-sm text-platinum-500">
-                  Escribe para buscar productos, materiales o colecciones
-                </p>
-              </div>
-            )}
-
-            {/* State: Loading */}
-            {hasQuery && isLoading && (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center gap-2 text-sm text-platinum-500">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  Buscando...
-                </div>
-              </div>
-            )}
-
-            {/* State: Has results */}
-            {hasQuery && !isLoading && hasResults && (
-              <div className="py-2">
-                {/* Product suggestions */}
-                {suggestions!.products.length > 0 && (
-                  <div>
-                    <p className="px-4 pt-3 pb-1 text-[10px] font-medium text-platinum-500 uppercase tracking-wider">
-                      Productos
-                    </p>
-                    {suggestions!.products.map((product, i) => (
-                      <button
-                        key={product.slug}
-                        data-search-item
-                        onClick={() => goToProduct(product.slug)}
-                        className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
-                          activeIndex === i
-                            ? 'bg-amber-gold-50'
-                            : 'hover:bg-pearl-50'
-                        }`}
-                        role="option"
-                        aria-selected={activeIndex === i}
-                      >
-                        <div className="w-10 h-10 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
-                          {product.image_url && (
-                            <Image
-                              src={product.image_url}
-                              alt=""
-                              width={40}
-                              height={40}
-                              className="object-cover w-full h-full"
-                            />
-                          )}
-                        </div>
-                        <span className="flex-1 text-sm text-obsidian-900 truncate">
-                          {product.name}
-                        </span>
-                        <span className="text-sm font-medium text-obsidian-800 tabular-nums">
-                          ${Math.round(Number(product.price) || 0).toLocaleString('es-CL')}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Collection suggestions */}
-                {suggestions!.collections.length > 0 && (
-                  <div>
-                    <p className="px-4 pt-3 pb-1 text-[10px] font-medium text-platinum-500 uppercase tracking-wider">
-                      Colecciones
-                    </p>
-                    {suggestions!.collections.map((col, i) => {
-                      const itemIndex = (suggestions!.products.length) + i;
-                      return (
-                        <button
-                          key={col.slug}
-                          data-search-item
-                          onClick={() => goToCollection(col.slug)}
-                          className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
-                            activeIndex === itemIndex
-                              ? 'bg-amber-gold-50'
-                              : 'hover:bg-pearl-50'
-                          }`}
-                          role="option"
-                          aria-selected={activeIndex === itemIndex}
-                        >
-                          <div className="w-10 h-10 bg-pearl-100 flex-shrink-0 rounded flex items-center justify-center">
-                            <svg className="w-5 h-5 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                          </div>
-                          <span className="flex-1 text-sm text-obsidian-900">
-                            {col.name}
-                          </span>
-                          <svg className="w-4 h-4 text-platinum-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* See all results link */}
-                <div className="px-4 py-3 border-t border-pearl-100">
-                  <button
-                    onClick={() => goToResults(query)}
-                    className="w-full text-center text-sm text-amber-gold-600 hover:text-amber-gold-700 font-medium transition-colors"
-                  >
-                    Ver todos los resultados para &ldquo;{query.trim()}&rdquo;
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* State: No results */}
-            {noResults && (
-              <div className="p-8 text-center">
-                <svg
-                  className="w-12 h-12 text-pearl-300 mx-auto mb-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-platinum-600 mb-1">
-                  No encontramos resultados para &ldquo;{query.trim()}&rdquo;
-                </p>
-                <p className="text-xs text-platinum-400">
-                  Intenta con otras palabras o revisa la ortografia
-                </p>
-              </div>
-            )}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Footer */}
-          <div className="hidden sm:flex items-center justify-between px-4 py-2.5 border-t border-pearl-200 bg-pearl-50 text-[11px] text-platinum-500">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1">
-                <kbd className="px-1 py-0.5 bg-white border border-pearl-300 rounded text-[10px] font-mono">↑</kbd>
-                <kbd className="px-1 py-0.5 bg-white border border-pearl-300 rounded text-[10px] font-mono">↓</kbd>
-                navegar
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white border border-pearl-300 rounded text-[10px] font-mono">↵</kbd>
-                seleccionar
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white border border-pearl-300 rounded text-[10px] font-mono">esc</kbd>
-                cerrar
-              </span>
-            </div>
+          {/* Mobile results */}
+          <div className="flex-1 overflow-y-auto overscroll-contain" role="listbox" aria-label="Resultados de busqueda">
+            {resultsContent}
           </div>
 
           {/* Mobile close */}
-          <div className="sm:hidden p-3 border-t border-pearl-200 bg-pearl-50">
+          <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-pearl-200 bg-pearl-50">
             <button
               onClick={onClose}
-              className="w-full py-2.5 text-center text-sm text-platinum-600 uppercase tracking-wide"
+              className="w-full py-3 text-center text-sm font-medium text-platinum-600 uppercase tracking-wide active:bg-pearl-200 rounded-lg transition-colors"
             >
               Cerrar
             </button>

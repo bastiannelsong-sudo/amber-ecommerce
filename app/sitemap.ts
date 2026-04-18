@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { dummyProducts } from './lib/data/dummy-products';
+import { PRODUCT_TYPE_SLUGS, TYPE_MATERIAL_COMBOS, getSupportedTagSlugs } from './lib/seo-copy';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://amberjoyeria.cl';
 
@@ -68,5 +69,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...productPages];
+  // Landings SEO por tipo de producto (/pulseras, /collares, /aros…)
+  const typePages: MetadataRoute.Sitemap = PRODUCT_TYPE_SLUGS.map((slug) => ({
+    url: `${SITE_URL}/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.85,
+  }));
+
+  // Rutas anidadas tipo × material (/pulseras/plata-925, /collares/acero…)
+  const typeMaterialPages: MetadataRoute.Sitemap = TYPE_MATERIAL_COMBOS.map((c) => ({
+    url: `${SITE_URL}/${c.type}/${c.material}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.75,
+  }));
+
+  // Landings SEO por símbolo/intención (/amuletos/san-benito, /amuletos/hilo-rojo…)
+  const tagPages: MetadataRoute.Sitemap = getSupportedTagSlugs().map((tag) => ({
+    url: `${SITE_URL}/amuletos/${tag}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...typePages, ...typeMaterialPages, ...tagPages, ...productPages];
 }

@@ -346,6 +346,19 @@
   animation: slideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .animate-line-expand {
   animation: lineExpand 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -414,14 +427,53 @@ html {
   animation: shake 0.5s ease-in-out;
 }
 
+/* Catalog infinite scroll - staggered fade-in (GPU accelerated: transform + opacity only) */
+@keyframes catalogItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.catalog-item-enter {
+  opacity: 0;
+  animation: catalogItemEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Catalog loading dots - smooth pulse */
+@keyframes catalogDotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.catalog-dot {
+  animation: catalogDotPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* Prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-fade-up,
   .animate-scale-in,
   .animate-slide-in-left,
+  .animate-slide-in-right,
+  .catalog-item-enter,
   .hover-lift {
     animation: none !important;
     transition: none !important;
+  }
+
+  .catalog-item-enter {
+    opacity: 1 !important;
+  }
+
+  .catalog-dot {
+    animation-duration: 0s !important;
+    opacity: 0.5 !important;
   }
 }

@@ -228,7 +228,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                   </div>
                   <div className="flex justify-between">
                     <span className="text-platinum-600">Garantía:</span>
-                    <span className="text-obsidian-900">12 meses</span>
+                    <span className="text-obsidian-900">Cambios sin costo</span>
                   </div>
                 </div>
               </div>

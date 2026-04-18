@@ -4,16 +4,16 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Garantia de 12 Meses',
-  description: 'Todas nuestras joyas en Plata 925 incluyen garantia de 12 meses. Conoce que cubre nuestra garantia y como hacer valida tu cobertura.',
+  title: 'Cambios y Devoluciones',
+  description: 'Todas nuestras joyas en Plata 925 incluyen politica de cambios y devoluciones. Conoce que cubre nuestra garantia y como hacer valida tu cobertura.',
   openGraph: {
-    title: 'Garantia de 12 Meses | AMBER Joyas',
-    description: 'Garantia de 12 meses en todas nuestras joyas. Plata 925 certificada con respaldo directo.',
+    title: 'Cambios y Devoluciones | AMBER Joyas',
+    description: 'Cambios y devoluciones sin costo en todas nuestras joyas. Plata 925 con respaldo directo.',
     url: '/garantia',
   },
   twitter: {
-    title: 'Garantia de 12 Meses | AMBER Joyas',
-    description: 'Garantia de 12 meses en todas nuestras joyas en Plata 925.',
+    title: 'Cambios y Devoluciones | AMBER Joyas',
+    description: 'Cambios y devoluciones sin costo en todas nuestras joyas en Plata 925.',
   },
   alternates: {
     canonical: '/garantia',
@@ -35,7 +35,7 @@ export default function GarantiaPage() {
             className="text-4xl lg:text-6xl font-light text-white tracking-wider mb-6"
             style={{ fontFamily: 'var(--font-cormorant)' }}
           >
-            Garantia de 12 Meses
+            Cambios y Devoluciones
           </h1>
           <p className="text-base lg:text-lg text-pearl-300 max-w-2xl mx-auto font-light">
             Respaldamos cada pieza que vendemos. Si algo no esta bien, lo solucionamos.

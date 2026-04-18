@@ -216,7 +216,7 @@ export default function GiftCardPage() {
 
                 <div className="relative z-10">
                   <Image
-                    src="/logo_claro.jpeg"
+                    src="/logo_claro.png"
                     alt="Amber"
                     width={120}
                     height={32}

@@ -5,15 +5,15 @@ import Footer from '../components/Footer';
 
 export const metadata: Metadata = {
   title: 'Envios y Despacho',
-  description: 'Envio gratuito en compras sobre $30.000. Despacho a todo Chile con Chilexpress y Correos de Chile. Seguimiento en tiempo real de tu pedido.',
+  description: 'Envio gratuito en compras sobre $50.000. Despacho a todo Chile con Chilexpress y Correos de Chile. Seguimiento en tiempo real de tu pedido.',
   openGraph: {
     title: 'Envios y Despacho | AMBER Joyas',
-    description: 'Envio gratuito sobre $30.000. Despacho a todo Chile con seguimiento.',
+    description: 'Envio gratuito sobre $50.000. Despacho a todo Chile con seguimiento.',
     url: '/envios',
   },
   twitter: {
     title: 'Envios y Despacho | AMBER Joyas',
-    description: 'Envio gratuito sobre $30.000. Despacho a todo Chile.',
+    description: 'Envio gratuito sobre $50.000. Despacho a todo Chile.',
   },
   alternates: {
     canonical: '/envios',
@@ -56,7 +56,7 @@ export default function EnviosPage() {
               Envio Gratuito
             </h2>
             <p className="text-obsidian-800 text-lg font-medium">
-              En todas las compras sobre $30.000
+              En todas las compras sobre $50.000
             </p>
             <p className="text-obsidian-700 text-sm mt-2">
               Aplica a todo Chile continental
@@ -78,14 +78,14 @@ export default function EnviosPage() {
                   time: '1-3 dias habiles',
                   cost: '$3.490',
                   detail: 'Entrega a domicilio o sucursal. Seguimiento en linea.',
-                  free: 'Gratis sobre $30.000',
+                  free: 'Gratis sobre $50.000',
                 },
                 {
                   carrier: 'Correos de Chile',
                   time: '3-5 dias habiles',
                   cost: '$2.490',
                   detail: 'Entrega a domicilio. Seguimiento disponible.',
-                  free: 'Gratis sobre $30.000',
+                  free: 'Gratis sobre $50.000',
                 },
                 {
                   carrier: 'Retiro en punto de encuentro',

@@ -55,7 +55,7 @@ export default function TerminosCondicionesPage() {
     {
       title: '5. Envios y Despacho',
       content: [
-        'Realizamos envios a todo Chile continental a traves de Chilexpress y Correos de Chile. Los envios son gratuitos en compras superiores a $30.000.',
+        'Realizamos envios a todo Chile continental a traves de Chilexpress y Correos de Chile. Los envios son gratuitos en compras superiores a $50.000.',
         'Los plazos de entrega son estimados y pueden variar segun la ubicacion y disponibilidad del servicio de courier. AMBER no se hace responsable por retrasos atribuibles al servicio de transporte.',
         'Para mas detalles, consulta nuestra pagina de Envios.',
       ],
@@ -63,7 +63,7 @@ export default function TerminosCondicionesPage() {
     {
       title: '6. Garantia',
       content: [
-        'Todos los productos vendidos por AMBER cuentan con una garantia de 12 meses contra defectos de fabricacion, sujeta a las condiciones detalladas en nuestra pagina de Garantia.',
+        'Todos los productos vendidos por AMBER cuentan con una politica de cambios y devoluciones sin costo, sujeta a las condiciones detalladas en nuestra pagina de Devoluciones.',
         'La garantia no cubre desgaste natural, danos por mal uso, contacto con quimicos o modificaciones realizadas por terceros.',
       ],
     },

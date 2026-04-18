@@ -53,7 +53,7 @@ export default function StickyAddToCart({ product, onAddToCart, targetRef }: Sti
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-pearl-100 rounded overflow-hidden flex-shrink-0 relative">
                   <Image
-                    src={product.image_url || '/logo_oscuro.jpeg'}
+                    src={product.image_url || '/logo_claro.png'}
                     alt={product.name}
                     fill
                     sizes="64px"

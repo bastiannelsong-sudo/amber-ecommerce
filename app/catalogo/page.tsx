@@ -1,35 +1,79 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CatalogClient from '../components/CatalogClient';
-import MvpToast from '../components/MvpToast';
+import { fetchCatalog, type CatalogFilters } from '../lib/catalog-api';
+import { SITE_URL } from '../lib/seo-copy';
 import { dummyProducts } from '../lib/data/dummy-products';
 import type { Product, Collection } from '../lib/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const CATALOG_URL = `${SITE_URL}/catalogo`;
 
-async function getProducts(): Promise<Product[]> {
+type SortMap = Record<string, CatalogFilters['sort']>;
+const URL_SORT_TO_BACKEND: SortMap = {
+  'price-asc': 'price_asc',
+  'price-desc': 'price_desc',
+  'name-asc': 'name_asc',
+  newest: 'newest',
+};
+
+/**
+ * Mapea los query params que usa CatalogClient (mat, col, pmin, pmax, sort)
+ * a filtros del endpoint /products/catalog. Multi-valor (ej: mat=X,Y) envía
+ * el primer valor al server; el cliente refina el resto localmente.
+ */
+function paramsToBackendFilters(sp: Record<string, string | string[] | undefined>): CatalogFilters {
+  const first = (v: string | string[] | undefined): string | undefined => {
+    if (!v) return undefined;
+    const raw = Array.isArray(v) ? v[0] : v;
+    return raw?.split(',').filter(Boolean)[0];
+  };
+
+  const filters: CatalogFilters = { limit: 500, sort: 'featured' };
+  const material = first(sp.mat);
+  if (material) filters.material = material;
+  const collection = first(sp.col);
+  if (collection) filters.collection = collection;
+  const pmin = Number(first(sp.pmin));
+  if (isFinite(pmin) && pmin > 0) filters.min_price = pmin;
+  const pmax = Number(first(sp.pmax));
+  if (isFinite(pmax) && pmax > 0) filters.max_price = pmax;
+  const sortKey = first(sp.sort);
+  if (sortKey && URL_SORT_TO_BACKEND[sortKey]) filters.sort = URL_SORT_TO_BACKEND[sortKey];
+  return filters;
+}
+
+export const metadata: Metadata = {
+  title: 'Catálogo Completo | AMBER Joyas',
+  description:
+    'Explora toda nuestra colección de joyería en plata 925, amuletos, pulseras, collares y aros. Envío a todo Chile con cambios y devoluciones sin costo.',
+  alternates: { canonical: CATALOG_URL },
+  openGraph: {
+    title: 'Catálogo Completo | AMBER',
+    description:
+      'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
+    url: CATALOG_URL,
+    siteName: 'AMBER Joyería',
+    type: 'website',
+    locale: 'es_CL',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Catálogo Completo | AMBER',
+    description:
+      'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
+  },
+};
+
+async function getProducts(filters: CatalogFilters): Promise<Product[]> {
   try {
-    const res = await fetch(`${API_URL}/products`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error('API error');
-    const data = await res.json();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data
-      .map((raw: any) => ({
-        ...raw,
-        category: raw.category
-          ? {
-              category_id: raw.category.category_id ?? raw.category.platform_id,
-              name: raw.category.name ?? raw.category.platform_name,
-              description: raw.category.description,
-            }
-          : undefined,
-      }))
-      .filter((p: any) => p.image_url && p.stock > 0);
+    const { data } = await fetchCatalog(filters);
+    if (data.length === 0) return dummyProducts;
+    return data;
   } catch {
     return dummyProducts;
   }
@@ -47,23 +91,55 @@ async function getCollections(): Promise<Collection[]> {
   }
 }
 
-export default async function CatalogoPage() {
+interface CatalogoPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function CatalogoPage({ searchParams }: CatalogoPageProps) {
+  const sp = await searchParams;
+  const filters = paramsToBackendFilters(sp);
   const [products, collections] = await Promise.all([
-    getProducts(),
+    getProducts(filters),
     getCollections(),
   ]);
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Catálogo', item: CATALOG_URL },
+    ],
+  };
+
+  const collectionPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Catálogo Completo',
+    description: 'Toda la joyería AMBER: plata 925, amuletos y diseños con significado.',
+    url: CATALOG_URL,
+    numberOfItems: products.length,
+  };
 
   return (
     <div className="min-h-screen bg-pearl-50">
       <Header />
-      <Suspense><MvpToast /></Suspense>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageJsonLd) }}
+      />
 
       {/* Hero Banner */}
       <section className="relative h-[30vh] sm:h-[40vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-obsidian-950/60 via-obsidian-900/30 to-obsidian-950/50 z-10" />
         <Image
           src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=800&fit=crop"
-          alt="Catalogo Completo"
+          alt="Catálogo Completo"
           fill
           sizes="100vw"
           className="object-cover"
@@ -72,16 +148,16 @@ export default async function CatalogoPage() {
         <div className="absolute inset-0 z-20 flex items-center justify-center">
           <div className="text-center text-white space-y-3 sm:space-y-6 px-4 animate-fade-in">
             <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-amber-gold-400 font-medium">
-              Toda la Coleccion
+              Toda la Colección
             </p>
             <h1
               className="text-3xl sm:text-5xl lg:text-7xl font-light tracking-wider"
               style={{ fontFamily: 'var(--font-cormorant)' }}
             >
-              Catalogo Completo
+              Catálogo Completo
             </h1>
             <p className="text-sm sm:text-base lg:text-lg tracking-wide font-light max-w-2xl mx-auto text-pearl-200">
-              Explora nuestra coleccion completa de joyeria artesanal
+              Explora nuestra colección completa de joyería artesanal
             </p>
           </div>
         </div>
@@ -90,13 +166,21 @@ export default async function CatalogoPage() {
       {/* Main Content */}
       <section className="container mx-auto px-4 lg:px-8 py-6 sm:py-12">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-platinum-600 mb-4 sm:mb-8">
-          <Link href="/" className="hover:text-amber-gold-500 transition-colors">
-            Inicio
-          </Link>
-          <span>/</span>
-          <span className="text-obsidian-900">Catalogo</span>
-        </div>
+        <nav aria-label="Breadcrumb" className="mb-4 sm:mb-8">
+          <ol className="flex items-center gap-2 text-sm text-platinum-600">
+            <li>
+              <Link href="/" className="hover:text-amber-gold-500 transition-colors">
+                Inicio
+              </Link>
+            </li>
+            <li aria-hidden>
+              <span>/</span>
+            </li>
+            <li className="text-obsidian-900" aria-current="page">
+              Catálogo
+            </li>
+          </ol>
+        </nav>
 
         <Suspense fallback={<CatalogSkeleton />}>
           <CatalogClient products={products} collections={collections} />

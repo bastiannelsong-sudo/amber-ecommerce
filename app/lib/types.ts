@@ -15,6 +15,8 @@ export interface Product {
   images?: string[];
   material?: string;
   style?: string;
+  product_type?: string;
+  audience?: string;
   tags?: string[];
   is_published?: boolean;
   display_order?: number;

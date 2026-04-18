@@ -104,7 +104,7 @@ export default function SobreNosotrosPage() {
                 Calidad Real
               </h3>
               <p className="text-platinum-600">
-                Plata 925 certificada, bano de oro de alta durabilidad y materiales
+                Plata 925, bano de oro de alta durabilidad y materiales
                 que no se oscurecen ni irritan la piel. Lo que decimos, lo cumplimos.
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function SobreNosotrosPage() {
               </h3>
               <p className="text-platinum-600">
                 Joyas de calidad no tienen por que ser inalcanzables. Ofrecemos piezas
-                hermosas desde $9.590, con envio gratuito sobre $30.000.
+                hermosas desde $9.590, con envio gratuito sobre $50.000.
               </p>
             </div>
           </div>
@@ -267,9 +267,9 @@ export default function SobreNosotrosPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { title: 'Precios exclusivos', desc: '10-15% menos que en marketplaces' },
-                { title: 'Envio gratuito', desc: 'En compras sobre $30.000' },
+                { title: 'Envio gratuito', desc: 'En compras sobre $50.000' },
                 { title: 'Colecciones exclusivas', desc: 'Piezas que solo encuentras aqui' },
-                { title: 'Garantia de 12 meses', desc: 'Respaldo directo con nosotros' },
+                { title: 'Cambios sin costo', desc: 'Devoluciones faciles y rapidas' },
                 { title: 'Pago seguro', desc: 'MercadoPago, tarjetas y transferencia' },
                 { title: 'Atencion personalizada', desc: 'Te ayudamos a elegir la pieza perfecta' },
               ].map((benefit, index) => (

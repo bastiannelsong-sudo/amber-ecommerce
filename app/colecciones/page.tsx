@@ -228,7 +228,7 @@ export default async function ColeccionesPage() {
                 </h2>
                 <p className="text-base lg:text-lg font-light max-w-2xl mx-auto text-pearl-200">
                   En nuestra tienda oficial encuentras precios exclusivos, envio gratuito
-                  sobre $30.000 y colecciones que no estan en marketplaces.
+                  sobre $50.000 y colecciones que no estan en marketplaces.
                 </p>
                 <Link
                   href="/catalogo"

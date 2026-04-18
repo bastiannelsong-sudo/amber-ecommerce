@@ -112,7 +112,7 @@ export default function ProductComparator({ isOpen, onClose, products, onRemove 
                             </button>
                             <div className="aspect-square bg-white rounded overflow-hidden mb-3 relative">
                               <Image
-                                src={product.image_url || '/logo_oscuro.jpeg'}
+                                src={product.image_url || '/logo_claro.png'}
                                 alt={product.name}
                                 fill
                                 sizes="250px"

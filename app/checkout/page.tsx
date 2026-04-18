@@ -447,7 +447,7 @@ export default function CheckoutPage() {
                         <div key={item.product.product_id} className="p-4 flex items-center gap-4">
                           <div className="w-20 h-20 bg-pearl-100 flex-shrink-0 rounded overflow-hidden relative">
                             <Image
-                              src={item.product.image_url || '/logo_oscuro.jpeg'}
+                              src={item.product.image_url || '/logo_claro.png'}
                               alt={item.product.name}
                               fill
                               sizes="80px"
@@ -540,7 +540,7 @@ export default function CheckoutPage() {
                   <div key={item.product.product_id} className="flex gap-4">
                     <div className="w-16 h-16 bg-pearl-100 flex-shrink-0 rounded overflow-hidden relative">
                       <Image
-                        src={item.product.image_url || '/logo_oscuro.jpeg'}
+                        src={item.product.image_url || '/logo_claro.png'}
                         alt={item.product.name}
                         fill
                         sizes="64px"

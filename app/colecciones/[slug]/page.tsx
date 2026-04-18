@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
+import { SITE_URL } from '../../lib/seo-copy';
 import type { Collection, Product } from '../../lib/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -31,19 +33,40 @@ async function getCollectionProducts(slug: string): Promise<{ data: Product[]; t
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const collection = await getCollection(slug);
-  if (!collection) return { title: 'Coleccion no encontrada' };
+  if (!collection) return { title: 'Colección no encontrada | AMBER Joyas' };
+
+  const url = `${SITE_URL}/colecciones/${slug}`;
+  const title = `${collection.name} | AMBER Joyas`;
+  const description =
+    collection.description ||
+    `Descubre la colección ${collection.name} en plata fina 925. Diseños únicos con significado, envío a todo Chile.`;
+
   return {
-    title: `${collection.name} | AMBER Joyas`,
-    description: collection.description || `Explora nuestra coleccion ${collection.name}`,
+    title,
+    description,
+    alternates: { canonical: url },
     openGraph: {
       title: `${collection.name} | AMBER`,
-      description: collection.description,
-      url: `/colecciones/${slug}`,
+      description,
+      url,
+      siteName: 'AMBER Joyería',
+      type: 'website',
+      locale: 'es_CL',
+      images: collection.image_url ? [{ url: collection.image_url, alt: collection.name }] : undefined,
     },
-    alternates: { canonical: `/colecciones/${slug}` },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: collection.image_url ? [collection.image_url] : undefined,
+    },
   };
 }
 
@@ -74,9 +97,59 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
   const { data: products, total } = productsResult;
   const hasChildren = collection.children && collection.children.length > 0;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Colecciones', item: `${SITE_URL}/colecciones` },
+      ...(collection.parent
+        ? [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: collection.parent.name,
+              item: `${SITE_URL}/colecciones/${collection.parent.slug}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: collection.name,
+              item: `${SITE_URL}/colecciones/${slug}`,
+            },
+          ]
+        : [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: collection.name,
+              item: `${SITE_URL}/colecciones/${slug}`,
+            },
+          ]),
+    ],
+  };
+
+  const collectionPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: collection.name,
+    description: collection.description ?? undefined,
+    url: `${SITE_URL}/colecciones/${slug}`,
+    numberOfItems: total,
+  };
+
   return (
     <div className="min-h-screen bg-pearl-50">
       <Header />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageJsonLd) }}
+      />
 
       {/* Hero */}
       <section className="relative h-[40vh] overflow-hidden">

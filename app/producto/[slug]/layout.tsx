@@ -29,9 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const name = product.display_name || product.name;
   const description = product.description
-    || `${name} - Joyeria con garantia 12 meses. Envio gratuito sobre $30.000.`;
+    || `${name} - Joyeria con cambios sin costo. Envio gratuito sobre $50.000.`;
   const priceText = product.price ? ` $${Math.round(Number(product.price)).toLocaleString('es-CL')}` : '';
-  const imageUrl = product.image_url || '/logo_oscuro.jpeg';
+  const imageUrl = product.image_url || '/logo_claro.png';
   const productSlug = product.slug || slug;
 
   return {
@@ -179,7 +179,7 @@ export default async function ProductoLayout({ params, children }: Props) {
         name: `¿Cuales son los detalles del producto ${name}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `${name} es una pieza de joyeria premium de AMBER${product?.material ? `, fabricada en ${product.material}` : ''}. Incluye garantia de 12 meses y empaque premium de regalo.`,
+          text: `${name} es una pieza de joyeria premium de AMBER${product?.material ? `, fabricada en ${product.material}` : ''}. Incluye cambios sin costo y empaque premium de regalo.`,
         },
       },
       {
@@ -195,7 +195,7 @@ export default async function ProductoLayout({ params, children }: Props) {
         name: '¿Cual es la politica de envio y devoluciones de AMBER?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Envio gratis en compras sobre $30.000 CLP. Despacho en 1-3 dias habiles a todo Chile. 30 dias para cambios y devoluciones.',
+          text: 'Envio gratis en compras sobre $50.000 CLP. Despacho en 1-3 dias habiles a todo Chile. 30 dias para cambios y devoluciones.',
         },
       },
     ],

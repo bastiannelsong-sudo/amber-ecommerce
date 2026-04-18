@@ -73,7 +73,7 @@ export default function PreguntasFrecuentesPage() {
       questions: [
         {
           q: '¿Cuanto cuesta el envio?',
-          a: 'El envio es gratuito en compras sobre $30.000. Para montos menores, el costo varia segun el courier: $3.490 por Chilexpress y $2.490 por Correos de Chile.',
+          a: 'El envio es gratuito en compras sobre $50.000. Para montos menores, el costo varia segun el courier: $3.490 por Chilexpress y $2.490 por Correos de Chile.',
         },
         {
           q: '¿Cuanto demora en llegar?',
@@ -94,7 +94,7 @@ export default function PreguntasFrecuentesPage() {
       questions: [
         {
           q: '¿Tienen garantia?',
-          a: 'Si, todas nuestras joyas tienen garantia de 12 meses contra defectos de fabricacion. Consulta nuestra pagina de garantia para mas detalles.',
+          a: 'Si, todas nuestras joyas tienen politica de cambios y devoluciones sin costo. Consulta nuestra pagina de devoluciones para mas detalles.',
         },
         {
           q: '¿Puedo devolver una joya?',

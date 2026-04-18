@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from './components/Header';
 import FeaturedProducts from './components/FeaturedProducts';
+import TestimonialCarousel from './components/TestimonialCarousel';
 import Footer from './components/Footer';
 
 export default function Home() {
@@ -22,6 +23,13 @@ export default function Home() {
         />
         <div className="absolute inset-0 z-20 flex items-center justify-center">
           <div className="text-center text-white space-y-8 px-4 max-w-4xl">
+            {/* Badge de novedad */}
+            <div className="animate-fade-in">
+              <span className="inline-block px-4 py-1.5 border border-amber-gold-400/40 text-amber-gold-300 text-[10px] uppercase tracking-[0.25em] font-medium mb-4">
+                Nueva Coleccion Disponible
+              </span>
+            </div>
+
             <div className="animate-fade-in">
               <p className="text-xs lg:text-sm uppercase tracking-[0.3em] text-amber-gold-400 mb-6 font-medium">
                 Plata 925 &middot; Amuletos &middot; Tendencia
@@ -42,19 +50,14 @@ export default function Home() {
                 href="/catalogo"
                 className="px-12 py-4 bg-white text-obsidian-900 text-xs uppercase tracking-[0.2em] font-medium hover:bg-amber-gold-500 hover:text-white transition-all duration-300 cursor-pointer"
               >
-                Ver Catalogo
+                Explorar la Coleccion
               </Link>
-              <a
-                href="https://wa.me/56932897499?text=Hola!%20Me%20comunico%20desde%20la%20web%20de%20AMBER%20Joyas."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-12 py-4 bg-[#25D366] text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-[#20BD5A] transition-all duration-300 cursor-pointer flex items-center gap-2"
+              <Link
+                href="/amuletos/proteccion"
+                className="px-12 py-4 border border-white/30 text-white text-xs uppercase tracking-[0.2em] font-medium hover:bg-white/10 transition-all duration-300 cursor-pointer"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                Escribenos
-              </a>
+                Descubrir Amuletos
+              </Link>
             </div>
           </div>
         </div>
@@ -72,21 +75,21 @@ export default function Home() {
             {[
               {
                 icon: (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
+                  <span className="text-amber-gold-400 text-sm font-bold tracking-tight" style={{ fontFamily: 'var(--font-cormorant)' }}>
+                    925
+                  </span>
                 ),
-                title: 'Plata 925 Certificada',
-                subtitle: 'Materiales garantizados',
+                title: 'Plata 925',
+                subtitle: 'Materiales de calidad',
               },
               {
                 icon: (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                   </svg>
                 ),
-                title: '+1.400 Seguidores',
-                subtitle: 'Confian en nosotros',
+                title: '+2.000 Joyas Entregadas',
+                subtitle: 'Clientas satisfechas en todo Chile',
               },
               {
                 icon: (
@@ -95,20 +98,20 @@ export default function Home() {
                   </svg>
                 ),
                 title: 'Envio Gratuito',
-                subtitle: 'En compras sobre $30.000',
+                subtitle: 'En compras sobre $50.000 en Chile',
               },
               {
                 icon: (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                   </svg>
                 ),
-                title: 'Garantia 12 Meses',
-                subtitle: 'Compromiso de calidad',
+                title: 'Cambios sin Costo',
+                subtitle: 'Devoluciones faciles y rapidas',
               },
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-4 text-white">
-                <div className="text-amber-gold-400 flex-shrink-0">
+                <div className="text-amber-gold-400 flex-shrink-0 w-8 h-8 flex items-center justify-center border border-amber-gold-500/30 rounded-full">
                   {item.icon}
                 </div>
                 <div>
@@ -136,48 +139,67 @@ export default function Home() {
           <div className="separator-luxury w-32 mx-auto mt-6"></div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
           {[
             {
               name: 'Pulseras',
-              image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=700&fit=crop',
+              href: '/catalogo?category=pulseras',
+              image: '/images/home/pulsera_home.jpg',
             },
             {
               name: 'Aros',
-              image: 'https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=600&h=700&fit=crop',
+              href: '/catalogo?category=aros',
+              image: '/images/home/aros_home.jpg',
             },
             {
               name: 'Anillos',
-              image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=700&fit=crop',
+              href: '/catalogo?category=anillos',
+              image: '/images/anillo_home.jpg',
             },
             {
-              name: 'Cadenas',
-              image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=700&fit=crop',
+              name: 'Collares',
+              href: '/catalogo?category=collares',
+              image: '/images/home/cadenas_home.webp',
+            },
+            {
+              name: 'Amuletos',
+              href: '/catalogo?category=amuletos',
+              image: '/images/home/amuleto_home3.jpg',
+              highlight: true,
             },
           ].map((category, index) => (
             <Link
               key={category.name}
-              href="/catalogo"
-              className="group relative aspect-[3/4] overflow-hidden cursor-pointer animate-fade-in"
+              href={category.href}
+              className={`group relative overflow-hidden cursor-pointer animate-fade-in ${
+                category.highlight
+                  ? 'aspect-[3/4] col-span-2 lg:col-span-1'
+                  : 'aspect-[3/4]'
+              }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <Image
                 src={category.image}
                 alt={category.name}
                 fill
-                sizes="(max-width: 768px) 50vw, 25vw"
+                sizes="(max-width: 768px) 50vw, 20vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-obsidian-950/70 via-obsidian-900/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              {category.highlight && (
+                <div className="absolute top-3 right-3 bg-amber-gold-500 text-obsidian-900 px-2 py-1 text-[9px] uppercase tracking-wider font-bold">
+                  Destacado
+                </div>
+              )}
+              <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-6 text-white">
                 <h3
-                  className="text-2xl lg:text-3xl font-light mb-1"
+                  className="text-xl lg:text-2xl font-light mb-1"
                   style={{ fontFamily: 'var(--font-cormorant)' }}
                 >
                   {category.name}
                 </h3>
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-xs uppercase tracking-wider text-pearl-300">
+                  <span className="text-[10px] uppercase tracking-wider text-pearl-300">
                     Ver productos
                   </span>
                   <svg className="w-3 h-3 text-pearl-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,45 +273,89 @@ export default function Home() {
                 fina 925 que te acompanan en tu dia a dia. No vendemos accesorios,
                 creamos conexiones con significado.
               </p>
-              <a
-                href="https://wa.me/56932897499?text=Hola!%20Quiero%20saber%20mas%20sobre%20AMBER%20Joyas."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-amber-gold-400 hover:text-amber-gold-300 transition-colors font-medium group cursor-pointer"
+              <Link
+                href="/sobre-nosotros"
+                className="inline-flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-amber-gold-400 hover:text-amber-gold-300 transition-colors font-medium group"
               >
-                <span>Escribenos por WhatsApp</span>
+                <span>Descubre por que creamos AMBER</span>
                 <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="bg-pearl-100 py-20 lg:py-24">
+      {/* Testimonials Carousel */}
+      <TestimonialCarousel />
+
+      {/* Trust & Confidence Strip - antes del footer */}
+      <section className="bg-white py-16 lg:py-20">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <svg className="w-10 h-10 text-amber-gold-400 mx-auto mb-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z" />
-            </svg>
-            <blockquote
-              className="text-2xl lg:text-3xl font-light text-obsidian-900 leading-relaxed mb-8"
+          <div className="text-center mb-12">
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-gold-500 mb-4 font-medium">
+              Compra con confianza
+            </p>
+            <h2
+              className="text-3xl lg:text-4xl font-light text-obsidian-900"
               style={{ fontFamily: 'var(--font-cormorant)' }}
             >
-              &ldquo;Compre el collar Metatron como amuleto de proteccion y la calidad
-              es increible. Plata 925 real, llego rapido y el packaging fue hermoso.
-              Ya llevo 3 compras y siempre todo perfecto.&rdquo;
-            </blockquote>
-            <div>
-              <p className="text-sm font-medium text-obsidian-900 uppercase tracking-wider">
-                Catalina R.
-              </p>
-              <p className="text-xs text-platinum-600 mt-1">
-                Clienta verificada &middot; Compra en Mercado Libre
-              </p>
-            </div>
+              Tu Tranquilidad es Nuestra Prioridad
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                ),
+                title: 'Pago 100% Seguro',
+                description: 'Tus datos protegidos con encriptacion SSL de ultima generacion',
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                ),
+                title: 'Cambios y Devoluciones',
+                description: 'Si no es lo que esperabas, hazlo sin complicaciones y sin costo',
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                  </svg>
+                ),
+                title: 'Envio Rapido',
+                description: 'Despacho en 1-3 dias habiles a todo Chile continental',
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+                  </svg>
+                ),
+                title: 'Atencion Personalizada',
+                description: 'Resolvemos tus dudas por WhatsApp en minutos',
+              },
+            ].map((item, index) => (
+              <div key={index} className="text-center group">
+                <div className="w-16 h-16 mx-auto mb-5 flex items-center justify-center text-amber-gold-500 border border-pearl-200 group-hover:border-amber-gold-400 group-hover:shadow-gold transition-all duration-300 rounded-full">
+                  {item.icon}
+                </div>
+                <h3 className="text-sm font-medium text-obsidian-900 uppercase tracking-wider mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-platinum-600 leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

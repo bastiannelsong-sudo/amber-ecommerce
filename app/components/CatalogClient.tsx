@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import FilterSidebar, { type ActiveFilters, emptyFilters } from './FilterSidebar';
 import ProductCard from './ProductCard';
@@ -9,7 +9,7 @@ import type { Product, Collection } from '../lib/types';
 type ViewMode = 'grid-3' | 'grid-4' | 'list';
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
 
-const PRODUCTS_PER_PAGE = 24;
+const PRODUCTS_PER_BATCH = 24;
 
 interface CatalogClientProps {
   products: Product[];
@@ -28,7 +28,7 @@ function parseFiltersFromParams(params: URLSearchParams): ActiveFilters {
 }
 
 /** Serialize filters to URL search params */
-function filtersToParams(filters: ActiveFilters, sort: SortOption, page: number): URLSearchParams {
+function filtersToParams(filters: ActiveFilters, sort: SortOption): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.collections.length) params.set('col', filters.collections.join(','));
   if (filters.materials.length) params.set('mat', filters.materials.join(','));
@@ -36,7 +36,6 @@ function filtersToParams(filters: ActiveFilters, sort: SortOption, page: number)
   if (filters.priceMin > 0) params.set('pmin', String(filters.priceMin));
   if (filters.priceMax > 0) params.set('pmax', String(filters.priceMax));
   if (sort !== 'newest') params.set('sort', sort);
-  if (page > 1) params.set('page', String(page));
   return params;
 }
 
@@ -58,16 +57,19 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
   const [sortOption, setSortOption] = useState<SortOption>(
     () => (searchParams.get('sort') as SortOption) || 'newest'
   );
-  const [currentPage, setCurrentPage] = useState(
-    () => Number(searchParams.get('page')) || 1
-  );
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_BATCH);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid-3');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const cooldownRef = useRef(false);
+  // Rastrear desde qué índice animar los productos nuevos
+  const animateFromRef = useRef(0);
 
   // Sync state to URL (without full page reload)
   const syncURL = useCallback(
-    (f: ActiveFilters, s: SortOption, p: number) => {
-      const params = filtersToParams(f, s, p);
+    (f: ActiveFilters, s: SortOption) => {
+      const params = filtersToParams(f, s);
       const qs = params.toString();
       const url = qs ? `${pathname}?${qs}` : pathname;
       router.replace(url, { scroll: false });
@@ -78,8 +80,9 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
   const handleFiltersChange = useCallback(
     (newFilters: ActiveFilters) => {
       setFilters(newFilters);
-      setCurrentPage(1); // Reset page on filter change
-      syncURL(newFilters, sortOption, 1);
+      setVisibleCount(PRODUCTS_PER_BATCH);
+      animateFromRef.current = 0;
+      syncURL(newFilters, sortOption);
     },
     [sortOption, syncURL]
   );
@@ -87,20 +90,44 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
   const handleSortChange = useCallback(
     (newSort: SortOption) => {
       setSortOption(newSort);
-      setCurrentPage(1);
-      syncURL(filters, newSort, 1);
+      setVisibleCount(PRODUCTS_PER_BATCH);
+      animateFromRef.current = 0;
+      syncURL(filters, newSort);
     },
     [filters, syncURL]
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      syncURL(filters, sortOption, page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    [filters, sortOption, syncURL]
-  );
+  const loadMore = useCallback(() => {
+    if (cooldownRef.current) return;
+    cooldownRef.current = true;
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((prev) => {
+        animateFromRef.current = prev;
+        return prev + PRODUCTS_PER_BATCH;
+      });
+      setIsLoadingMore(false);
+      cooldownRef.current = false;
+    }, 300);
+  }, []);
+
+  // IntersectionObserver: carga automática al acercarse al final
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !cooldownRef.current) {
+          loadMore();
+        }
+      },
+      { rootMargin: '400px' } // Empieza a cargar 400px antes de llegar al final
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   // Apply filters + sorting
   const filteredAndSorted = useMemo(() => {
@@ -146,30 +173,18 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
     });
   }, [products, filters, sortOption]);
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / PRODUCTS_PER_PAGE));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedProducts = filteredAndSorted.slice(
-    (safePage - 1) * PRODUCTS_PER_PAGE,
-    safePage * PRODUCTS_PER_PAGE
-  );
+  // Load more slicing
+  const visibleProducts = filteredAndSorted.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredAndSorted.length;
+  const progressPercent = filteredAndSorted.length > 0
+    ? Math.min(100, (visibleCount / filteredAndSorted.length) * 100)
+    : 100;
 
   const activeFilterCount =
     filters.collections.length +
     filters.materials.length +
     filters.styles.length +
     (filters.priceMin > 0 || filters.priceMax > 0 ? 1 : 0);
-
-  // Generate page numbers to display
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, safePage - Math.floor(maxVisible / 2));
-    const end = Math.min(totalPages, start + maxVisible - 1);
-    start = Math.max(1, end - maxVisible + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
-  }, [safePage, totalPages]);
 
   const gridClass = {
     'grid-3': 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3',
@@ -356,7 +371,7 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
 
         {/* Products Grid */}
         <div className="flex-1">
-          {paginatedProducts.length === 0 ? (
+          {visibleProducts.length === 0 ? (
             <div className="text-center py-20">
               <svg className="w-16 h-16 text-platinum-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -376,47 +391,77 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
             </div>
           ) : (
             <div className={`grid ${gridClass} gap-3 gap-y-6 sm:gap-6 sm:gap-y-10 lg:gap-8`}>
-              {paginatedProducts.map((product) => (
-                <ProductCard key={product.product_id} product={product} />
-              ))}
+              {visibleProducts.map((product, index) => {
+                const isNew = index >= animateFromRef.current;
+                // Stagger: 50ms por item dentro del batch, máximo 600ms
+                const staggerDelay = isNew
+                  ? Math.min((index - animateFromRef.current) * 50, 600)
+                  : 0;
+
+                return (
+                  <div
+                    key={product.product_id}
+                    className={isNew ? 'catalog-item-enter' : undefined}
+                    style={isNew ? { animationDelay: `${staggerDelay}ms` } as React.CSSProperties : undefined}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between mt-10 sm:mt-16 gap-4 sm:gap-6">
-              <div className="text-sm text-platinum-600">
-                Mostrando {(safePage - 1) * PRODUCTS_PER_PAGE + 1}-{Math.min(safePage * PRODUCTS_PER_PAGE, filteredAndSorted.length)} de {filteredAndSorted.length} productos
+          {/* Infinite Scroll Sentinel + Loading indicator */}
+          {hasMore && visibleProducts.length > 0 && (
+            <div className="mt-12 sm:mt-16">
+              {/* Barra de progreso */}
+              <div className="max-w-xs mx-auto mb-4">
+                <div className="h-[2px] bg-pearl-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-gold-400 to-amber-gold-600 rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <button
-                  onClick={() => handlePageChange(safePage - 1)}
-                  disabled={safePage <= 1}
-                  className="px-3 sm:px-4 py-2 border border-pearl-300 hover:border-amber-gold-500 transition-colors text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  Anterior
-                </button>
-                {pageNumbers.map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`w-10 h-10 border transition-colors text-sm rounded cursor-pointer ${
-                      page === safePage
-                        ? 'bg-amber-gold-500 text-white border-amber-gold-500'
-                        : 'border-pearl-300 hover:border-amber-gold-500'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  onClick={() => handlePageChange(safePage + 1)}
-                  disabled={safePage >= totalPages}
-                  className="px-3 sm:px-4 py-2 border border-pearl-300 hover:border-amber-gold-500 transition-colors text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  Siguiente
-                </button>
+              <p className="text-center text-[11px] text-platinum-500 tracking-wide mb-6">
+                {Math.min(visibleCount, filteredAndSorted.length)} de {filteredAndSorted.length} productos
+              </p>
+
+              {/* Loading indicator */}
+              {isLoadingMore && (
+                <div className="flex items-center justify-center gap-2.5 py-6">
+                  <span className="catalog-dot w-1.5 h-1.5 bg-amber-gold-500/80 rounded-full" />
+                  <span className="catalog-dot w-1.5 h-1.5 bg-amber-gold-500/80 rounded-full" style={{ animationDelay: '160ms' }} />
+                  <span className="catalog-dot w-1.5 h-1.5 bg-amber-gold-500/80 rounded-full" style={{ animationDelay: '320ms' }} />
+                </div>
+              )}
+
+              {/* Sentinel invisible - IntersectionObserver lo detecta */}
+              <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+            </div>
+          )}
+
+          {/* Mensaje final cuando se muestran todos */}
+          {!hasMore && filteredAndSorted.length > PRODUCTS_PER_BATCH && (
+            <div className="mt-12 sm:mt-16 text-center">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-pearl-300 to-transparent" />
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-amber-gold-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-platinum-500 font-medium">
+                    Has visto todos los productos
+                  </span>
+                  <svg className="w-4 h-4 text-amber-gold-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-pearl-300 to-transparent" />
               </div>
+              <p className="text-sm text-platinum-600">
+                {filteredAndSorted.length} producto{filteredAndSorted.length !== 1 ? 's' : ''} en total
+              </p>
             </div>
           )}
         </div>
