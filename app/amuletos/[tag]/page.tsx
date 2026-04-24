@@ -105,7 +105,9 @@ export default async function AmuletoTagPage({ params }: PageProps) {
             /
           </li>
           <li>
-            <span className="text-obsidian-500">Amuletos</span>
+            <Link href="/amuletos" className="hover:text-amber-gold-600 transition-colors">
+              Amuletos
+            </Link>
           </li>
           <li aria-hidden className="text-obsidian-300">
             /

@@ -2,60 +2,34 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types';
 
-// TODO: Implementar encriptación de tokens antes de almacenarlos en localStorage.
-// Los tokens se almacenan actualmente en texto plano, lo cual es vulnerable a XSS.
-// Considerar: 1) Usar httpOnly cookies desde el backend, o
-//             2) Encriptar con Web Crypto API antes de persistir.
+/**
+ * Store de auth del cliente — SOLO maneja la representación del usuario.
+ *
+ * Los tokens JWT (access_token / refresh_token) viven en una cookie httpOnly
+ * firmada (`amber_session`) seteada por los Route Handlers de /api/auth/*.
+ * El JS del browser NO puede leerlos (mitiga XSS).
+ *
+ * Para saber si la sesión sigue válida, el cliente consulta GET /api/auth/me;
+ * si devuelve 401, el store se limpia.
+ */
 
 interface AuthStore {
   user: User | null;
-  token: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
 
-  // Actions
-  login: (user: User, accessToken: string, refreshToken: string) => void;
-  logout: () => void;
+  setUser: (user: User | null) => void;
   updateUser: (user: Partial<User>) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  clear: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
-      refreshToken: null,
       isAuthenticated: false,
 
-      login: (user, accessToken, refreshToken) => {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('auth_token', accessToken);
-          localStorage.setItem('refresh_token', refreshToken);
-        }
-
-        set({
-          user,
-          token: accessToken,
-          refreshToken,
-          isAuthenticated: true,
-        });
-      },
-
-      logout: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('amber-auth-storage');
-          sessionStorage.clear();
-        }
-
-        set({
-          user: null,
-          token: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        });
+      setUser: (user) => {
+        set({ user, isAuthenticated: !!user });
       },
 
       updateUser: (userData) => {
@@ -64,16 +38,14 @@ export const useAuthStore = create<AuthStore>()(
         }));
       },
 
-      setTokens: (accessToken, refreshToken) => {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('auth_token', accessToken);
-          localStorage.setItem('refresh_token', refreshToken);
-        }
-        set({ token: accessToken, refreshToken });
+      clear: () => {
+        set({ user: null, isAuthenticated: false });
       },
     }),
     {
       name: 'amber-auth-storage',
-    }
-  )
+      // Solo persistir el perfil — nada sensible cruza localStorage.
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+    },
+  ),
 );

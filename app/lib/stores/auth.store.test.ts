@@ -15,55 +15,47 @@ describe('AuthStore', () => {
   beforeEach(() => {
     useAuthStore.setState({
       user: null,
-      token: null,
-      refreshToken: null,
       isAuthenticated: false,
     });
   });
 
-  describe('login', () => {
-    it('should set user and tokens on login', () => {
-      useAuthStore.getState().login(mockUser, 'access-token', 'refresh-token');
+  describe('setUser', () => {
+    it('sets user e isAuthenticated=true', () => {
+      useAuthStore.getState().setUser(mockUser);
       const state = useAuthStore.getState();
       expect(state.user).toEqual(mockUser);
-      expect(state.token).toBe('access-token');
-      expect(state.refreshToken).toBe('refresh-token');
       expect(state.isAuthenticated).toBe(true);
     });
-  });
 
-  describe('logout', () => {
-    it('should clear user and tokens on logout', () => {
-      useAuthStore.getState().login(mockUser, 'access-token', 'refresh-token');
-      useAuthStore.getState().logout();
+    it('setUser(null) deja isAuthenticated=false', () => {
+      useAuthStore.getState().setUser(mockUser);
+      useAuthStore.getState().setUser(null);
       const state = useAuthStore.getState();
       expect(state.user).toBeNull();
-      expect(state.token).toBeNull();
-      expect(state.refreshToken).toBeNull();
       expect(state.isAuthenticated).toBe(false);
     });
   });
 
-  describe('setTokens', () => {
-    it('should update tokens', () => {
-      useAuthStore.getState().login(mockUser, 'old-access', 'old-refresh');
-      useAuthStore.getState().setTokens('new-access', 'new-refresh');
+  describe('clear', () => {
+    it('limpia user y isAuthenticated', () => {
+      useAuthStore.getState().setUser(mockUser);
+      useAuthStore.getState().clear();
       const state = useAuthStore.getState();
-      expect(state.token).toBe('new-access');
-      expect(state.refreshToken).toBe('new-refresh');
+      expect(state.user).toBeNull();
+      expect(state.isAuthenticated).toBe(false);
     });
   });
 
   describe('updateUser', () => {
-    it('should partially update user data', () => {
-      useAuthStore.getState().login(mockUser, 'token', 'refresh');
+    it('hace merge parcial del user', () => {
+      useAuthStore.getState().setUser(mockUser);
       useAuthStore.getState().updateUser({ first_name: 'Updated' });
       const state = useAuthStore.getState();
       expect(state.user?.first_name).toBe('Updated');
       expect(state.user?.last_name).toBe('User');
     });
 
-    it('should not update if user is null', () => {
+    it('no hace nada si user es null', () => {
       useAuthStore.getState().updateUser({ first_name: 'Updated' });
       expect(useAuthStore.getState().user).toBeNull();
     });

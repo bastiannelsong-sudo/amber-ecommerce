@@ -7,7 +7,7 @@ export const collectionsService = {
    */
   async getTree(): Promise<Collection[]> {
     try {
-      const response = await apiClient.get('/collections/tree');
+      const response = await apiClient.get<Collection[]>('/collections/tree');
       return response.data;
     } catch {
       return [];
@@ -19,7 +19,7 @@ export const collectionsService = {
    */
   async getAll(): Promise<Collection[]> {
     try {
-      const response = await apiClient.get('/collections');
+      const response = await apiClient.get<Collection[]>('/collections');
       return response.data;
     } catch {
       return [];
@@ -31,7 +31,7 @@ export const collectionsService = {
    */
   async getBySlug(slug: string): Promise<Collection | null> {
     try {
-      const response = await apiClient.get(`/collections/${slug}`);
+      const response = await apiClient.get<Collection>(`/collections/${slug}`);
       return response.data;
     } catch {
       return null;
@@ -48,9 +48,10 @@ export const collectionsService = {
     sort: 'bestseller' | 'newest' | 'price_asc' | 'price_desc' | 'name' = 'bestseller',
   ): Promise<PaginatedResponse<Product>> {
     try {
-      const response = await apiClient.get(`/collections/${slug}/products`, {
-        params: { page, limit, sort },
-      });
+      const response = await apiClient.get<PaginatedResponse<Product>>(
+        `/collections/${slug}/products`,
+        { params: { page, limit, sort } },
+      );
       return response.data;
     } catch {
       return { data: [], total: 0, page: 1, limit: 20 };

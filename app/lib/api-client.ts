@@ -1,110 +1,105 @@
-import axios from 'axios';
+/**
+ * Cliente HTTP del browser — apunta SIEMPRE al propio Next.js (/api/*).
+ *
+ * Implementado con `fetch` nativo (sin axios) para reducir el bundle del
+ * cliente ~30KB. La forma pública replica la de axios (`{data}`, errores
+ * con `.response?.data?.message`) para no forzar refactor en los callers.
+ *
+ * Razones:
+ *   1. El backend NestJS vive en subnet privada AWS (ver CLAUDE.md y
+ *      backlog/arquitectura/ARCH-001-aws-private-network.md). El browser NO
+ *      puede llegar a él; solo el server de Next.js puede.
+ *   2. La autenticación va por cookie httpOnly firmada, no por Bearer del
+ *      cliente. El browser no lee ni setea tokens directamente.
+ *
+ * Cada Route Handler (`app/api/*`) actúa como BFF: recibe esta request,
+ * inyecta el access_token desde la cookie y reenvía al backend interno.
+ */
 
-// Validación de variable de entorno para URL del API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const BASE = '/api';
 
-if (!process.env.NEXT_PUBLIC_API_URL && process.env.NODE_ENV === 'production') {
-  throw new Error('NEXT_PUBLIC_API_URL environment variable is required in production');
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly data: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+
+  // Shape compatible con axios: error.response.data.message
+  get response() {
+    return { status: this.status, data: this.data };
+  }
 }
 
-export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
-});
+interface RequestConfig {
+  params?: Record<string, string | number | boolean | undefined>;
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
 
-// Request interceptor — agregar Bearer token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+}
 
-// Response interceptor — refresh automático en 401
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (token: string) => void; reject: (error: unknown) => void }> = [];
-
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
-    }
-  });
-  failedQueue = [];
+const buildUrl = (path: string, params?: RequestConfig['params']): string => {
+  const url = `${BASE}${path.startsWith('/') ? path : `/${path}`}`;
+  if (!params) return url;
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === null) continue;
+    qs.set(k, String(v));
+  }
+  const s = qs.toString();
+  return s ? `${url}?${s}` : url;
 };
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+const request = async <T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  config?: RequestConfig,
+): Promise<ApiResponse<T>> => {
+  const hasBody = body !== undefined && !['GET', 'HEAD'].includes(method);
+  const res = await fetch(buildUrl(path, config?.params), {
+    method,
+    credentials: 'include',
+    signal: config?.signal,
+    headers: {
+      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+      ...(config?.headers ?? {}),
+    },
+    body: hasBody ? JSON.stringify(body) : undefined,
+  });
 
-    // Si es 401 y no es el endpoint de refresh, intentar refresh
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url?.includes('/ecommerce-auth/refresh') &&
-      !originalRequest.url?.includes('/ecommerce-auth/login')
-    ) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
-        });
-      }
+  const contentType = res.headers.get('content-type') ?? '';
+  const data: unknown = contentType.includes('application/json')
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => null);
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
-
-      if (!refreshToken) {
-        isRefreshing = false;
-        clearAuth();
-        return Promise.reject(error);
-      }
-
-      try {
-        const { data } = await axios.post(`${API_BASE_URL}/ecommerce-auth/refresh`, {
-          refresh_token: refreshToken,
-        });
-
-        localStorage.setItem('auth_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-
-        processQueue(null, data.access_token);
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
-
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        clearAuth();
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    return Promise.reject(error);
+  if (!res.ok) {
+    const message =
+      (data && typeof data === 'object' && 'message' in data
+        ? String((data as { message: unknown }).message)
+        : null) ?? `HTTP ${res.status}`;
+    throw new ApiError(message, res.status, data);
   }
-);
 
-function clearAuth() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    // Limpiar zustand store y sesión
-    localStorage.removeItem('amber-auth-storage');
-    sessionStorage.clear();
-  }
-}
+  return { data: data as T, status: res.status };
+};
+
+export const apiClient = {
+  get: <T = unknown>(path: string, config?: RequestConfig) =>
+    request<T>('GET', path, undefined, config),
+  post: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) =>
+    request<T>('POST', path, body, config),
+  put: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) =>
+    request<T>('PUT', path, body, config),
+  patch: <T = unknown>(path: string, body?: unknown, config?: RequestConfig) =>
+    request<T>('PATCH', path, body, config),
+  delete: <T = unknown>(path: string, config?: RequestConfig) =>
+    request<T>('DELETE', path, undefined, config),
+};

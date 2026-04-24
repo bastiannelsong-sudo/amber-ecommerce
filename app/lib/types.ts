@@ -135,10 +135,13 @@ export interface Address {
   country: string;
 }
 
+/**
+ * Respuesta de auth hacia el cliente.
+ * access_token / refresh_token NO vienen aquí — viven en cookie httpOnly
+ * seteada por los Route Handlers /api/auth/*.
+ */
 export interface AuthResponse {
   customer: User;
-  access_token: string;
-  refresh_token: string;
   is_new_account?: boolean;
   was_linked?: boolean;
 }

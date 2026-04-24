@@ -238,11 +238,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/gift-card" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
-                  Gift Card
-                </Link>
-              </li>
-              <li>
                 <Link href="/contacto" className="text-pearl-300 hover:text-amber-gold-400 transition-colors">
                   Contacto
                 </Link>

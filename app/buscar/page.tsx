@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 import SearchResultsClient from '../components/SearchResultsClient';
 import type { Product, SearchResponse } from '../lib/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 
 type Props = {
   searchParams: Promise<{ q?: string; page?: string; sort?: string; material?: string; style?: string; collection?: string }>;

@@ -10,7 +10,7 @@ import { SITE_URL } from '../lib/seo-copy';
 import { dummyProducts } from '../lib/data/dummy-products';
 import type { Product, Collection } from '../lib/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 const CATALOG_URL = `${SITE_URL}/catalogo`;
 
 type SortMap = Record<string, CatalogFilters['sort']>;
@@ -33,11 +33,22 @@ function paramsToBackendFilters(sp: Record<string, string | string[] | undefined
     return raw?.split(',').filter(Boolean)[0];
   };
 
+  // Parsea una o varias tags: acepta ?tag=X, ?tag=X,Y o ?tags=X,Y.
+  const parseTags = (): string[] | undefined => {
+    const raw = sp.tag ?? sp.tags;
+    if (!raw) return undefined;
+    const arr = Array.isArray(raw) ? raw : [raw];
+    const out = arr.flatMap((v) => v.split(',')).map((s) => s.trim()).filter(Boolean);
+    return out.length ? out : undefined;
+  };
+
   const filters: CatalogFilters = { limit: 500, sort: 'featured' };
   const material = first(sp.mat);
   if (material) filters.material = material;
   const collection = first(sp.col);
   if (collection) filters.collection = collection;
+  const tags = parseTags();
+  if (tags) filters.tags = tags;
   const pmin = Number(first(sp.pmin));
   if (isFinite(pmin) && pmin > 0) filters.min_price = pmin;
   const pmax = Number(first(sp.pmax));

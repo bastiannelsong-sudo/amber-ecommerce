@@ -4,11 +4,21 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useAuthStore } from '../lib/stores/auth.store';
+import { authService } from '../lib/services/auth.service';
 
 export default function PerfilPage() {
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
-  const logout = useAuthStore((state) => state.logout);
+  const clearAuth = useAuthStore((state) => state.clear);
+
+  // Logout = llama al Route Handler (que borra la cookie) + limpia el store local.
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      clearAuth();
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
   const [isEditing, setIsEditing] = useState(false);

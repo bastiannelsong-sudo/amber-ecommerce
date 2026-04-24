@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchModal from './SearchModal';
+import AuthButton from './AuthButton';
 import { useCartStore } from '../lib/stores/cart.store';
 import { buildWhatsAppUrl } from '../lib/whatsapp';
 
@@ -41,9 +42,17 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [promoIndex, setPromoIndex] = useState(0);
+  // Evitar hydration mismatch: el carrito vive en localStorage (zustand/persist),
+  // el server renderiza con 0 items y el cliente puede tener N > 0 tras rehidratar.
+  // Mostramos el badge solo después del primer efecto en cliente.
+  const [hasMounted, setHasMounted] = useState(false);
   const catalogTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const openCart = useCartStore((state) => state.openCart);
   const itemCount = useCartStore((state) => state.getItemCount());
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -284,6 +293,9 @@ export default function Header() {
               </svg>
             </button>
 
+            {/* Cuenta — login o menú de usuario */}
+            <AuthButton />
+
             {/* Carrito */}
             <button
               onClick={openCart}
@@ -293,7 +305,7 @@ export default function Header() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              {itemCount > 0 && (
+              {hasMounted && itemCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-amber-gold-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>

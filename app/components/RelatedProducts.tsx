@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import type { Product } from '../lib/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
 interface RelatedProductsProps {
   currentProductId: number;
   categoryId?: number;
@@ -23,16 +21,16 @@ export default function RelatedProducts({
   useEffect(() => {
     const fetchRelated = async () => {
       try {
-        let url = `${API_URL}/products/ecommerce?limit=8`;
-        if (material) url += `&material=${encodeURIComponent(material)}`;
+        // BFF same-origin: Next.js reenvía al backend privado.
+        const params = new URLSearchParams({ limit: '8', sort: 'featured' });
+        if (material) params.set('material', material);
 
-        const res = await fetch(url);
+        const res = await fetch(`/api/products/catalog?${params.toString()}`);
         if (!res.ok) throw new Error('Error fetching');
 
         const data = await res.json();
         const allProducts: Product[] = data.data || data || [];
 
-        // Filtrar el producto actual y tomar 4
         const related = allProducts
           .filter((p) => p.product_id !== currentProductId)
           .slice(0, 4);

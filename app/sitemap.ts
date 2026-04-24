@@ -42,18 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.5,
     },
-    {
-      url: `${SITE_URL}/gift-card`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
   ];
 
   // Fetch real products for slug-based URLs; fall back to dummy data
   let products = dummyProducts;
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/products/ecommerce?limit=500`, {
+    const res = await fetch(`${process.env.INTERNAL_API_URL || 'http://localhost:3000'}/products/ecommerce?limit=500`, {
       next: { revalidate: 3600 },
     });
     if (res.ok) {

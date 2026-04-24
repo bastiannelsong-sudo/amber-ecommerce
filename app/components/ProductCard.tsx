@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import ScarcityIndicator from './marketing/ScarcityIndicator';
 import { useCartStore } from '../lib/stores/cart.store';
 import type { Product } from '../lib/types';
@@ -89,16 +90,25 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Quick Add to Cart button - shows on hover */}
+        {/* Quick Add to Cart button - desktop-only, shows on hover.
+            Hidden on mobile because there's no hover and tapping an invisible
+            button feels broken (ghost-tap). Mobile users tap the card to open
+            the product page and add from there. */}
         <div
-          className={`absolute bottom-0 left-0 right-0 p-4 transition-all duration-300 z-10 ${
-            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          className={`hidden md:block absolute bottom-0 left-0 right-0 p-4 transition-all duration-300 z-10 ${
+            isHovered
+              ? 'translate-y-0 opacity-100 pointer-events-auto'
+              : 'translate-y-4 opacity-0 pointer-events-none'
           }`}
         >
           <button
             onClick={(e) => {
               e.preventDefault();
-              if (stock > 0) addItem(product, 1);
+              e.stopPropagation();
+              if (stock > 0) {
+                addItem(product, 1);
+                toast.success(`${name} agregado al carrito`);
+              }
             }}
             disabled={stock === 0}
             className={`w-full flex items-center justify-center gap-2 py-3.5 text-[11px] uppercase tracking-[0.15em] font-medium transition-colors duration-300 ${
