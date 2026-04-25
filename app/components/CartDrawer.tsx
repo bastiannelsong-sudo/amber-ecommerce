@@ -88,13 +88,13 @@ export default function CartDrawer() {
                   {items.map((item) => (
                     <div key={item.product.product_id} className="flex gap-4">
                       {/* Image */}
-                      <div className="w-24 h-24 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
+                      <div className="w-24 h-24 bg-pearl-100 flex-shrink-0 rounded overflow-hidden flex items-center justify-center p-1">
                         <Image
                           src={item.product.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop'}
                           alt={item.product.name}
                           width={96}
                           height={96}
-                          className="object-cover"
+                          className="w-full h-full object-contain"
                         />
                       </div>
 
@@ -104,7 +104,7 @@ export default function CartDrawer() {
                           {item.product.name}
                         </h3>
                         <p className="text-sm text-platinum-600 mb-2">
-                          ${item.product.price?.toLocaleString('es-CL')}
+                          ${Math.round(Number(item.product.price) || 0).toLocaleString('es-CL')}
                         </p>
 
                         {/* Quantity Controls */}
