@@ -7,7 +7,7 @@ import ProductCard from '../../components/ProductCard';
 import { SITE_URL } from '../../lib/seo-copy';
 import type { Collection, Product } from '../../lib/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 
 async function getCollection(slug: string): Promise<Collection | null> {
   try {

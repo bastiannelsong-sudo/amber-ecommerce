@@ -1,7 +1,10 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from './components/Header';
-import FeaturedProducts from './components/FeaturedProducts';
+import FeaturedProducts, {
+  FeaturedProductsSkeleton,
+} from './components/FeaturedProducts';
 import TestimonialCarousel from './components/TestimonialCarousel';
 import Footer from './components/Footer';
 
@@ -143,27 +146,27 @@ export default function Home() {
           {[
             {
               name: 'Pulseras',
-              href: '/catalogo?category=pulseras',
+              href: '/pulseras',
               image: '/images/home/pulsera_home.jpg',
             },
             {
               name: 'Aros',
-              href: '/catalogo?category=aros',
+              href: '/aros',
               image: '/images/home/aros_home.jpg',
             },
             {
               name: 'Anillos',
-              href: '/catalogo?category=anillos',
+              href: '/anillos',
               image: '/images/anillo_home.jpg',
             },
             {
-              name: 'Collares',
-              href: '/catalogo?category=collares',
+              name: 'Regalos',
+              href: '/regalos',
               image: '/images/home/cadenas_home.webp',
             },
             {
               name: 'Amuletos',
-              href: '/catalogo?category=amuletos',
+              href: '/amuletos',
               image: '/images/home/amuleto_home3.jpg',
               highlight: true,
             },
@@ -236,7 +239,9 @@ export default function Home() {
             </Link>
           </div>
 
-          <FeaturedProducts />
+          <Suspense fallback={<FeaturedProductsSkeleton />}>
+            <FeaturedProducts />
+          </Suspense>
         </div>
       </section>
 

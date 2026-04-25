@@ -48,7 +48,18 @@ Servidor: http://localhost:3001
 
 ## 📦 Variables de Entorno
 
-Configura `.env.local`:
+Configura `.env.local` (ver `.env.example`):
 ```
-NEXT_PUBLIC_API_URL=http://localhost:3000
+# Backend NestJS (server-only, SIN prefijo NEXT_PUBLIC_)
+INTERNAL_API_URL=http://localhost:3000
+
+# URL pública del ecommerce (OG, canonical, sitemap)
+NEXT_PUBLIC_SITE_URL=http://localhost:3001
+
+# Session cookie firmada (mínimo 32 caracteres)
+SESSION_SECRET=dev-only-secret-change-in-production-32chars
 ```
+
+**Arquitectura**: el backend NestJS nunca es accesible desde el browser.
+Todo pasa por Route Handlers `app/api/*` que viven en el server de Next.
+Ver `CLAUDE.md` en la raíz del monorepo para las reglas completas.

@@ -228,13 +228,8 @@ export const TAG_COPY: Record<
       'Mariposas en plata 925: símbolos de transformación y renacer. Pulseras, aros y dijes delicados.',
     lead: 'Mariposas: transformación, libertad, renacer. Joyería sutil con mensaje profundo.',
   },
-  regalo: {
-    h1: 'Ideas de Regalo',
-    title: 'Regalos de Joyería en Plata 925 | AMBER',
-    description:
-      'Joyería de regalo: pulseras, collares y conjuntos en plata 925 listos para sorprender. Presentación incluida.',
-    lead: 'Una joya siempre es buen regalo. Más cuando viene con historia y plata fina.',
-  },
+  // `regalo` ya no tiene landing propia: consolidado en /regalos para evitar
+  // canibalización SEO con el hub. La ruta /amuletos/regalo redirige vía next.config.
   proteccion: {
     h1: 'Amuletos de Protección',
     title: 'Amuletos de Protección: San Benito, Hilo Rojo y Más | AMBER',

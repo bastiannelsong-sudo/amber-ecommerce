@@ -1,12 +1,13 @@
 # 01 — Infraestructura y DevOps
 
-> Prioridad: CRÍTICA | Estado actual: 0%
+> Prioridad: CRÍTICA | Estado actual: 40%
 
 ## Lo que existe hoy
 
-- Proyecto Next.js con `next build` / `next start` funcional
-- Una sola variable de entorno: `NEXT_PUBLIC_API_URL`
-- Sin CI/CD, sin config de deployment, sin Docker
+- Proyecto Next.js 16 con `next build` / `next start` funcional
+- Dockerfile multi-stage ya en repo
+- `.env.example` con variables documentadas
+- Arquitectura BFF: backend nunca expuesto al cliente (ver CLAUDE.md)
 
 ---
 
@@ -14,23 +15,32 @@
 
 ### 1.1 Variables de entorno
 
-**Estado:** Solo existe `NEXT_PUBLIC_API_URL`
+**Estado actual:** definidas en `.env.example` y `.env.local`.
 
-**Falta:**
+| Variable | Scope | Propósito |
+|----------|-------|-----------|
+| `INTERNAL_API_URL` | **server-only** | URL del backend NestJS (privado en prod, subnet VPC AWS) |
+| `NEXT_PUBLIC_SITE_URL` | public | URL pública del ecommerce (OG, canonical, sitemap) |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | public | Google OAuth client ID (es un identifier público por diseño) |
+| `SESSION_SECRET` | **server-only** | Firma HMAC de la cookie httpOnly `amber_session` (≥32 chars) |
+
+**Falta aún:**
 
 | Variable | Propósito |
 |----------|-----------|
-| `NEXT_PUBLIC_API_URL` | URL del backend (ya existe) |
-| `NEXT_PUBLIC_SITE_URL` | URL del sitio en producción (para SEO, OG tags) |
 | `NEXT_PUBLIC_GA_ID` | Google Analytics tracking ID |
 | `SENTRY_DSN` | Monitoreo de errores (server-side) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Monitoreo de errores (client-side) |
 | `MERCADOPAGO_WEBHOOK_SECRET` | Verificación de webhooks de pago |
 
 **Acción:**
-- [ ] Crear archivo `.env.example` con todas las variables documentadas
-- [ ] Configurar variables en la plataforma de deploy (Vercel/Railway)
-- [ ] Verificar que no haya secrets expuestos con `NEXT_PUBLIC_`
+- [x] Crear archivo `.env.example` con todas las variables documentadas
+- [ ] Configurar variables en la plataforma de deploy (ECS task env)
+- [x] Verificar que no haya secrets expuestos con `NEXT_PUBLIC_`
+
+**Regla crítica:** la URL del backend (`INTERNAL_API_URL`) nunca debe
+prefijarse con `NEXT_PUBLIC_` porque quedaría en el bundle del cliente.
+Ver [CLAUDE.md](../../CLAUDE.md) → sección "REGLA ARQUITECTÓNICA CRÍTICA — API Consumption".
 
 ---
 

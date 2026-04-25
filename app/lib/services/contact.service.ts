@@ -8,7 +8,10 @@ export const contactService = {
     subject: string;
     message: string;
   }): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/contact', data);
+    const response = await apiClient.post<{ success: boolean; message: string }>(
+      '/contact',
+      data,
+    );
     return response.data;
   },
 };

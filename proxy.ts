@@ -10,7 +10,9 @@ const MVP_DISABLED_ROUTES = [
   '/favoritos',
 ];
 
-export function middleware(request: NextRequest) {
+// Next 16 renombra `middleware` → `proxy`. El export function debe llamarse
+// `proxy` para que el runtime lo reconozca.
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Redirigir rutas no-MVP al catalogo

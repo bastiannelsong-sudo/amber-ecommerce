@@ -1,5 +1,17 @@
 'use client';
 
+/**
+ * Modal de búsqueda con typeahead.
+ *
+ * Es inherentemente Client Component: typeahead con debounce reactivo al
+ * input del usuario, useRouter para navegar, localStorage para historial,
+ * motion/react para animación. RSC no aplica — el fetch debe correr por
+ * keystroke en el browser.
+ *
+ * Cumple la regla arquitectónica: NO llama al backend directo, va por
+ * /api/products/suggestions (BFF) → proxyToBackend → NestJS.
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -87,9 +99,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => document.removeEventListener('keydown', handleGlobalKey);
   }, [isOpen]);
 
-  // Desktop: click outside panel to close
+  // Desktop: click outside panel to close.
+  // Solo activo en >=640px: en mobile el panel desktop queda montado pero display:none,
+  // y cualquier tap quedaria fuera de panelRef y cerraria el modal antes del click del resultado.
   useEffect(() => {
     if (!isOpen) return;
+    if (typeof window === 'undefined') return;
+
+    const mq = window.matchMedia('(min-width: 640px)');
+    if (!mq.matches) return;
+
     function handleClickOutside(e: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         onClose();
@@ -384,7 +403,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   return (
     <AnimatePresence>
       {/* ==================== DESKTOP: Panel desplegable sin overlay ==================== */}
-      <div className="hidden sm:block">
+      <div key="search-desktop" className="hidden sm:block">
         <motion.div
           ref={panelRef}
           initial={{ opacity: 0, y: -10 }}
@@ -479,6 +498,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
       {/* ==================== MOBILE: Modal fullscreen ==================== */}
       <motion.div
+        key="search-mobile"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

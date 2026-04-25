@@ -1,13 +1,14 @@
+import 'server-only';
 /**
  * Server-side catalog fetchers. Usados por las rutas SEO estáticas
  * (app/[type], app/amuletos/[tag]) desde el servidor Next.js.
  *
- * No usan axios para evitar el request interceptor de `apiClient` que
- * intenta leer `localStorage` — ese módulo asume browser.
+ * Backend NestJS es privado (subnet privada AWS). La URL NUNCA debe existir
+ * en el bundle cliente — de ahí INTERNAL_API_URL (sin prefijo NEXT_PUBLIC_).
  */
 import type { Product } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 
 export interface CatalogFilters {
   product_type?: string;

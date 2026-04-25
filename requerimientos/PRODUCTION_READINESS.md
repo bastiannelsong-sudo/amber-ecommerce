@@ -49,12 +49,18 @@
   - [ ] Checkout con auth opcional (banner "iniciar sesión" + checkbox "crear cuenta")
 
 ### 3. Variables de entorno de producción
-- [ ] `NEXT_PUBLIC_API_URL` → URL del backend en producción (actualmente `localhost:3000`)
+- [ ] `INTERNAL_API_URL` → URL interna del backend NestJS (subnet privada AWS, **sin** prefijo `NEXT_PUBLIC_`)
 - [ ] `NEXT_PUBLIC_SITE_URL` → `https://amberjoyeria.cl`
+- [ ] `SESSION_SECRET` → secreto aleatorio ≥32 chars para firma HMAC de cookies
 - [ ] `MP_ACCESS_TOKEN` → Credenciales reales de MercadoPago
 - [ ] `DB_HOST`, `DB_PORT`, `DB_PASSWORD` → Credenciales de PostgreSQL de producción
 - [ ] `REDIRECT_URI` de MercadoLibre → Verificar que apunte al dominio correcto
-- [ ] CORS en backend → Agregar `https://amberjoyeria.cl` a origins permitidos
+- [ ] CORS en backend → ya **no** es necesario exponer el backend al navegador (arquitectura BFF). Si se mantiene acceso público transitorio, agregar `https://amberjoyeria.cl`.
+
+> **Nota migración**: la variable legacy `NEXT_PUBLIC_API_URL` fue eliminada
+> cuando se adoptó el modelo BFF (ver `CLAUDE.md` → "REGLA ARQUITECTÓNICA
+> CRÍTICA — API Consumption"). Si aparece en algún docker-compose, CI o
+> pipeline antiguo, reemplazar por `INTERNAL_API_URL`.
 - [x] `JWT_SECRET` y `JWT_REFRESH_SECRET` configurados (dev, cambiar en prod)
 - [x] `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` placeholder en .env
 - [x] `SMTP_HOST/PORT/USER/PASS/FROM` configurado para AWS SES

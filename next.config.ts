@@ -20,6 +20,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // Consolidación SEO: /amuletos/regalo ya no existe como landing.
+      // Todo tráfico va al hub curado /regalos (evita canibalización de keywords).
+      {
+        source: '/amuletos/regalo',
+        destination: '/regalos',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

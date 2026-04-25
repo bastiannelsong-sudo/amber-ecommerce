@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WhatsAppFloat from './WhatsAppFloat';
 import CartDrawer from './CartDrawer';
+import AuthHydrator from './AuthHydrator';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,6 +21,7 @@ export default function ClientProviders({ children }: { children: React.ReactNod
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthHydrator />
       {children}
       <WhatsAppFloat />
       <CartDrawer />
