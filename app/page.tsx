@@ -7,10 +7,33 @@ import FeaturedProducts, {
 } from './components/FeaturedProducts';
 import TestimonialCarousel from './components/TestimonialCarousel';
 import Footer from './components/Footer';
+import { SITE_URL } from './lib/seo-copy';
+
+// JSON-LD: WebSite + SearchAction habilita el sitelinks searchbox en Google.
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'AMBER Joyas',
+  alternateName: 'AMBER Joyeria',
+  url: SITE_URL,
+  inLanguage: 'es-CL',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE_URL}/buscar?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
       <Header />
 
       {/* Hero Section */}

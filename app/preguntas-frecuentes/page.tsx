@@ -108,8 +108,29 @@ export default function PreguntasFrecuentesPage() {
     },
   ];
 
+  // JSON-LD: FAQPage — habilita rich result de FAQ expandible en Google.
+  // Google permite hasta ~10 entradas visibles; mas no daña.
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqCategories.flatMap((cat) =>
+      cat.questions.map((faq) => ({
+        '@type': 'Question',
+        name: faq.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.a,
+        },
+      })),
+    ),
+  };
+
   return (
     <div className="min-h-screen bg-pearl-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <Header />
 
       {/* Hero */}
