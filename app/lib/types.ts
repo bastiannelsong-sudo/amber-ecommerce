@@ -114,15 +114,38 @@ export interface User {
   created_at?: string;
 }
 
+/**
+ * Direccion guardada del cliente. Matchea backend CustomerAddress entity.
+ * FEAT-005: address book.
+ */
 export interface CustomerAddress {
-  id: string;
-  label: string;
+  id: number;
+  customer_id?: number;
   street: string;
-  apartment?: string;
+  apartment?: string | null;
   city: string;
   region: string;
-  postal_code?: string;
+  zip_code?: string | null;
   is_default: boolean;
+  created_at?: string;
+}
+
+export interface ChileCommune {
+  name: string;
+}
+
+export interface ChileRegion {
+  id: number;
+  short_name: string;
+  full_name: string;
+  capital: string;
+  communes: ChileCommune[];
+}
+
+export interface ChileGeoResponse {
+  regions: ChileRegion[];
+  total_regions: number;
+  total_communes: number;
 }
 
 export interface Address {

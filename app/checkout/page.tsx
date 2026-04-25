@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SavedAddressPicker from '../components/SavedAddressPicker';
 import CheckoutProgressBar from '../components/marketing/CheckoutProgressBar';
 import TrustBadges from '../components/marketing/TrustBadges';
 import { useCartStore } from '../lib/stores/cart.store';
-import type { CartItem } from '../lib/types';
+import { addressesService } from '../lib/services/addresses.service';
+import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
@@ -34,6 +36,45 @@ export default function CheckoutPage() {
     // Se debe integrar una pasarela de pago (MercadoPago/Stripe) que maneje
     // los datos sensibles de forma segura mediante tokenización.
   });
+
+  // Address book: null = usuario elige "nueva direccion" (o no hay guardadas).
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [geo, setGeo] = useState<ChileGeoResponse | null>(null);
+
+  // Carga del catalogo CL para el selector region/comuna (FEAT-005).
+  useEffect(() => {
+    addressesService.getGeo().then(setGeo).catch(() => {});
+  }, []);
+
+  const communesOfRegion = useMemo(() => {
+    if (!geo) return [];
+    const region = geo.regions.find((r) => r.short_name === formData.region);
+    return region?.communes ?? [];
+  }, [geo, formData.region]);
+
+  // Al elegir direccion guardada, poblar el form. Null -> limpiar para nueva.
+  const handleSelectSavedAddress = (addr: CustomerAddress | null) => {
+    setSelectedAddressId(addr?.id ?? null);
+    if (addr) {
+      setFormData((prev) => ({
+        ...prev,
+        address: addr.street,
+        apartment: addr.apartment ?? '',
+        city: addr.city,
+        region: addr.region,
+        postalCode: addr.zip_code ?? '',
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        address: '',
+        apartment: '',
+        city: '',
+        region: '',
+        postalCode: '',
+      }));
+    }
+  };
 
   const subtotal = getTotal;
   const shipping = subtotal > 30000 ? 0 : 5000;
@@ -123,6 +164,11 @@ export default function CheckoutPage() {
                 >
                   Información de Envío
                 </h2>
+
+                <SavedAddressPicker
+                  selectedId={selectedAddressId}
+                  onSelect={handleSelectSavedAddress}
+                />
 
                 <div className="space-y-6">
                   <div>
@@ -215,45 +261,50 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-obsidian-900 mb-2">
-                        Ciudad *
-                      </label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-obsidian-900 mb-2">
                         Región *
                       </label>
                       <select
                         name="region"
                         value={formData.region}
-                        onChange={handleInputChange}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            region: e.target.value,
+                            city: '',
+                          })
+                        }
                         required
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors"
+                        disabled={!geo}
+                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors bg-white"
                       >
                         <option value="">Seleccionar</option>
-                        <option value="arica">Arica y Parinacota</option>
-                        <option value="tarapaca">Tarapacá</option>
-                        <option value="antofagasta">Antofagasta</option>
-                        <option value="atacama">Atacama</option>
-                        <option value="coquimbo">Coquimbo</option>
-                        <option value="valparaiso">Valparaíso</option>
-                        <option value="metropolitana">Metropolitana</option>
-                        <option value="ohiggins">O'Higgins</option>
-                        <option value="maule">Maule</option>
-                        <option value="nuble">Ñuble</option>
-                        <option value="biobio">Biobío</option>
-                        <option value="araucania">Araucanía</option>
-                        <option value="losrios">Los Ríos</option>
-                        <option value="loslagos">Los Lagos</option>
-                        <option value="aysen">Aysén</option>
-                        <option value="magallanes">Magallanes</option>
+                        {geo?.regions.map((r) => (
+                          <option key={r.id} value={r.short_name}>
+                            {r.short_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-obsidian-900 mb-2">
+                        Comuna *
+                      </label>
+                      <select
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        required
+                        disabled={!formData.region || communesOfRegion.length === 0}
+                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors bg-white disabled:bg-pearl-50"
+                      >
+                        <option value="">
+                          {formData.region ? 'Seleccionar' : 'Elige region primero'}
+                        </option>
+                        {communesOfRegion.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>

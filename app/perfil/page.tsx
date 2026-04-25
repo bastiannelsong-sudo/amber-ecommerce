@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import AddressBookSection from '../components/AddressBookSection';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
 
@@ -325,68 +326,7 @@ export default function PerfilPage() {
               )}
 
               {/* Addresses Tab */}
-              {activeTab === 'addresses' && (
-                <div className="bg-white shadow-luxury rounded-lg p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <h2
-                      className="text-3xl font-light text-obsidian-900"
-                      style={{ fontFamily: 'var(--font-cormorant)' }}
-                    >
-                      Mis Direcciones
-                    </h2>
-                    <button className="px-6 py-2 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors">
-                      + Nueva Dirección
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Default Address */}
-                    <div className="border-2 border-amber-gold-500 rounded-lg p-6 relative">
-                      <span className="absolute top-4 right-4 bg-amber-gold-500 text-white text-xs px-2 py-1 rounded uppercase tracking-wide">
-                        Principal
-                      </span>
-                      <h3 className="font-medium text-obsidian-900 mb-4">Casa</h3>
-                      <p className="text-sm text-platinum-700 leading-relaxed">
-                        Av. Principal 123, Depto 401
-                        <br />
-                        Las Condes, Santiago
-                        <br />
-                        Región Metropolitana
-                        <br />
-                        7550000
-                      </p>
-                      <div className="flex gap-2 mt-4">
-                        <button className="text-sm text-amber-gold-600 hover:text-amber-gold-700">
-                          Editar
-                        </button>
-                        <span className="text-platinum-400">|</span>
-                        <button className="text-sm text-red-600 hover:text-red-700">
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Secondary Address */}
-                    <div className="border border-pearl-300 rounded-lg p-6">
-                      <h3 className="font-medium text-obsidian-900 mb-4">Oficina</h3>
-                      <p className="text-sm text-platinum-700 leading-relaxed">
-                        Av. Apoquindo 4800, Piso 12
-                        <br />
-                        Las Condes, Santiago
-                        <br />
-                        Región Metropolitana
-                        <br />
-                        7560000
-                      </p>
-                      <div className="flex gap-2 mt-4">
-                        <button className="text-sm text-amber-gold-600 hover:text-amber-gold-700">
-                          Marcar como principal
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {activeTab === 'addresses' && <AddressBookSection />}
             </div>
           </div>
         </div>
