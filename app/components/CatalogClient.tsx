@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import FilterSidebar, { type ActiveFilters, emptyFilters } from './FilterSidebar';
 import ProductCard from './ProductCard';
+import { trackViewItemList } from '../lib/analytics';
 import type { Product, Collection } from '../lib/types';
 
 type ViewMode = 'grid-3' | 'grid-4' | 'list';
@@ -109,6 +110,16 @@ export default function CatalogClient({ products, collections }: CatalogClientPr
       setIsLoadingMore(false);
       cooldownRef.current = false;
     }, 300);
+  }, []);
+
+  // GA4 view_item_list - una vez por mount con la primera tanda visible.
+  const listTracked = useRef(false);
+  useEffect(() => {
+    if (!listTracked.current && products.length > 0) {
+      trackViewItemList('catalogo', products.slice(0, PRODUCTS_PER_BATCH));
+      listTracked.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // IntersectionObserver: carga automática al acercarse al final

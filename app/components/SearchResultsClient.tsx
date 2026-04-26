@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ProductCard from './ProductCard';
+import { trackSearch, trackViewItemList } from '../lib/analytics';
 import type { SearchResponse } from '../lib/types';
 
 interface SearchResultsClientProps {
@@ -32,6 +33,22 @@ export default function SearchResultsClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // GA4 search + view_item_list por query (no por re-render).
+  // Si el user pagina o cambia sort, es la misma busqueda - no re-emit search,
+  // pero si re-emit view_item_list de la nueva tanda visible.
+  const lastTrackedQuery = useRef<string | null>(null);
+  useEffect(() => {
+    if (!query) return;
+    if (lastTrackedQuery.current !== query) {
+      trackSearch(query);
+      lastTrackedQuery.current = query;
+    }
+    if (results?.data && results.data.length > 0) {
+      trackViewItemList(`search:${query}`, results.data);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, currentPage, currentSort]);
 
   const updateParams = useCallback(
     (updates: Record<string, string | undefined>) => {
