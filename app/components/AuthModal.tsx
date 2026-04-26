@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
+import { trackLogin, trackSignUp } from '../lib/analytics';
 import toast from 'react-hot-toast';
 
 type ModalView = 'login' | 'register' | 'forgot' | 'forgot-response' | 'linked';
@@ -163,6 +164,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       });
       // Tokens viven en cookie httpOnly seteada por /api/auth/login.
       setUser(response.customer);
+      trackLogin('email');
       toast.success(`Bienvenida de vuelta, ${response.customer.first_name}`);
       onClose();
     } catch (error: any) {
@@ -191,6 +193,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         last_name: formData.last_name,
       });
       setUser(response.customer);
+      trackSignUp('email');
       toast.success('Cuenta creada exitosamente');
       onClose();
     } catch (error: any) {
@@ -267,6 +270,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               setView('linked');
               setTimeout(() => onClose(), 3000);
               return;
+            }
+
+            // GA4: sign_up para cuenta nueva, login para vuelta.
+            if (result.is_new_account) {
+              trackSignUp('google');
+            } else {
+              trackLogin('google');
             }
 
             toast.success(

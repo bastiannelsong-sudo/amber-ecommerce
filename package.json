@@ -16,6 +16,7 @@
     "test:e2e:rp": "npx playwright test --config playwright.reportportal.config.ts"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.4",
     "@tanstack/react-query": "^5.90.20",
     "motion": "^12.34.3",
     "next": "16.1.6",
@@ -23,6 +24,7 @@
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
     "react-zoom-pan-pinch": "^3.7.0",
+    "vanilla-cookieconsent": "^3.1.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

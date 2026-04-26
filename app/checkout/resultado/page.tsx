@@ -1,18 +1,21 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ecommerceService } from '../../lib/services/ecommerce.service';
 import { useCartStore } from '../../lib/stores/cart.store';
+import { trackPurchase } from '../../lib/analytics';
 
 function ResultContent() {
   const searchParams = useSearchParams();
   const status = searchParams.get('status');
   const orderNumber = searchParams.get('order');
   const clearCart = useCartStore((state) => state.clearCart);
+  const itemsBeforeClear = useRef(useCartStore.getState().items);
+  const purchaseTracked = useRef(false);
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,19 @@ function ResultContent() {
       loadOrder();
     }
     if (status === 'success') {
+      // GA4 purchase: dedupe por orderNumber. Snapshot de items
+      // ANTES de clearCart para que el evento tenga la lista real.
+      if (!purchaseTracked.current && orderNumber) {
+        trackPurchase({
+          transaction_id: orderNumber,
+          value: itemsBeforeClear.current.reduce(
+            (acc, ci) => acc + Number(ci.product.price) * ci.quantity,
+            0,
+          ),
+          items: itemsBeforeClear.current,
+        });
+        purchaseTracked.current = true;
+      }
       clearCart();
     }
   }, [orderNumber, status]);
