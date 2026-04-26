@@ -108,7 +108,8 @@ export default function RootLayout({
             }),
           }}
         />
-        <Toaster position="top-right" />
+        {/* top-center evita superponerse con el icono del carrito (top-right del header) */}
+        <Toaster position="top-center" />
         <ClientProviders>{children}</ClientProviders>
         <CookieConsentBanner />
       </body>
