@@ -11,7 +11,7 @@ import ReviewList from '@/app/components/marketing/ReviewList';
 import { ecommerceService } from '@/app/lib/services/ecommerce.service';
 import { useCartStore } from '@/app/lib/stores/cart.store';
 import { trackViewItem } from '@/app/lib/analytics';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import type { Product } from '@/app/lib/types';
 
 interface ProductClientUIProps {
@@ -73,7 +73,6 @@ export default function ProductClientUI({ product }: ProductClientUIProps) {
 
   return (
     <>
-      <Toaster position="top-right" />
       {/* Product Details */}
       <div className="container mx-auto px-4 lg:px-8 py-6 sm:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-20">
