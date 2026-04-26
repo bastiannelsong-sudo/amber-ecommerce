@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -17,13 +16,18 @@ const POLL_INTERVAL_MS = 2000;
 const POLL_MAX_ATTEMPTS = 15; // 30s total
 
 function mapToUiStatus(orderStatus: string | undefined): UiStatus {
-  if (orderStatus === 'paid' || orderStatus === 'processing' || orderStatus === 'shipped' || orderStatus === 'delivered') {
+  if (
+    orderStatus === 'paid' ||
+    orderStatus === 'processing' ||
+    orderStatus === 'shipped' ||
+    orderStatus === 'delivered'
+  ) {
     return 'paid';
   }
   if (orderStatus === 'cancelled' || orderStatus === 'refunded') {
     return 'failed';
   }
-  // 'pending' o desconocido -> pending (esperando webhook).
+  // 'pending' o desconocido → pending (esperando webhook).
   return 'pending';
 }
 
@@ -32,6 +36,8 @@ function ResultContent() {
   const queryStatus = searchParams.get('status'); // success | failure | pending (de MP)
   const orderNumber = searchParams.get('order');
   const clearCart = useCartStore((state) => state.clearCart);
+
+  // Snapshot del cart ANTES de limpiar - para que GA4 purchase tenga la lista real.
   const itemsBeforeClear = useRef(useCartStore.getState().items);
   const purchaseTracked = useRef(false);
   const cartCleared = useRef(false);
@@ -39,79 +45,77 @@ function ResultContent() {
   const [order, setOrder] = useState<EcommerceOrderSummary | null>(null);
   const [uiStatus, setUiStatus] = useState<UiStatus>('loading');
 
-  useEffect(() => {
-    if (orderNumber) {
-      loadOrder();
-    }
-    if (status === 'success') {
-      // GA4 purchase: dedupe por orderNumber. Snapshot de items
-      // ANTES de clearCart para que el evento tenga la lista real.
-      if (!purchaseTracked.current && orderNumber) {
-        trackPurchase({
-          transaction_id: orderNumber,
-          value: itemsBeforeClear.current.reduce(
-            (acc, ci) => acc + Number(ci.product.price) * ci.quantity,
-            0,
-          ),
-          items: itemsBeforeClear.current,
-        });
-        purchaseTracked.current = true;
-      }
-      clearCart();
   /**
    * Polling al backend hasta que el status sea terminal o se agoten reintentos.
    * MP redirige al cliente ANTES de procesar el webhook, asi que la orden
-   * llega a esta pagina probablemente todavia en 'pending'. El polling
-   * espera a que el webhook actualice el estado.
+   * llega aca probablemente todavia en 'pending'. El polling espera al webhook.
    */
-  const pollOrderStatus = useCallback(async (attempt: number) => {
-    if (!orderNumber) {
-      setUiStatus('error');
-      return;
-    }
-    try {
-      const fetched = await ecommerceService.getOrder(orderNumber);
-      setOrder(fetched);
-      const next = mapToUiStatus(fetched.status);
-
-      // Si MP redirigio con failure y el status sigue pending, asumimos failed
-      // para no dejar al usuario en limbo (el webhook puede no llegar).
-      if (queryStatus === 'failure' && next === 'pending') {
-        setUiStatus('failed');
-        return;
-      }
-
-      if (next === 'paid') {
-        setUiStatus('paid');
-        if (!cartCleared.current) {
-          clearCart();
-          cartCleared.current = true;
-        }
-        return;
-      }
-      if (next === 'failed') {
-        setUiStatus('failed');
-        return;
-      }
-
-      // next === 'pending': seguir polleando hasta agotar.
-      if (attempt + 1 < POLL_MAX_ATTEMPTS) {
-        setUiStatus('pending');
-        setTimeout(() => pollOrderStatus(attempt + 1), POLL_INTERVAL_MS);
-      } else {
-        // Timeout: el webhook puede llegar tarde. UI lo refleja.
-        setUiStatus('pending');
-      }
-    } catch {
-      if (attempt + 1 < POLL_MAX_ATTEMPTS) {
-        setTimeout(() => pollOrderStatus(attempt + 1), POLL_INTERVAL_MS);
-      } else {
+  const pollOrderStatus = useCallback(
+    async (attempt: number) => {
+      if (!orderNumber) {
         setUiStatus('error');
+        return;
       }
-    }
-    // clearCart es estable, queryStatus + orderNumber se leen desde closure.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderNumber, queryStatus]);
+      try {
+        const fetched = await ecommerceService.getOrder(orderNumber);
+        setOrder(fetched);
+        const next = mapToUiStatus(fetched.status);
+
+        // Si MP redirigio con failure y el polling sigue dando pending,
+        // asumimos failed para no dejar al usuario en limbo.
+        if (queryStatus === 'failure' && next === 'pending') {
+          setUiStatus('failed');
+          return;
+        }
+
+        if (next === 'paid') {
+          setUiStatus('paid');
+
+          // GA4 purchase: dedupe por orderNumber. Snapshot ANTES de clearCart.
+          if (!purchaseTracked.current) {
+            trackPurchase({
+              transaction_id: orderNumber,
+              value: itemsBeforeClear.current.reduce(
+                (acc, ci) => acc + Number(ci.product.price) * ci.quantity,
+                0,
+              ),
+              items: itemsBeforeClear.current,
+            });
+            purchaseTracked.current = true;
+          }
+
+          if (!cartCleared.current) {
+            clearCart();
+            cartCleared.current = true;
+          }
+          return;
+        }
+
+        if (next === 'failed') {
+          setUiStatus('failed');
+          return;
+        }
+
+        // pending: seguir polleando hasta agotar.
+        if (attempt + 1 < POLL_MAX_ATTEMPTS) {
+          setUiStatus('pending');
+          setTimeout(() => pollOrderStatus(attempt + 1), POLL_INTERVAL_MS);
+        } else {
+          // Timeout: el webhook puede llegar tarde. UI lo refleja.
+          setUiStatus('pending');
+        }
+      } catch {
+        if (attempt + 1 < POLL_MAX_ATTEMPTS) {
+          setTimeout(() => pollOrderStatus(attempt + 1), POLL_INTERVAL_MS);
+        } else {
+          setUiStatus('error');
+        }
+      }
+      // clearCart es estable, queryStatus + orderNumber se leen desde closure.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [orderNumber, queryStatus],
+  );
 
   useEffect(() => {
     pollOrderStatus(0);
