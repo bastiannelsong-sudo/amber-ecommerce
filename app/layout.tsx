@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
+import { GoogleTagManager } from '@next/third-parties/google';
 import { Toaster } from 'react-hot-toast';
 import ClientProviders from './components/ClientProviders';
+import CookieConsentBanner from './components/CookieConsent';
 import "./globals.css";
+
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
 // Elegant serif font for headings - refined aesthetic
 const cormorant = Cormorant_Garamond({
@@ -70,6 +74,9 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${cormorant.variable} ${montserrat.variable}`}>
       <head>
+        {/* GTM container - los tags individuales (GA4, Meta Pixel, etc.)
+            se configuran en GTM y se gatean por consent (ver CookieConsent). */}
+        {GTM_ID && <GoogleTagManager gtmId={GTM_ID} />}
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
       <body
@@ -103,6 +110,7 @@ export default function RootLayout({
         />
         <Toaster position="top-right" />
         <ClientProviders>{children}</ClientProviders>
+        <CookieConsentBanner />
       </body>
     </html>
   );

@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCartStore } from '../lib/stores/cart.store';
+import { trackViewCart } from '../lib/analytics';
 import toast from 'react-hot-toast';
 
 export default function CarritoPage() {
@@ -13,6 +15,16 @@ export default function CarritoPage() {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
   const getTotal = useCartStore((state) => state.getTotal());
+
+  // GA4 view_cart: una vez por entrada a la pagina, no por cada change.
+  const tracked = useRef(false);
+  useEffect(() => {
+    if (!tracked.current && items.length > 0) {
+      trackViewCart(items);
+      tracked.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const subtotal = getTotal;
   const shipping = subtotal > 30000 ? 0 : 5000;

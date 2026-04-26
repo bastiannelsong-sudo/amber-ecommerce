@@ -10,6 +10,7 @@ import CheckoutProgressBar from '../components/marketing/CheckoutProgressBar';
 import TrustBadges from '../components/marketing/TrustBadges';
 import { useCartStore } from '../lib/stores/cart.store';
 import { addressesService } from '../lib/services/addresses.service';
+import { trackBeginCheckout } from '../lib/analytics';
 import { apiClient, ApiError } from '../lib/api-client';
 import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
@@ -45,6 +46,16 @@ export default function CheckoutPage() {
   // Carga del catalogo CL para el selector region/comuna (FEAT-005).
   useEffect(() => {
     addressesService.getGeo().then(setGeo).catch(() => {});
+  }, []);
+
+  // GA4 begin_checkout - una vez al entrar al checkout con items.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (!checkoutTracked.current && items.length > 0) {
+      trackBeginCheckout(items);
+      checkoutTracked.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const communesOfRegion = useMemo(() => {

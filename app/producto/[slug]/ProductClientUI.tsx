@@ -10,6 +10,7 @@ import PriceAnchor from '@/app/components/marketing/PriceAnchor';
 import ReviewList from '@/app/components/marketing/ReviewList';
 import { ecommerceService } from '@/app/lib/services/ecommerce.service';
 import { useCartStore } from '@/app/lib/stores/cart.store';
+import { trackViewItem } from '@/app/lib/analytics';
 import toast, { Toaster } from 'react-hot-toast';
 import type { Product } from '@/app/lib/types';
 
@@ -42,6 +43,12 @@ export default function ProductClientUI({ product }: ProductClientUIProps) {
     average_rating: number;
     total_reviews: number;
   } | null>(null);
+
+  // GA4 view_item: una vez por mount, no en cada re-render.
+  useEffect(() => {
+    trackViewItem(product);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.product_id]);
 
   useEffect(() => {
     ecommerceService

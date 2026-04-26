@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -7,6 +8,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ecommerceService } from '../../lib/services/ecommerce.service';
 import { useCartStore } from '../../lib/stores/cart.store';
+import { trackPurchase } from '../../lib/analytics';
 import type { EcommerceOrderSummary } from '../../lib/types';
 
 type UiStatus = 'loading' | 'paid' | 'pending' | 'failed' | 'error';
@@ -30,11 +32,32 @@ function ResultContent() {
   const queryStatus = searchParams.get('status'); // success | failure | pending (de MP)
   const orderNumber = searchParams.get('order');
   const clearCart = useCartStore((state) => state.clearCart);
+  const itemsBeforeClear = useRef(useCartStore.getState().items);
+  const purchaseTracked = useRef(false);
   const cartCleared = useRef(false);
 
   const [order, setOrder] = useState<EcommerceOrderSummary | null>(null);
   const [uiStatus, setUiStatus] = useState<UiStatus>('loading');
 
+  useEffect(() => {
+    if (orderNumber) {
+      loadOrder();
+    }
+    if (status === 'success') {
+      // GA4 purchase: dedupe por orderNumber. Snapshot de items
+      // ANTES de clearCart para que el evento tenga la lista real.
+      if (!purchaseTracked.current && orderNumber) {
+        trackPurchase({
+          transaction_id: orderNumber,
+          value: itemsBeforeClear.current.reduce(
+            (acc, ci) => acc + Number(ci.product.price) * ci.quantity,
+            0,
+          ),
+          items: itemsBeforeClear.current,
+        });
+        purchaseTracked.current = true;
+      }
+      clearCart();
   /**
    * Polling al backend hasta que el status sea terminal o se agoten reintentos.
    * MP redirige al cliente ANTES de procesar el webhook, asi que la orden
