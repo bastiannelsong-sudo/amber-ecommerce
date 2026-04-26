@@ -10,6 +10,7 @@ import CheckoutProgressBar from '../components/marketing/CheckoutProgressBar';
 import TrustBadges from '../components/marketing/TrustBadges';
 import { useCartStore } from '../lib/stores/cart.store';
 import { addressesService } from '../lib/services/addresses.service';
+import { apiClient, ApiError } from '../lib/api-client';
 import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
 
@@ -100,12 +101,76 @@ export default function CheckoutPage() {
     toast.success('Información de envío guardada');
   };
 
-  const handleSubmitPayment = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Guard contra doble-click. useRef sobrevive re-renders, useState no.
+  const submitGuard = useRef(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-    // TODO: Aquí se debe iniciar el flujo de pago con MercadoPago/Stripe
-    // La pasarela de pago manejará los datos sensibles de tarjeta
-    toast.error('Pasarela de pago pendiente de integración');
+  /**
+   * Crea la orden en el backend (que crea la preference MP) y redirige
+   * al init_point para que el cliente complete el pago en MP.
+   * El cart se limpia despues, en /checkout/resultado al confirmar approved.
+   */
+  const handleSubmitPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitGuard.current) return;
+    submitGuard.current = true;
+    setIsProcessingPayment(true);
+
+    try {
+      const payload = {
+        customer_email: formData.email,
+        customer_name: `${formData.firstName} ${formData.lastName}`.trim(),
+        customer_phone: formData.phone || undefined,
+        shipping_address: formData.apartment
+          ? `${formData.address}, ${formData.apartment}`
+          : formData.address,
+        shipping_city: formData.city,
+        shipping_region: formData.region,
+        shipping_postal_code: formData.postalCode || undefined,
+        items: items.map((ci: CartItem) => ({
+          product_id: ci.product.product_id,
+          name: ci.product.name,
+          internal_sku: ci.product.internal_sku,
+          quantity: ci.quantity,
+          unit_price: Number(ci.product.price),
+          image_url: ci.product.image_url,
+        })),
+      };
+
+      const res = await apiClient.post<{
+        order: { order_number: string };
+        init_point: string;
+      }>('/orders', payload);
+
+      if (!res.data?.init_point) {
+        throw new Error('No se recibio el link de pago. Intenta nuevamente.');
+      }
+
+      // Snapshot del carrito por si volvemos a esta pagina y necesitamos
+      // mostrar la confirmacion. /checkout/resultado limpiara el cart real.
+      orderSnapshot.current = {
+        items: [...items],
+        subtotal,
+        shipping,
+        total,
+      };
+
+      toast.success('Redirigiendo a MercadoPago...');
+      // window.location triggea full navigation, sale del flujo Next.
+      window.location.href = res.data.init_point;
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? typeof err.data === 'object' && err.data && 'error' in err.data
+            ? String((err.data as { error?: string }).error)
+            : err.message
+          : err instanceof Error
+            ? err.message
+            : 'No se pudo iniciar el pago. Intenta nuevamente.';
+      toast.error(message);
+      submitGuard.current = false;
+      setIsProcessingPayment(false);
+    }
   };
 
   // Get display data: use snapshot for confirmation, live cart otherwise
@@ -331,36 +396,94 @@ export default function CheckoutPage() {
               </form>
             )}
 
-            {/* Payment Form */}
+            {/* Payment Form: revision de envio + checkout MP */}
             {step === 'payment' && (
               <form onSubmit={handleSubmitPayment} className="bg-white p-5 sm:p-8 shadow-luxury">
                 <h2
                   className="text-2xl sm:text-3xl font-light text-obsidian-900 mb-5 sm:mb-8 pb-4 border-b border-pearl-200"
                   style={{ fontFamily: 'var(--font-cormorant)' }}
                 >
-                  Información de Pago
+                  Confirmar y Pagar
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Pasarela de pago - reemplazar con MercadoPago/Stripe */}
-                  <div className="p-8 text-center border-2 border-dashed border-gray-300 rounded-lg">
-                    <p className="text-lg font-medium text-gray-600">Integración de pasarela de pago pendiente</p>
-                    <p className="text-sm text-gray-400 mt-2">Aquí se integrará MercadoPago o Stripe para procesamiento seguro de pagos</p>
+                  {/* Resumen de envio */}
+                  <div className="border border-pearl-200 rounded p-4 bg-pearl-50/40">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-obsidian-900 uppercase tracking-wider">
+                        Datos de envio
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setStep('shipping')}
+                        className="text-xs text-amber-gold-600 hover:text-amber-gold-700 underline underline-offset-4"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                    <div className="text-sm text-platinum-700 space-y-1">
+                      <p className="font-medium text-obsidian-900">
+                        {formData.firstName} {formData.lastName}
+                      </p>
+                      <p>{formData.email}</p>
+                      {formData.phone && <p>{formData.phone}</p>}
+                      <p>
+                        {formData.address}
+                        {formData.apartment ? `, ${formData.apartment}` : ''}
+                      </p>
+                      <p>
+                        {formData.city} · {formData.region}
+                        {formData.postalCode ? ` · ${formData.postalCode}` : ''}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  {/* MercadoPago info card */}
+                  <div className="border border-pearl-200 rounded p-4 bg-white">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-full bg-amber-gold-50 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-amber-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-obsidian-900 mb-1">
+                          Pago seguro con MercadoPago
+                        </h3>
+                        <p className="text-sm text-platinum-600 leading-relaxed">
+                          Vas a ser redirigido al sitio seguro de MercadoPago para
+                          completar el pago. Aceptamos tarjetas de credito, debito,
+                          transferencia y mas.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col-reverse sm:flex-row gap-4">
                     <button
                       type="button"
                       onClick={() => setStep('shipping')}
-                      className="flex-1 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors cursor-pointer"
+                      disabled={isProcessingPayment}
+                      className="flex-1 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Volver
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors cursor-pointer"
+                      disabled={isProcessingPayment}
+                      className="flex-1 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Finalizar Compra
+                      {isProcessingPayment ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Procesando...
+                        </>
+                      ) : (
+                        'Pagar con MercadoPago'
+                      )}
                     </button>
                   </div>
                 </div>
