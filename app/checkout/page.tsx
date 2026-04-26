@@ -190,6 +190,28 @@ export default function CheckoutPage() {
   const displayShipping = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.shipping : shipping;
   const displayTotal = step === 'confirmation' && orderSnapshot.current ? orderSnapshot.current.total : total;
 
+  // Hydration guard: Zustand persist no hidrata el cart desde localStorage
+  // hasta despues del mount. Sin este guard, el primer render ve items=[]
+  // y muestra "carrito vacio" cuando en realidad si hay items, redirigiendo
+  // al usuario al catalogo erroneamente.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-pearl-50">
+        <Header />
+        <div className="flex flex-col items-center justify-center py-24">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
+          <p className="mt-4 text-platinum-600 text-sm">Cargando tu carrito...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (items.length === 0 && step !== 'confirmation') {
     return (
       <div className="min-h-screen bg-pearl-50">
