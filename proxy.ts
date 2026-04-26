@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Rutas desactivadas en MVP - se redirigen al catalogo
-const MVP_DISABLED_ROUTES = [
-  '/checkout',
-  '/carrito',
-  '/perfil',
-  '/reset-password',
-  '/favoritos',
+/**
+ * Rutas desactivadas en este momento - se redirigen al catalogo con
+ * el flag ?mvp=1 que dispara el toast "Compra por WhatsApp".
+ *
+ * Histórico: cuando el MP no estaba integrado, todo el flow B2C estaba
+ * acá (checkout, carrito, perfil, etc). Ahora que FEAT-001 (MercadoPago
+ * E2E), FEAT-002 (emails), FEAT-005 (address book) están en producción,
+ * se removieron de la lista.
+ *
+ * Si necesitás bloquear una ruta temporalmente (mantenimiento, feature
+ * incompleta), agregala acá y el usuario será redirigido sin romper.
+ */
+const MVP_DISABLED_ROUTES: string[] = [
+  // Vacio: todo el flow B2C habilitado.
+  // Ejemplos para futuro si necesitas pausar algo:
+  //   '/favoritos',     // si hay bug en wishlist
+  //   '/blog',          // si content no esta listo
 ];
 
 // Next 16 renombra `middleware` → `proxy`. El export function debe llamarse
@@ -31,6 +41,9 @@ export function proxy(request: NextRequest) {
   return response;
 }
 
+// El matcher se mantiene amplio para que los headers de seguridad sigan
+// aplicandose a estas rutas. La logica de redirect arriba ya filtra
+// segun MVP_DISABLED_ROUTES.
 export const config = {
   matcher: [
     '/checkout/:path*',
