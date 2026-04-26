@@ -54,8 +54,8 @@ export const ecommerceService = {
     return response.data;
   },
 
-  async getOrder(orderNumber: string): Promise<Record<string, unknown>> {
-    const response = await apiClient.get<Record<string, unknown>>(
+  async getOrder(orderNumber: string): Promise<import('../types').EcommerceOrderSummary> {
+    const response = await apiClient.get<import('../types').EcommerceOrderSummary>(
       `/orders/${orderNumber}`,
     );
     return response.data;

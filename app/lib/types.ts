@@ -148,6 +148,27 @@ export interface ChileGeoResponse {
   total_communes: number;
 }
 
+/** Estado del lifecycle de una orden B2C, igual al backend. */
+export type EcommerceOrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded';
+
+/** Shape del response de GET /api/orders/:orderNumber (subset relevante para UI). */
+export interface EcommerceOrderSummary {
+  order_id?: number;
+  order_number: string;
+  status: EcommerceOrderStatus;
+  total: number | string;
+  customer_email?: string;
+  mp_payment_status?: string | null;
+  mp_payment_method?: string | null;
+}
+
 export interface Address {
   street: string;
   number: string;
