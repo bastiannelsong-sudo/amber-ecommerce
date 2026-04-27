@@ -169,6 +169,48 @@ export interface EcommerceOrderSummary {
   mp_payment_method?: string | null;
 }
 
+/** Item dentro de items[] de una orden (JSONB en backend). */
+export interface EcommerceOrderItem {
+  product_id: number;
+  name: string;
+  internal_sku: string;
+  quantity: number;
+  unit_price: number | string;
+  image_url?: string;
+}
+
+/** Shape completo de GET /api/orders/:orderNumber para el comprobante. */
+export interface EcommerceOrderDetail {
+  order_id: number;
+  order_number: string;
+  status: EcommerceOrderStatus;
+
+  customer_email: string;
+  customer_name: string;
+  customer_phone?: string | null;
+
+  shipping_address: string;
+  shipping_city: string;
+  shipping_region: string;
+  shipping_postal_code?: string | null;
+
+  items: EcommerceOrderItem[];
+
+  subtotal: number | string;
+  shipping_cost: number | string;
+  discount_amount: number | string;
+  coupon_code?: string | null;
+  total: number | string;
+
+  mp_payment_id?: string | null;
+  mp_payment_status?: string | null;
+  mp_payment_method?: string | null;
+  mp_card_last_four?: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Address {
   street: string;
   number: string;
