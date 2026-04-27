@@ -255,12 +255,14 @@ function ResultContent() {
             Reintentar pago
           </Link>
         )}
-        <Link
-          href="/"
-          className="px-8 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
-        >
-          Ir al inicio
-        </Link>
+        {uiStatus === 'paid' && order && (
+          <Link
+            href={`/orden/${order.order_number}`}
+            className="px-8 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+          >
+            Ver comprobante
+          </Link>
+        )}
         <Link
           href="/catalogo"
           className="px-8 py-4 border-2 border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-widest font-medium hover:bg-obsidian-900 hover:text-white transition-colors"

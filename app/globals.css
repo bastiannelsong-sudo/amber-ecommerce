@@ -477,3 +477,19 @@ html {
     opacity: 0.5 !important;
   }
 }
+
+/* Print: ocultar header/footer/CTAs y dejar solo el contenido del comprobante.
+   Usado por /orden/[orderNumber]. La clase .print-hide se aplica en cualquier
+   elemento que NO debe aparecer al imprimir o "Guardar como PDF". */
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  /* Bordes y sombras se ven raros en print: las atenuamos. */
+  .shadow-luxury {
+    box-shadow: none !important;
+  }
+}
