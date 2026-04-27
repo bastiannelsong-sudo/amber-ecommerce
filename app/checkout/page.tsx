@@ -11,6 +11,7 @@ import TrustBadges from '../components/marketing/TrustBadges';
 import { useCartStore } from '../lib/stores/cart.store';
 import { addressesService } from '../lib/services/addresses.service';
 import { trackBeginCheckout } from '../lib/analytics';
+import CheckoutSkeleton from '../components/skeletons/CheckoutSkeleton';
 import { apiClient, ApiError } from '../lib/api-client';
 import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
@@ -42,10 +43,32 @@ export default function CheckoutPage() {
   // Address book: null = usuario elige "nueva direccion" (o no hay guardadas).
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [geo, setGeo] = useState<ChileGeoResponse | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   // Carga del catalogo CL para el selector region/comuna (FEAT-005).
   useEffect(() => {
-    addressesService.getGeo().then(setGeo).catch(() => {});
+    let cancelled = false;
+    setGeoError(null);
+    addressesService
+      .getGeo()
+      .then((data) => {
+        if (cancelled) return;
+        if (!data || !Array.isArray(data.regions) || data.regions.length === 0) {
+          setGeoError('No se pudo cargar el listado de regiones.');
+          return;
+        }
+        setGeo(data);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
+        // eslint-disable-next-line no-console
+        console.error('[checkout] getGeo() falló:', err);
+        setGeoError(`No se pudo cargar regiones/comunas: ${msg}`);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // GA4 begin_checkout - una vez al entrar al checkout con items.
@@ -203,10 +226,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-pearl-50">
         <Header />
-        <div className="flex flex-col items-center justify-center py-24">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
-          <p className="mt-4 text-platinum-600 text-sm">Cargando tu carrito...</p>
-        </div>
+        <CheckoutSkeleton />
         <Footer />
       </div>
     );
@@ -356,6 +376,34 @@ export default function CheckoutPage() {
                     />
                   </div>
 
+                  {geoError && (
+                    <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center justify-between gap-4">
+                      <span>{geoError}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGeoError(null);
+                          addressesService
+                            .getGeo()
+                            .then((d) => {
+                              if (!d || !Array.isArray(d.regions) || d.regions.length === 0) {
+                                setGeoError('No se pudo cargar el listado de regiones.');
+                                return;
+                              }
+                              setGeo(d);
+                            })
+                            .catch((err: unknown) => {
+                              const msg = err instanceof Error ? err.message : 'Error desconocido';
+                              setGeoError(`No se pudo cargar regiones/comunas: ${msg}`);
+                            });
+                        }}
+                        className="text-red-700 underline underline-offset-2 hover:text-red-800 cursor-pointer text-xs uppercase tracking-wider font-medium"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-obsidian-900 mb-2">
@@ -373,9 +421,11 @@ export default function CheckoutPage() {
                         }
                         required
                         disabled={!geo}
-                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors bg-white"
+                        className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors bg-white disabled:bg-pearl-50 disabled:cursor-not-allowed"
                       >
-                        <option value="">Seleccionar</option>
+                        <option value="">
+                          {geo ? 'Seleccionar' : geoError ? 'Error cargando' : 'Cargando…'}
+                        </option>
                         {geo?.regions.map((r) => (
                           <option key={r.id} value={r.short_name}>
                             {r.short_name}
@@ -658,7 +708,7 @@ export default function CheckoutPage() {
                               alt={item.product.name}
                               fill
                               sizes="80px"
-                              className="object-cover"
+                              className="object-contain p-1.5"
                             />
                           </div>
                           <div className="flex-1">
@@ -751,7 +801,7 @@ export default function CheckoutPage() {
                         alt={item.product.name}
                         fill
                         sizes="64px"
-                        className="object-cover"
+                        className="object-contain p-1"
                       />
                     </div>
                     <div className="flex-1">

@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useCartStore } from '../lib/stores/cart.store';
 import { trackViewCart } from '../lib/analytics';
+import CartSkeleton from '../components/skeletons/CartSkeleton';
 import toast from 'react-hot-toast';
 
 export default function CarritoPage() {
@@ -69,10 +70,7 @@ export default function CarritoPage() {
         </div>
 
         {!mounted ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
-            <p className="mt-4 text-platinum-600 text-sm">Cargando tu carrito...</p>
-          </div>
+          <CartSkeleton />
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
             <svg
@@ -109,13 +107,13 @@ export default function CarritoPage() {
                   className="bg-white p-6 shadow-luxury flex gap-6"
                 >
                   {/* Image */}
-                  <div className="w-32 h-32 bg-pearl-100 flex-shrink-0 rounded overflow-hidden">
+                  <div className="w-32 h-32 bg-pearl-100 flex-shrink-0 rounded overflow-hidden flex items-center justify-center p-2">
                     <Image
                       src={item.product.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop'}
                       alt={item.product.name}
                       width={128}
                       height={128}
-                      className="object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
 
