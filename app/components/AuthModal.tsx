@@ -356,13 +356,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         className="fixed inset-0 bg-obsidian-900/70 backdrop-blur-sm z-[100] overflow-y-auto"
         onClick={onClose}
       >
-        <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="flex min-h-full items-center justify-center p-4">
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white w-full sm:max-w-md shadow-2xl overflow-hidden relative rounded-t-2xl sm:rounded-lg"
+            className="bg-white w-full sm:max-w-md shadow-2xl overflow-hidden relative rounded-2xl sm:rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}

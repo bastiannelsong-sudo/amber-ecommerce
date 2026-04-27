@@ -1,11 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AddressBookSection from '../components/AddressBookSection';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
+
+// Map del status interno (ingles) -> label visible y color de badge.
+// El backend persiste status en ingles, la UI lo traduce a una etiqueta
+// amigable y un color que matchea el estado conceptualmente.
+const STATUS_META: Record<
+  string,
+  { label: string; badge: string }
+> = {
+  pending: { label: 'Pago pendiente', badge: 'bg-amber-100 text-amber-700' },
+  paid: { label: 'Pagado', badge: 'bg-blue-100 text-blue-700' },
+  processing: { label: 'En preparación', badge: 'bg-blue-100 text-blue-700' },
+  shipped: { label: 'En tránsito', badge: 'bg-indigo-100 text-indigo-700' },
+  delivered: { label: 'Entregado', badge: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Cancelado', badge: 'bg-red-100 text-red-700' },
+  refunded: { label: 'Reembolsado', badge: 'bg-gray-200 text-gray-700' },
+};
+
+interface MyOrder {
+  order_id: number;
+  order_number: string;
+  status: string;
+  total: number | string;
+  items: { name: string; quantity: number }[];
+  created_at: string;
+}
+
+interface OrdersResponse {
+  orders: MyOrder[];
+  total: number;
+}
 
 export default function PerfilPage() {
   const user = useAuthStore((state) => state.user);
@@ -40,30 +71,33 @@ export default function PerfilPage() {
     setIsEditing(false);
   };
 
-  // Mock orders data
-  const orders = [
-    {
-      id: 'AMB-1234',
-      date: '2024-02-01',
-      status: 'Entregado',
-      total: 49990,
-      items: 2,
-    },
-    {
-      id: 'AMB-1233',
-      date: '2024-01-15',
-      status: 'En tránsito',
-      total: 29990,
-      items: 1,
-    },
-    {
-      id: 'AMB-1232',
-      date: '2024-01-01',
-      status: 'Entregado',
-      total: 59990,
-      items: 3,
-    },
-  ];
+  // Pedidos reales del usuario - fetch lazy al activar la tab "orders".
+  const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [ordersStatus, setOrdersStatus] = useState<'idle' | 'loading' | 'error' | 'ok'>('idle');
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'orders' || ordersStatus === 'loading' || ordersStatus === 'ok') return;
+    setOrdersStatus('loading');
+    setOrdersError(null);
+    fetch('/api/orders/me', { credentials: 'include' })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `HTTP ${res.status}`);
+        }
+        return res.json() as Promise<OrdersResponse>;
+      })
+      .then((data) => {
+        setOrders(data.orders ?? []);
+        setOrdersStatus('ok');
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Error desconocido';
+        setOrdersError(msg);
+        setOrdersStatus('error');
+      });
+  }, [activeTab, ordersStatus]);
 
   return (
     <div className="min-h-screen bg-pearl-50">
@@ -276,52 +310,94 @@ export default function PerfilPage() {
                     Mis Pedidos
                   </h2>
 
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="border border-pearl-200 rounded-lg p-6 hover:border-amber-gold-500 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-lg font-medium text-obsidian-900 mb-1">
-                              Pedido #{order.id}
-                            </h3>
-                            <p className="text-sm text-platinum-600">
-                              {new Date(order.date).toLocaleDateString('es-CL', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </p>
-                          </div>
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              order.status === 'Entregado'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-amber-100 text-amber-700'
-                            }`}
-                          >
-                            {order.status}
-                          </span>
-                        </div>
+                  {ordersStatus === 'loading' && (
+                    <div className="flex items-center justify-center py-16">
+                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-amber-gold-500 border-t-transparent" />
+                    </div>
+                  )}
 
-                        <div className="flex items-center justify-between pt-4 border-t border-pearl-200">
-                          <div>
-                            <p className="text-sm text-platinum-600">
-                              {order.items} {order.items === 1 ? 'producto' : 'productos'}
-                            </p>
-                            <p className="text-lg font-medium text-obsidian-900">
-                              ${order.total.toLocaleString('es-CL')}
-                            </p>
+                  {ordersStatus === 'error' && (
+                    <div className="rounded border border-red-300 bg-red-50 px-4 py-4 text-sm text-red-700 flex items-center justify-between gap-4">
+                      <span>No se pudieron cargar tus pedidos: {ordersError}</span>
+                      <button
+                        type="button"
+                        onClick={() => setOrdersStatus('idle')}
+                        className="text-red-700 underline underline-offset-2 hover:text-red-800 cursor-pointer text-xs uppercase tracking-wider font-medium"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  )}
+
+                  {ordersStatus === 'ok' && orders.length === 0 && (
+                    <div className="text-center py-16">
+                      <p className="text-platinum-600 mb-6">
+                        Aún no tienes pedidos. ¡Cuando hagas tu primera compra aparecerán aquí!
+                      </p>
+                      <Link
+                        href="/catalogo"
+                        className="inline-block px-8 py-3 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+                      >
+                        Explorar catálogo
+                      </Link>
+                    </div>
+                  )}
+
+                  {ordersStatus === 'ok' && orders.length > 0 && (
+                    <div className="space-y-4">
+                      {orders.map((order) => {
+                        const meta = STATUS_META[order.status] ?? {
+                          label: order.status,
+                          badge: 'bg-gray-100 text-gray-700',
+                        };
+                        const itemCount = order.items.reduce(
+                          (sum, it) => sum + (it.quantity ?? 1),
+                          0,
+                        );
+                        return (
+                          <div
+                            key={order.order_id}
+                            className="border border-pearl-200 rounded-lg p-6 hover:border-amber-gold-500 transition-colors"
+                          >
+                            <div className="flex items-start justify-between mb-4">
+                              <div>
+                                <h3 className="text-lg font-medium text-obsidian-900 mb-1">
+                                  Pedido #{order.order_number}
+                                </h3>
+                                <p className="text-sm text-platinum-600">
+                                  {new Date(order.created_at).toLocaleDateString('es-CL', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                  })}
+                                </p>
+                              </div>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${meta.badge}`}>
+                                {meta.label}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t border-pearl-200">
+                              <div>
+                                <p className="text-sm text-platinum-600">
+                                  {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
+                                </p>
+                                <p className="text-lg font-medium text-obsidian-900">
+                                  ${Math.round(Number(order.total) || 0).toLocaleString('es-CL')}
+                                </p>
+                              </div>
+                              <Link
+                                href={`/checkout/resultado?order=${encodeURIComponent(order.order_number)}`}
+                                className="px-6 py-2 border border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-wide font-medium hover:bg-obsidian-900 hover:text-white transition-colors"
+                              >
+                                Ver Detalle
+                              </Link>
+                            </div>
                           </div>
-                          <button className="px-6 py-2 border border-obsidian-900 text-obsidian-900 text-sm uppercase tracking-wide font-medium hover:bg-obsidian-900 hover:text-white transition-colors">
-                            Ver Detalle
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
