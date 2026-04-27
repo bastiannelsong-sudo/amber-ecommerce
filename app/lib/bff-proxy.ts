@@ -11,8 +11,10 @@ if (!INTERNAL_API_URL && process.env.NODE_ENV === 'production') {
 const BASE = INTERNAL_API_URL ?? 'http://localhost:3000';
 
 interface ProxyOptions {
-  /** Si true, inyecta Bearer token desde la cookie de sesión */
+  /** Si true, inyecta Bearer token desde la cookie de sesión y rechaza con 401 si no hay sesión */
   authenticated?: boolean;
+  /** Si true, inyecta Bearer token si hay sesión pero NO rechaza si falta (para endpoints publicos que enriquecen UX al loguear, ej: POST /orders con guest checkout) */
+  optionalAuth?: boolean;
   /** Headers extra a reenviar */
   extraHeaders?: Record<string, string>;
   /** Parsear body del request para reenviar */
@@ -64,6 +66,9 @@ const tryRefreshAccessToken = async (): Promise<string | null> => {
 /**
  * Hace el fetch al backend con un access_token dado. Retorna el Response
  * crudo para que el caller decida cómo manejar status/body.
+ *
+ * Timeout de 8s: evita que un backend colgado deje el BFF esperando
+ * indefinidamente y la UI con spinner eterno.
  */
 const doFetch = async (
   url: string,
@@ -71,12 +76,29 @@ const doFetch = async (
   headers: Record<string, string>,
   body: string | undefined,
 ): Promise<Response> => {
-  return fetch(url, {
-    method,
-    headers,
-    body,
-    cache: 'no-store',
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  // eslint-disable-next-line no-console
+  console.log(`[bff-proxy] → ${method} ${url}`);
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body,
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    // eslint-disable-next-line no-console
+    console.log(`[bff-proxy] ← ${res.status} ${method} ${url}`);
+    return res;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.error(`[bff-proxy] ✗ ${method} ${url}: ${msg}`);
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 /**
@@ -92,7 +114,12 @@ export const proxyToBackend = async (
   backendPath: string,
   options: ProxyOptions = {},
 ): Promise<NextResponse> => {
-  const { authenticated = false, extraHeaders = {}, forwardBody = true } = options;
+  const {
+    authenticated = false,
+    optionalAuth = false,
+    extraHeaders = {},
+    forwardBody = true,
+  } = options;
 
   const url = new URL(backendPath, BASE);
   if (!backendPath.includes('?')) {
@@ -122,10 +149,10 @@ export const proxyToBackend = async (
   };
 
   let token: string | null = null;
-  if (authenticated) {
+  if (authenticated || optionalAuth) {
     const session = await getSession();
     token = session?.access_token ?? null;
-    if (!token) {
+    if (authenticated && !token) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
   }
