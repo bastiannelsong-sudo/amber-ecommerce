@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '../components/Header';
@@ -16,15 +16,23 @@ export default function CarritoPage() {
   const clearCart = useCartStore((state) => state.clearCart);
   const getTotal = useCartStore((state) => state.getTotal());
 
+  // Hydration guard: Zustand persist no hidrata el cart hasta despues
+  // del mount. Sin esto, el primer render muestra "carrito vacio" aunque
+  // si haya items - confunde al usuario.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // GA4 view_cart: una vez por entrada a la pagina, no por cada change.
   const tracked = useRef(false);
   useEffect(() => {
-    if (!tracked.current && items.length > 0) {
+    if (!tracked.current && mounted && items.length > 0) {
       trackViewCart(items);
       tracked.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mounted]);
 
   const subtotal = getTotal;
   const shipping = subtotal > 30000 ? 0 : 5000;
@@ -60,7 +68,12 @@ export default function CarritoPage() {
           </p>
         </div>
 
-        {items.length === 0 ? (
+        {!mounted ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
+            <p className="mt-4 text-platinum-600 text-sm">Cargando tu carrito...</p>
+          </div>
+        ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
             <svg
               className="w-24 h-24 text-platinum-400 mb-6"
