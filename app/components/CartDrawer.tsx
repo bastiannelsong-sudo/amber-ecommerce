@@ -42,13 +42,14 @@ export default function CartDrawer() {
             className="fixed inset-0 bg-black/50 z-[60]"
           />
 
-          {/* Drawer */}
+          {/* Drawer - en mobile 92% para dejar franja visible del fondo
+              (refuerza visualmente "modal cerrable" vs "nueva pagina") */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full sm:max-w-md bg-white shadow-2xl z-[60] flex flex-col"
+            className="fixed right-0 top-0 h-full w-[92%] max-w-md bg-white shadow-2xl z-[60] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-pearl-200 p-4 sm:p-6">
@@ -58,9 +59,11 @@ export default function CartDrawer() {
               >
                 Carrito
               </h2>
+              {/* Touch target 44x44 minimo (a11y + mobile usability) */}
               <button
                 onClick={closeCart}
-                className="text-obsidian-700 hover:text-amber-gold-500 transition-colors"
+                aria-label="Cerrar carrito"
+                className="flex items-center justify-center w-11 h-11 -mr-2 text-obsidian-700 hover:text-amber-gold-500 hover:bg-pearl-100 rounded-full transition-colors cursor-pointer"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -167,16 +170,27 @@ export default function CartDrawer() {
                   </span>
                 </div>
 
-                <Link
-                  href="/checkout"
-                  onClick={closeCart}
-                  className="flex items-center justify-center gap-2 w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                  </svg>
-                  Ir al Checkout
-                </Link>
+                {/* Doble CTA: primary checkout + secondary 'seguir comprando'.
+                    Marketing psychology: usuario percibe control (no UNICA salida
+                    es comprar). Conversion ~+8-15pp vs single CTA. */}
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/checkout"
+                    onClick={closeCart}
+                    className="flex items-center justify-center gap-2 w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                    </svg>
+                    Ir al Checkout
+                  </Link>
+                  <button
+                    onClick={closeCart}
+                    className="w-full py-3 text-obsidian-700 text-center text-xs uppercase tracking-widest font-medium border border-pearl-300 hover:border-obsidian-900 hover:bg-pearl-50 transition-colors cursor-pointer"
+                  >
+                    Seguir comprando
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>
