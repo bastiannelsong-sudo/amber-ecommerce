@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useCartStore } from '../lib/stores/cart.store';
 import FreeShippingProgress from './marketing/FreeShippingProgress';
 import CouponInput from './marketing/CouponInput';
+import CartCrossSell from './CartCrossSell';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 
@@ -141,6 +142,9 @@ export default function CartDrawer() {
                 </div>
               )}
             </div>
+
+            {/* Cross-sell mini: aumentar AOV con bestsellers no en carrito */}
+            {items.length > 0 && <CartCrossSell />}
 
             {/* Footer */}
             {items.length > 0 && (

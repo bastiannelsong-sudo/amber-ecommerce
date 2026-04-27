@@ -40,18 +40,32 @@ export default function CheckoutProgressBar({ currentStep }: CheckoutProgressBar
   const stepKeys = steps.map((s) => s.key);
   const currentIndex = stepKeys.indexOf(currentStep);
 
-  return (
-    <div className="max-w-2xl mx-auto mb-12">
-      <div className="flex items-center">
-        {steps.map((step, index) => {
-          const isCompleted = index < currentIndex;
-          const isCurrent = index === currentIndex;
-          const isUpcoming = index > currentIndex;
+  const progressPct = currentIndex > 0 ? (currentIndex / (steps.length - 1)) * 100 : 0;
 
-          return (
-            <div key={step.key} className="flex items-center flex-1">
-              {/* Step circle + label */}
-              <div className="flex flex-col items-center relative z-10">
+  return (
+    <div className="max-w-md mx-auto mb-12 px-4">
+      <div className="relative">
+        {/* Background connector line (behind circles, spans col1 center → col3 center) */}
+        <div className="absolute top-5 left-[16.667%] right-[16.667%] h-px bg-pearl-200 -translate-y-1/2" />
+
+        {/* Progress fill */}
+        {currentIndex > 0 && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `calc(${progressPct}% * 0.6667)` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="absolute top-5 left-[16.667%] h-px bg-green-500 -translate-y-1/2"
+          />
+        )}
+
+        {/* Steps - grid ensures each circle is centered in its column */}
+        <div className="grid grid-cols-3 relative">
+          {steps.map((step, index) => {
+            const isCompleted = index < currentIndex;
+            const isCurrent = index === currentIndex;
+
+            return (
+              <div key={step.key} className="flex flex-col items-center relative z-10">
                 <motion.div
                   initial={false}
                   animate={{
@@ -63,7 +77,7 @@ export default function CheckoutProgressBar({ currentStep }: CheckoutProgressBar
                       : '#e8e8e8',
                   }}
                   transition={{ duration: 0.3 }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
                 >
                   {isCompleted ? (
                     <motion.svg
@@ -85,7 +99,7 @@ export default function CheckoutProgressBar({ currentStep }: CheckoutProgressBar
                 </motion.div>
 
                 <span
-                  className={`text-[10px] mt-2.5 uppercase tracking-widest font-medium transition-colors ${
+                  className={`text-[10px] mt-3 uppercase tracking-widest font-medium transition-colors text-center ${
                     isCurrent
                       ? 'text-obsidian-900'
                       : isCompleted
@@ -101,31 +115,17 @@ export default function CheckoutProgressBar({ currentStep }: CheckoutProgressBar
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -bottom-1 w-1 h-1 rounded-full bg-amber-gold-500"
+                    className="mt-1.5 w-1 h-1 rounded-full bg-amber-gold-500"
                   />
                 )}
               </div>
-
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="flex-1 h-px mx-3 bg-pearl-200 relative overflow-hidden">
-                  {(isCompleted || isCurrent) && index < currentIndex && (
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 0.5, ease: 'easeOut' }}
-                      className="absolute inset-y-0 left-0 bg-green-500"
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Security note */}
-      <div className="flex items-center justify-center gap-2 mt-6">
+      <div className="flex items-center justify-center gap-2 mt-8">
         <svg className="w-3.5 h-3.5 text-platinum-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
         </svg>

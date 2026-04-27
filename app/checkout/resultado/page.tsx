@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -9,6 +10,35 @@ import { ecommerceService } from '../../lib/services/ecommerce.service';
 import { useCartStore } from '../../lib/stores/cart.store';
 import { trackPurchase } from '../../lib/analytics';
 import type { EcommerceOrderSummary } from '../../lib/types';
+
+/**
+ * Lanza confetti suave (~600ms) cuando el pago se confirma.
+ * Carga canvas-confetti dinamicamente (lazy) para no agregar al bundle
+ * inicial de la pagina. Respeta prefers-reduced-motion.
+ */
+const fireConfetti = async () => {
+  if (typeof window === 'undefined') return;
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches;
+  if (reducedMotion) return;
+
+  const confetti = (await import('canvas-confetti')).default;
+  const palette = ['#c8a456', '#a48642', '#1a1a1a', '#faf8f5']; // amber + obsidian + pearl
+  const fire = (origin: { x: number; y: number }) =>
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      startVelocity: 35,
+      origin,
+      colors: palette,
+      disableForReducedMotion: true,
+      scalar: 0.9,
+    });
+  // Dos burbujas desde laterales para efecto natural.
+  fire({ x: 0.2, y: 0.6 });
+  setTimeout(() => fire({ x: 0.8, y: 0.6 }), 150);
+};
 
 type UiStatus = 'loading' | 'paid' | 'pending' | 'failed' | 'error';
 
@@ -82,6 +112,8 @@ function ResultContent() {
               items: itemsBeforeClear.current,
             });
             purchaseTracked.current = true;
+            // Momento WOW: confetti una sola vez al confirmar pago.
+            fireConfetti();
           }
 
           if (!cartCleared.current) {
@@ -166,19 +198,25 @@ function ResultContent() {
 
   return (
     <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-      <div
+      <motion.div
+        initial={{ scale: 0, rotate: -90 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.05 }}
         className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 ${config.iconBg}`}
       >
-        <svg
+        <motion.svg
           className="w-10 h-10 text-white"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           strokeWidth={2}
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d={config.icon} />
-        </svg>
-      </div>
+        </motion.svg>
+      </motion.div>
 
       <h1
         className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-4"

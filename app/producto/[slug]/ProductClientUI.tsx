@@ -6,6 +6,7 @@ import Link from 'next/link';
 import RelatedProducts from '@/app/components/RelatedProducts';
 import ZoomLens from '@/app/components/ZoomLens';
 import ScarcityIndicator from '@/app/components/marketing/ScarcityIndicator';
+import SocialProofBadge from '@/app/components/marketing/SocialProofBadge';
 import PriceAnchor from '@/app/components/marketing/PriceAnchor';
 import ReviewList from '@/app/components/marketing/ReviewList';
 import { ecommerceService } from '@/app/lib/services/ecommerce.service';
@@ -272,6 +273,7 @@ export default function ProductClientUI({ product }: ProductClientUIProps) {
             {/* Scarcity */}
             <motion.div variants={fadeUp} className="mb-6">
               <ScarcityIndicator stock={product.stock} />
+              <SocialProofBadge productId={product.product_id} />
             </motion.div>
 
             {/* Cantidad + Agregar al Carrito */}
