@@ -4,7 +4,8 @@ test.describe('Catalogo', () => {
   test('should load the catalog page', async ({ page }) => {
     await page.goto('/catalogo');
     await expect(page).toHaveTitle(/Catalogo|AMBER/i);
-    await expect(page.locator('h1')).toContainText('Catalogo');
+    // Acepta tanto "Catalogo" como "Catálogo" (con acento) y variantes ("Catálogo Completo").
+    await expect(page.locator('h1')).toContainText(/Cat[aá]logo/);
   });
 
   test('should display products', async ({ page }) => {
@@ -21,7 +22,9 @@ test.describe('Catalogo', () => {
       // En mobile el link de catalogo esta oculto detras del menu hamburguesa
       await expect(page.locator('button[aria-label="Menu"]')).toBeVisible();
     } else {
-      await expect(page.locator('nav a[href="/catalogo"]')).toBeVisible();
+      // El nav del header tiene el primer link "Catalogo"; otros links a /catalogo
+      // existen en footers/CTAs de la misma página, por eso usamos .first().
+      await expect(page.locator('header nav a[href="/catalogo"]').first()).toBeVisible();
     }
   });
 });
