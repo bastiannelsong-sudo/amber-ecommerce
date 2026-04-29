@@ -1,7 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-
-const BASE = process.env.INTERNAL_API_URL ?? 'http://localhost:3000';
+import { internalFetch } from './internal-fetch';
 
 export interface Review {
   review_id: number;
@@ -28,7 +27,7 @@ export interface ReviewSummary {
 
 export const getProductReviews = cache(
   async (productId: number): Promise<ReviewDetail | null> => {
-    const res = await fetch(`${BASE}/ecommerce/reviews/${productId}`, {
+    const res = await internalFetch(`/ecommerce/reviews/${productId}`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;

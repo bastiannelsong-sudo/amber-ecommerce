@@ -1,8 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import type { Product } from '../types';
-
-const BASE = process.env.INTERNAL_API_URL ?? 'http://localhost:3000';
+import { internalFetch } from './internal-fetch';
 
 /**
  * Fetchers server-only para catálogo de productos.
@@ -16,7 +15,7 @@ interface FetchOptions {
 
 export const getBestsellerIds = cache(
   async (opts: FetchOptions = {}): Promise<number[]> => {
-    const res = await fetch(`${BASE}/ecommerce/bestsellers`, {
+    const res = await internalFetch(`/ecommerce/bestsellers`, {
       next: { revalidate: opts.revalidate ?? 300 },
     });
     if (!res.ok) return [];
@@ -27,8 +26,8 @@ export const getBestsellerIds = cache(
 export const getFeaturedProducts = cache(
   async (limit = 8, opts: FetchOptions = {}): Promise<Product[]> => {
     // Usa el catálogo ecommerce con sort=featured. Fallback silencioso a lista vacía.
-    const res = await fetch(
-      `${BASE}/products/catalog?limit=${limit}&sort=featured`,
+    const res = await internalFetch(
+      `/products/catalog?limit=${limit}&sort=featured`,
       { next: { revalidate: opts.revalidate ?? 120 } },
     );
     if (!res.ok) return [];
@@ -43,8 +42,8 @@ export const getRelatedProducts = cache(
     limit = 4,
     opts: FetchOptions = {},
   ): Promise<Product[]> => {
-    const res = await fetch(
-      `${BASE}/products/catalog?limit=${limit}&sort=featured`,
+    const res = await internalFetch(
+      `/products/catalog?limit=${limit}&sort=featured`,
       { next: { revalidate: opts.revalidate ?? 120 } },
     );
     if (!res.ok) return [];
