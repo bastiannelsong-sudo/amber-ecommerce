@@ -169,7 +169,7 @@ export default function CarritoPage() {
                           ${((item.product.price || 0) * item.quantity).toLocaleString('es-CL')}
                         </p>
                         <p className="text-sm text-platinum-600">
-                          ${item.product.price?.toLocaleString('es-CL')} c/u
+                          ${Number(item.product.price ?? 0).toLocaleString('es-CL')} c/u
                         </p>
                       </div>
                     </div>
