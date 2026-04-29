@@ -51,18 +51,10 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' accounts.google.com",
-              "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
-              "font-src 'self' fonts.gstatic.com",
-              "img-src 'self' data: blob: images.unsplash.com http2.mlstatic.com *.mlstatic.com",
-              `connect-src 'self' ${isDev ? 'http://localhost:* ws://localhost:* wss://local.ambernelson.cl https://local.ambernelson.cl' : ''} api.ambernelson.cl accounts.google.com wa.me`,
-              "frame-src accounts.google.com",
-            ].join('; '),
-          },
+          // Content-Security-Policy ahora se setea dinamicamente con nonce
+          // per-request en proxy.ts (Next 16 middleware). Sacarla de aca
+          // evita que el browser reciba dos CSP headers contradictorios.
+          // Ver arquitectura CSP details para el detalle completo.
         ],
       },
     ];
