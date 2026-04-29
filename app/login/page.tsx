@@ -27,7 +27,11 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
-  const next = searchParams.get('next') || '/perfil';
+  // Validar `next` contra open redirect: solo paths internos (empieza con `/`
+  // pero NO con `//` ni `/\`, que el browser interpreta como protocol-relative).
+  const rawNext = searchParams.get('next');
+  const next =
+    rawNext && /^\/(?![/\\])/.test(rawNext) ? rawNext : '/perfil';
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
