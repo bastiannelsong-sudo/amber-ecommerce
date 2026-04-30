@@ -53,3 +53,38 @@ queda colgada, podés limpiar manualmente:
 ```sql
 DELETE FROM ecommerce_orders WHERE customer_email LIKE 'e2e-test-%@%';
 ```
+
+## Smoke MP real (manual, no automatizado)
+
+Esta suite **mockea el webhook**. Para validar end-to-end con la UI
+real de MercadoPago Sandbox antes de releases grandes, hay que correr
+el flow manualmente:
+
+1. Entrar al ecommerce local, agregar producto, llenar checkout, "Pagar".
+2. MP redirige a `sandbox.mercadopago.com` — loguearse con un
+   **comprador de prueba** (las credenciales del comprador test viven
+   fuera del repo, pedirlas a quien administre la cuenta MP).
+3. En el formulario de pago, completar la tarjeta usando el **nombre
+   mágico del titular** que controla el resultado:
+
+| Nombre titular | Resultado |
+|---|---|
+| `APRO` | Pago aprobado |
+| `OTHE` | Rechazado por error general |
+| `CONT` | Pendiente de pago |
+| `CALL` | Rechazado con validación para autorizar |
+| `FUND` | Rechazado por importe insuficiente |
+| `SECU` | Rechazado por código de seguridad inválido |
+| `EXPI` | Rechazado por problema de fecha de vencimiento |
+| `FORM` | Rechazado por error de formulario |
+
+- Para `APRO`: documento de identidad `123456789`.
+- Tarjetas TEST CL: Mastercard `5031 7557 3453 0604`, Visa
+  `4168 8188 4444 7115`, Amex `3711 803032 57522`.
+- CVV: cualquiera. Fecha: cualquier futura.
+
+4. Verificar que `/checkout/resultado` reacciona acorde al status y
+   que el webhook llega al backend (logs del NestJS).
+
+Frecuencia: ~1 vez por sprint, o antes de tocar el flow del checkout.
+Si una de las 8 variantes rompe, abrir issue.
