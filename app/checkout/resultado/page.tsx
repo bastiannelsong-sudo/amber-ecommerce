@@ -257,7 +257,14 @@ function ResultContent() {
         )}
         {uiStatus === 'paid' && order && (
           <Link
-            href={`/orden/${order.order_number}`}
+            href={
+              // Pasamos email como query param para que la pagina del
+              // comprobante valide acceso (guests no tienen sesion). Los
+              // logueados igual pasan por la verificacion de session ahi.
+              order.customer_email
+                ? `/orden/${order.order_number}?email=${encodeURIComponent(order.customer_email)}`
+                : `/orden/${order.order_number}`
+            }
             className="px-8 py-4 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
           >
             Ver comprobante
