@@ -51,36 +51,10 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            // Defensa contra XSS / clickjacking / form hijacking. Cada
-            // directiva tiene su justificación documentada en
-            // arquitectura/amber_arquitectura_v1.drawio.xml (página CSP details).
-            //
-            // Debilidades conocidas: 'unsafe-inline' y 'unsafe-eval' en
-            // script-src/style-src son requeridas por Next 16 + Tailwind +
-            // hidratación RSC. Migrar a nonce-based CSP es la mejora
-            // estructural a futuro (no trivial).
-            //
-            // Cuando se active Sentry: agregar *.sentry.io a connect-src
-            // y configurar `report-uri https://sentry.io/api/<project>/security/`
-            // para recibir violaciones de CSP en el dashboard.
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' accounts.google.com",
-              "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
-              "font-src 'self' fonts.gstatic.com",
-              "img-src 'self' data: blob: images.unsplash.com http2.mlstatic.com *.mlstatic.com",
-              `connect-src 'self' ${isDev ? 'http://localhost:* ws://localhost:* wss://local.ambernelson.cl https://local.ambernelson.cl' : ''} api.ambernelson.cl accounts.google.com wa.me`,
-              "frame-src accounts.google.com",
-              // Hardening agregado 2026-04-29 (CSP page del drawio):
-              "object-src 'none'",            // bloquea <object>/<embed>/<applet>
-              "base-uri 'self'",              // previene base-tag injection (XSS amplification)
-              "form-action 'self'",           // forms sólo POSTean al mismo origen (anti-credential-theft)
-              "frame-ancestors 'none'",       // duplica X-Frame-Options DENY (versión moderna)
-              'upgrade-insecure-requests',    // sube cualquier recurso HTTP a HTTPS automático
-            ].join('; '),
-          },
+          // Content-Security-Policy ahora se setea dinamicamente con nonce
+          // per-request en proxy.ts (Next 16 middleware). Sacarla de aca
+          // evita que el browser reciba dos CSP headers contradictorios.
+          // Ver arquitectura CSP details para el detalle completo.
         ],
       },
     ];
