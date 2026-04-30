@@ -29,7 +29,12 @@ test.describe('Checkout → MercadoPago sandbox', () => {
     await expect(firstProduct).toBeVisible({ timeout: 10000 });
     await firstProduct.click();
 
-    // 2. PDP: click "Agregar al carrito" (abre CartDrawer overlay)
+    // 2. PDP: click "Agregar al carrito".
+    // Animations de framer-motion (stagger entry) reemplazan elementos durante
+    // el mount, así que esperamos networkidle + un tiempo extra para que las
+    // animations terminen antes de buscar el botón.
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(800);
     const addToCart = page.getByRole('button', { name: /agregar al carrito/i }).first();
     await expect(addToCart).toBeVisible({ timeout: 10000 });
     await addToCart.click();

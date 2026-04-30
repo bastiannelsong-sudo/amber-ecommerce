@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Footer from '@/app/components/Footer';
 import Header from '@/app/components/Header';
 import { fetchProductBySlug, fetchReviewSummary } from '@/app/lib/catalog-api';
+import { getRelatedProducts } from '@/app/lib/server-api/products';
 import {
   PRODUCT_TYPE_COPY,
   SITE_URL,
@@ -75,8 +76,17 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await fetchProductBySlug(slug);
   if (!product) notFound();
 
-  // Review summary en paralelo — nullable si no hay reviews.
-  const reviewSummary = await fetchReviewSummary(product.product_id);
+  // Review summary y productos relacionados en paralelo. Pre-fetch de
+  // related-products en server-side asegura que los links salgan en el HTML
+  // SSR — clave para SEO interno linking (SEO-001 #6).
+  const [reviewSummary, relatedProducts] = await Promise.all([
+    fetchReviewSummary(product.product_id),
+    getRelatedProducts(product.product_id, {
+      productType: product.product_type,
+      material: product.material,
+      limit: 4,
+    }),
+  ]);
 
   const displayName = product.display_name || product.name;
   const typeSlug = productTypeToSlug(product.product_type);
@@ -185,7 +195,7 @@ export default async function ProductPage({ params }: PageProps) {
       </nav>
 
       {/* UI interactiva del producto (cart, zoom, gallery, reviews, accordion) */}
-      <ProductClientUI product={product} />
+      <ProductClientUI product={product} relatedProducts={relatedProducts} />
 
       {/* Explora más — internal linking SEO server-rendered */}
       {hasExploreLinks && (
