@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "^1.59.1",
     "@reportportal/agent-js-playwright": "^5.4.0",
     "@reportportal/agent-js-vitest": "^5.2.2",
     "@stryker-mutator/core": "^9.5.1",
@@ -40,12 +40,14 @@
     "@testing-library/react": "^16.1.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^25.0.1",
+    "pg": "^8.20.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.0.5"
