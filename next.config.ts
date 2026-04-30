@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from '@sentry/nextjs';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -69,4 +70,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Wrap con Sentry para inyectar source maps al deploy y reescribir
+ * stack traces minified -> originales. No-op si SENTRY_DSN no esta
+ * seteado en build time (no envia source maps a ningun lado).
+ *
+ * silent:true porque sino los logs de Sentry contaminan el output del
+ * build. Cambiar a false si hay que debuggear el upload de source maps.
+ */
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  // Source maps solo si hay token. Si no, se hace build sin uploadearlos.
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  // Tunnel los eventos de Sentry via /monitoring para evitar adblockers.
+  tunnelRoute: '/monitoring',
+});
