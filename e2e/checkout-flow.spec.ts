@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 import {
-  addFirstProductToCart,
-  submitCheckoutAndCaptureOrder,
-} from './helpers/checkout';
-import { simulateMpWebhook, cleanupRecentTestOrders } from './helpers/db';
+  createTestOrderInDb,
+  simulateMpWebhook,
+  cleanupRecentTestOrders,
+} from './helpers/db';
 
 /**
  * E2E del flow completo de checkout. NO testea la UI de MercadoPago
@@ -25,6 +25,11 @@ import { simulateMpWebhook, cleanupRecentTestOrders } from './helpers/db';
  * 'e2e-test-*' creadas durante la corrida.
  */
 test.describe('Checkout flow E2E', () => {
+  // Serial: cada spec abre su propia conexion pg, en paralelo saturan
+  // el pool y empiezan a fallar inserts/queries. ~10s para los 5 vs
+  // unos pocos segundos en paralelo — vale la simplicidad.
+  test.describe.configure({ mode: 'serial' });
+
   test.afterAll(async () => {
     await cleanupRecentTestOrders();
   });
@@ -32,15 +37,12 @@ test.describe('Checkout flow E2E', () => {
   test('Pago aprobado con tarjeta → comprobante muestra "Visa terminada en 0604"', async ({
     page,
   }) => {
-    await addFirstProductToCart(page);
-    const orderNumber = await submitCheckoutAndCaptureOrder(page);
-
-    // Simulamos lo que haria el webhook real cuando MP nos avisa que
-    // el pago fue aprobado con tarjeta Visa terminada en 0604.
-    await simulateMpWebhook(orderNumber, {
-      status: 'approved',
-      payment_method: 'visa',
-      card_last_four: '0604',
+    // Insertamos la orden directo en BD ya en estado 'paid' con los
+    // datos que el webhook real habria poblado.
+    const orderNumber = await createTestOrderInDb({
+      status: 'paid',
+      mp_payment_method: 'visa',
+      mp_card_last_four: '0604',
     });
 
     // Navegamos a la pagina de resultado como si MP nos hubiera redirigido.
@@ -67,10 +69,7 @@ test.describe('Checkout flow E2E', () => {
   test('Pago rechazado → UI failure + boton "Reintentar pago"', async ({
     page,
   }) => {
-    await addFirstProductToCart(page);
-    const orderNumber = await submitCheckoutAndCaptureOrder(page);
-
-    await simulateMpWebhook(orderNumber, { status: 'rejected' });
+    const orderNumber = await createTestOrderInDb({ status: 'cancelled' });
 
     await page.goto(`/checkout/resultado?status=failure&order=${orderNumber}`);
 
@@ -89,11 +88,8 @@ test.describe('Checkout flow E2E', () => {
   test('Pago pending → polling → transiciona a paid en runtime', async ({
     page,
   }) => {
-    await addFirstProductToCart(page);
-    const orderNumber = await submitCheckoutAndCaptureOrder(page);
-
-    // Inicialmente lo dejamos pending. La UI debe mostrar "Pago en proceso".
-    await simulateMpWebhook(orderNumber, { status: 'pending' });
+    // Inicialmente la orden esta pending. La UI debe mostrar "Pago en proceso".
+    const orderNumber = await createTestOrderInDb({ status: 'pending' });
     await page.goto(`/checkout/resultado?status=pending&order=${orderNumber}`);
 
     await expect(
@@ -117,13 +113,10 @@ test.describe('Checkout flow E2E', () => {
   test('Pago aprobado con account_money (sin tarjeta) → comprobante sin 4 digitos', async ({
     page,
   }) => {
-    await addFirstProductToCart(page);
-    const orderNumber = await submitCheckoutAndCaptureOrder(page);
-
-    await simulateMpWebhook(orderNumber, {
-      status: 'approved',
-      payment_method: 'account_money',
-      card_last_four: undefined,
+    const orderNumber = await createTestOrderInDb({
+      status: 'paid',
+      mp_payment_method: 'account_money',
+      mp_card_last_four: null,
     });
 
     await page.goto(`/checkout/resultado?status=success&order=${orderNumber}`);
