@@ -30,8 +30,14 @@ test.describe('Checkout flow E2E', () => {
   // unos pocos segundos en paralelo — vale la simplicidad.
   test.describe.configure({ mode: 'serial' });
 
+  // Cleanup desactivado por default para que las ordenes de test queden
+  // visibles en el admin (/ecommerce-orders) y poder inspeccionarlas
+  // visualmente. Habilitar via env CLEANUP_E2E=1 si querés que la suite
+  // limpie despues de correr (CI o local cuando quieras higiene).
   test.afterAll(async () => {
-    await cleanupRecentTestOrders();
+    if (process.env.CLEANUP_E2E === '1') {
+      await cleanupRecentTestOrders();
+    }
   });
 
   test('Pago aprobado con tarjeta → comprobante muestra "Visa terminada en 0604"', async ({
