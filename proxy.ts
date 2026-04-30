@@ -153,19 +153,6 @@ export function proxy(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Content-Security-Policy', cspHeader);
 
-  // CSP Report-Only en paralelo: monitoreamos violaciones sin bloquear.
-  // Si una directiva nueva rompe algo, lo detectamos sin afectar usuarios.
-  // El report-uri apunta a un proxy interno (/api/csp-report) para no
-  // exponer URL del backend ni Sentry. Cuando este pulido, mover a
-  // enforcing-only y borrar este Report-Only.
-  if (process.env.CSP_REPORT_ONLY === 'true') {
-    const reportOnlyCsp = cspHeader.replace(/;\s*upgrade-insecure-requests/, '');
-    response.headers.set(
-      'Content-Security-Policy-Report-Only',
-      `${reportOnlyCsp}; report-uri /api/csp-report`,
-    );
-  }
-
   return response;
 }
 
