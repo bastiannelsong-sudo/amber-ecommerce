@@ -39,7 +39,11 @@ test.describe('Navigation', () => {
     await page.goto('/catalogo');
     await page.click('button[aria-label="Buscar"]');
     // Verificar que el modal de busqueda aparece
-    const searchModal = page.locator('input[type="search"], input[placeholder*="Buscar"]');
+    // En desktop hay un input inline en hero + el del modal; en mobile solo el del
+    // modal queda visible. Pedimos el primero VISIBLE — funciona para ambos viewports.
+    const searchModal = page
+      .locator('input[type="search"]:visible, input[placeholder*="Buscar"]:visible')
+      .first();
     await expect(searchModal).toBeVisible({ timeout: 3000 });
   });
 
