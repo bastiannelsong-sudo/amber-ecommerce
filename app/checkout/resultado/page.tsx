@@ -157,10 +157,28 @@ function ResultContent() {
   // ── Render ────────────────────────────────────────────────────────
 
   if (uiStatus === 'loading') {
+    // Skeleton estructural: el usuario "ve" el resultado venir, no un spinner.
+    // Reduce ansiedad durante el polling al webhook MP (puede tomar 2-5s).
     return (
-      <div className="py-24 text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
-        <p className="mt-4 text-platinum-600">Verificando tu pago...</p>
+      <div className="container mx-auto px-4 lg:px-8 py-12 max-w-2xl">
+        <div className="bg-white shadow-luxury overflow-hidden">
+          <div className="bg-gradient-to-br from-pearl-50 to-pearl-100 p-8 text-center border-b border-pearl-200 animate-pulse">
+            <div className="w-20 h-20 bg-pearl-300 rounded-full mx-auto mb-6" />
+            <div className="h-9 w-3/4 bg-pearl-300 rounded mx-auto mb-3" />
+            <div className="h-4 w-2/3 bg-pearl-200 rounded mx-auto" />
+          </div>
+          <div className="p-8 space-y-4 animate-pulse">
+            <div className="h-4 w-1/3 bg-pearl-200 rounded" />
+            <div className="h-12 bg-pearl-100 rounded" />
+            <div className="h-12 bg-pearl-100 rounded" />
+            <div className="h-12 bg-pearl-100 rounded" />
+          </div>
+          <div className="px-8 pb-6 pt-2 text-center">
+            <p className="text-xs text-platinum-500 uppercase tracking-wider">
+              Verificando tu pago…
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -293,8 +311,18 @@ export default function CheckoutResultPage() {
       <Header />
       <Suspense
         fallback={
-          <div className="py-24 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-gold-500 border-t-transparent" />
+          <div className="container mx-auto px-4 lg:px-8 py-12 max-w-2xl">
+            <div className="bg-white shadow-luxury overflow-hidden animate-pulse">
+              <div className="bg-pearl-100 p-8 text-center border-b border-pearl-200">
+                <div className="w-20 h-20 bg-pearl-300 rounded-full mx-auto mb-6" />
+                <div className="h-9 w-3/4 bg-pearl-300 rounded mx-auto mb-3" />
+                <div className="h-4 w-2/3 bg-pearl-200 rounded mx-auto" />
+              </div>
+              <div className="p-8 space-y-3">
+                <div className="h-4 w-1/3 bg-pearl-200 rounded" />
+                <div className="h-12 bg-pearl-100 rounded" />
+              </div>
+            </div>
           </div>
         }
       >
