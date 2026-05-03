@@ -9,6 +9,7 @@ import Footer from '../../components/Footer';
 import { ecommerceService } from '../../lib/services/ecommerce.service';
 import { useCartStore } from '../../lib/stores/cart.store';
 import { trackPurchase } from '../../lib/analytics';
+import OrderStatusTimeline from '../../components/OrderStatusTimeline';
 import type { EcommerceOrderSummary } from '../../lib/types';
 
 /**
@@ -246,22 +247,36 @@ function ResultContent() {
       <p className="text-lg text-platinum-700 mb-8">{config.message}</p>
 
       {order && (
-        <div className="bg-amber-gold-50 border border-amber-gold-200 p-6 rounded-lg mb-8 inline-block">
-          <p className="text-sm text-amber-gold-700 mb-1 uppercase tracking-wider">
-            Numero de Orden
-          </p>
-          <p
-            className="text-3xl font-medium text-obsidian-900"
-            style={{ fontFamily: 'var(--font-cormorant)' }}
-          >
-            #{order.order_number}
-          </p>
-          {order.total != null && (
-            <p className="text-sm text-amber-gold-700 mt-2">
-              Total: ${Number(order.total).toLocaleString('es-CL')}
+        <>
+          <div className="bg-amber-gold-50 border border-amber-gold-200 p-6 rounded-lg mb-8 inline-block">
+            <p className="text-sm text-amber-gold-700 mb-1 uppercase tracking-wider">
+              Numero de Orden
             </p>
+            <p
+              className="text-3xl font-medium text-obsidian-900"
+              style={{ fontFamily: 'var(--font-cormorant)' }}
+            >
+              #{order.order_number}
+            </p>
+            {order.total != null && (
+              <p className="text-sm text-amber-gold-700 mt-2">
+                Total: ${Number(order.total).toLocaleString('es-CL')}
+              </p>
+            )}
+          </div>
+
+          {/* Timeline visual del estado actual del pedido. Solo lo mostramos
+              cuando el pago ya está confirmado — antes de eso el polling
+              sigue activo y el componente del top ya cuenta la historia. */}
+          {uiStatus === 'paid' && (
+            <div className="max-w-md mx-auto bg-white border border-pearl-200 rounded-lg p-6 mb-8 text-left">
+              <p className="text-xs uppercase tracking-wider text-amber-gold-600 font-semibold mb-4">
+                Estado de tu pedido
+              </p>
+              <OrderStatusTimeline status={order.status} variant="full" />
+            </div>
           )}
-        </div>
+        </>
       )}
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
