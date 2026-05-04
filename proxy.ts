@@ -82,7 +82,9 @@ function buildCspHeader(nonce: string, isDev: boolean): string {
     // 'strict-dynamic' permite que scripts cargados con nonce carguen otros
     // scripts dinamicamente sin necesidad de nonce explicito en cada uno.
     // 'unsafe-inline' es ignorado por browsers que soportan nonce (fallback).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' ${externalScriptSrc}`,
+    // 'unsafe-eval' solo en dev: React dev mode lo usa para reconstruir
+    // stacktraces. En prod NO se incluye (React nunca llama eval en prod).
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} ${externalScriptSrc}`,
     `script-src-elem 'self' 'nonce-${nonce}' 'unsafe-inline' ${externalScriptSrc}`,
     `script-src-attr 'none'`,
     `style-src 'self' 'unsafe-inline' fonts.googleapis.com`,

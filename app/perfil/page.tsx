@@ -5,24 +5,10 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AddressBookSection from '../components/AddressBookSection';
+import OrderStatusTimeline from '../components/OrderStatusTimeline';
+import { getOrderStatusMeta } from '../lib/order-status';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
-
-// Map del status interno (ingles) -> label visible y color de badge.
-// El backend persiste status en ingles, la UI lo traduce a una etiqueta
-// amigable y un color que matchea el estado conceptualmente.
-const STATUS_META: Record<
-  string,
-  { label: string; badge: string }
-> = {
-  pending: { label: 'Pago pendiente', badge: 'bg-amber-100 text-amber-700' },
-  paid: { label: 'Pagado', badge: 'bg-blue-100 text-blue-700' },
-  processing: { label: 'En preparación', badge: 'bg-blue-100 text-blue-700' },
-  shipped: { label: 'En tránsito', badge: 'bg-indigo-100 text-indigo-700' },
-  delivered: { label: 'Entregado', badge: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'Cancelado', badge: 'bg-red-100 text-red-700' },
-  refunded: { label: 'Reembolsado', badge: 'bg-gray-200 text-gray-700' },
-};
 
 interface MyOrder {
   order_id: number;
@@ -346,10 +332,7 @@ export default function PerfilPage() {
                   {ordersStatus === 'ok' && orders.length > 0 && (
                     <div className="space-y-4">
                       {orders.map((order) => {
-                        const meta = STATUS_META[order.status] ?? {
-                          label: order.status,
-                          badge: 'bg-gray-100 text-gray-700',
-                        };
+                        const meta = getOrderStatusMeta(order.status);
                         const itemCount = order.items.reduce(
                           (sum, it) => sum + (it.quantity ?? 1),
                           0,
@@ -359,8 +342,8 @@ export default function PerfilPage() {
                             key={order.order_id}
                             className="border border-pearl-200 rounded-lg p-6 hover:border-amber-gold-500 transition-colors"
                           >
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
+                            <div className="flex items-start justify-between mb-4 gap-4">
+                              <div className="min-w-0 flex-1">
                                 <h3 className="text-lg font-medium text-obsidian-900 mb-1">
                                   Pedido #{order.order_number}
                                 </h3>
@@ -372,9 +355,21 @@ export default function PerfilPage() {
                                   })}
                                 </p>
                               </div>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${meta.badge}`}>
+                              <span
+                                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium ${meta.badge}`}
+                              >
                                 {meta.label}
                               </span>
+                            </div>
+
+                            {/* Mensaje contextual del estado actual */}
+                            <p className="text-sm text-platinum-600 mb-5">
+                              {meta.description}
+                            </p>
+
+                            {/* Timeline visual — 4 pasos del happy path */}
+                            <div className="mb-5 hidden sm:block">
+                              <OrderStatusTimeline status={order.status} variant="compact" />
                             </div>
 
                             <div className="flex items-center justify-between pt-4 border-t border-pearl-200">
