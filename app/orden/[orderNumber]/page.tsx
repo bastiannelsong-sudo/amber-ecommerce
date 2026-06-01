@@ -6,6 +6,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { getOrderByNumber } from '../../lib/server-api/orders';
 import { getSession } from '../../lib/session';
+import { getOrderStatusMeta } from '../../lib/order-status';
 import PrintButton from './PrintButton';
 import type { EcommerceOrderDetail } from '../../lib/types';
 
@@ -63,16 +64,6 @@ function canAccessOrder(
 
   return false;
 }
-
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  pending: { label: 'Pendiente de pago', cls: 'bg-amber-gold-100 text-amber-gold-800' },
-  paid: { label: 'Pagado', cls: 'bg-green-100 text-green-800' },
-  processing: { label: 'En preparación', cls: 'bg-blue-100 text-blue-800' },
-  shipped: { label: 'Enviado', cls: 'bg-blue-100 text-blue-800' },
-  delivered: { label: 'Entregado', cls: 'bg-green-100 text-green-800' },
-  cancelled: { label: 'Cancelado', cls: 'bg-red-100 text-red-800' },
-  refunded: { label: 'Reembolsado', cls: 'bg-platinum-200 text-platinum-700' },
-};
 
 /**
  * MP retorna `payment_method_id` con valores como "visa", "master", "amex",
@@ -171,13 +162,16 @@ export default async function OrderReceiptPage({
             </div>
 
             <div className="flex flex-col items-start sm:items-end gap-2">
-              <span
-                className={`inline-block px-3 py-1 text-xs uppercase tracking-wider font-medium rounded ${
-                  STATUS_LABEL[order.status]?.cls ?? 'bg-platinum-200 text-platinum-700'
-                }`}
-              >
-                {STATUS_LABEL[order.status]?.label ?? order.status}
-              </span>
+              {(() => {
+                const statusMeta = getOrderStatusMeta(order.status);
+                return (
+                  <span
+                    className={`inline-block px-3 py-1 text-xs uppercase tracking-wider font-medium rounded ${statusMeta.badge}`}
+                  >
+                    {statusMeta.label}
+                  </span>
+                );
+              })()}
               <p
                 className="text-2xl font-light text-obsidian-900"
                 style={{ fontFamily: 'var(--font-cormorant)' }}
