@@ -83,4 +83,66 @@ describe('order-access — signOrderAccessToken / verifyOrderAccessToken', () =>
     // Si el caller compara contra ORD-B, el mismatch lo detecta el route.
     expect(result).not.toBe('ORD-B');
   });
+
+  // ---------------------------------------------------------------------------
+  // Finding #3 — edge cases adicionales
+  // ---------------------------------------------------------------------------
+
+  it('verifyOrderAccessToken returns null when exp field is absent', async () => {
+    // Token bien formado y firmado pero sin campo exp → debe rechazarse.
+    const { verifyOrderAccessToken } = await import('./order-access');
+    const { createHmac } = await import('node:crypto');
+    const secret = process.env.SESSION_SECRET!;
+    // Payload sin exp (solo order_number).
+    const payload = Buffer.from(JSON.stringify({ order_number: 'ORD-NO-EXP' })).toString('base64url');
+    const sig = createHmac('sha256', secret).update(payload).digest('base64url');
+    const tokenNoExp = `${payload}.${sig}`;
+    expect(verifyOrderAccessToken(tokenNoExp)).toBeNull();
+  });
+
+  it('safeEqual: signature with different buffer length returns false without throwing', async () => {
+    // safeEqual tiene un guard de longitud antes de timingSafeEqual.
+    // Probamos indirectamente: firma correcta recortada (longitud distinta) → null.
+    const { signOrderAccessToken, verifyOrderAccessToken } = await import('./order-access');
+    const token = signOrderAccessToken('ORD-LEN');
+    const [payload, sig] = token.split('.');
+    // Recortamos la firma a la mitad → longitud diferente a la esperada.
+    const shortSig = sig.slice(0, Math.floor(sig.length / 2));
+    // No debe lanzar excepción, debe devolver null.
+    expect(() => verifyOrderAccessToken(`${payload}.${shortSig}`)).not.toThrow();
+    expect(verifyOrderAccessToken(`${payload}.${shortSig}`)).toBeNull();
+  });
+
+  it('verifyOrderAccessToken fails closed when SESSION_SECRET is absent', async () => {
+    // Sin SESSION_SECRET el sign/verify debe fallar cerrado (null), nunca fail-open.
+    const { verifyOrderAccessToken, signOrderAccessToken } = await import('./order-access');
+
+    // Firmamos con el secret presente para tener un token válido de referencia.
+    const validToken = signOrderAccessToken('ORD-NOSECRET');
+    expect(verifyOrderAccessToken(validToken)).toBe('ORD-NOSECRET'); // baseline
+
+    // Ahora quitamos el secret y verificamos que falla cerrado.
+    const original = process.env.SESSION_SECRET;
+    delete process.env.SESSION_SECRET;
+    try {
+      // verify debe retornar null (fail-closed), nunca lanzar ni devolver el order_number.
+      const result = verifyOrderAccessToken(validToken);
+      expect(result).toBeNull();
+    } finally {
+      // Restaurar para no contaminar otros tests.
+      process.env.SESSION_SECRET = original;
+    }
+  });
+
+  it('signOrderAccessToken throws when SESSION_SECRET is absent', async () => {
+    // sign también debe fallar cerrado (lanzar), nunca emitir un token sin secret.
+    const { signOrderAccessToken } = await import('./order-access');
+    const original = process.env.SESSION_SECRET;
+    delete process.env.SESSION_SECRET;
+    try {
+      expect(() => signOrderAccessToken('ORD-NOSECRET')).toThrow();
+    } finally {
+      process.env.SESSION_SECRET = original;
+    }
+  });
 });

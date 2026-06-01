@@ -301,6 +301,42 @@ describe('GET /api/orders/[orderNumber] — ownership guard', () => {
 
     expect(response.status).toBe(403);
   });
+
+  // ---------------------------------------------------------------------------
+  // Finding #3 — orden de guest (customer_id == null) accedida por sesión válida
+  // que NO es dueña → 403.
+  // Cubre el caso: hasSessionAccess=true, hasCapabilityAccess=false,
+  // data.customer_id == null → ownership check falla → 403.
+  // ---------------------------------------------------------------------------
+  it('returns 403 when session user accesses a guest order (customer_id is null)', async () => {
+    getSession.mockResolvedValue({
+      user_id: 99,
+      email: 'otro@ejemplo.com',
+      first_name: 'Otro',
+      last_name: 'Usuario',
+      access_token: 'tok',
+      refresh_token: 'ref',
+      expires_at: Date.now() / 1000 + 3600,
+    });
+    verifyOrderAccessCookie.mockResolvedValue(null); // sin cookie de acceso
+
+    // La orden existe pero fue creada como guest (customer_id null).
+    backendFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: { ...MOCK_ORDER_WITH_PII, customer_id: null },
+    });
+
+    const { req, params } = makeRequest('ORD-001');
+    const response = await GET(req, { params });
+
+    // customer_id == null → el ownership check falla → 403.
+    expect(response.status).toBe(403);
+
+    const body = await response.json() as Record<string, unknown>;
+    expect(body.customer_email).toBeUndefined();
+    expect(body.shipping_address).toBeUndefined();
+  });
 });
 
 // Los tests unitarios de signOrderAccessToken / verifyOrderAccessToken
