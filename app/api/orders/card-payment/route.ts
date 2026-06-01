@@ -1,18 +1,24 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { backendFetch } from '../../lib/bff-proxy';
-import { getSession } from '../../lib/session';
-import { setOrderAccessCookie } from '../../lib/order-access';
+import { backendFetch } from '../../../lib/bff-proxy';
+import { getSession } from '../../../lib/session';
+import { setOrderAccessCookie } from '../../../lib/order-access';
 
-interface CreateOrderResponse {
+interface CardPaymentResponse {
   order_number?: string;
   [key: string]: unknown;
 }
 
 /**
- * POST /api/orders → crear orden (checkout — Checkout Pro con redirect MP).
+ * POST /api/orders/card-payment — proxy al backend del flow Bricks Auth/Capture.
  *
- * optionalAuth: si el usuario está logueado se inyecta JWT y la orden
- * queda asociada al customer; si es guest la orden se crea sin owner.
+ * El frontend (componente CardPaymentBrick) tokeniza la tarjeta vía MP Bricks
+ * SDK en el browser y manda acá el token + datos de orden. Backend crea
+ * orden + ejecuta Payment.create con capture: false → status authorized.
+ *
+ * Por qué BFF y no llamada directa al backend:
+ *   1. Cumple ARCH-001 (browser nunca habla al backend NestJS directo)
+ *   2. Inyecta el x-internal-api-key + JWT del cookie httpOnly si hay sesión
+ *   3. Permite logging/rate-limiting en una sola capa Next.js
  *
  * Después de crear la orden con éxito, emite una cookie de acceso firmada
  * (HMAC) para ese order_number concreto. Esto permite que /checkout/resultado
@@ -35,8 +41,8 @@ export async function POST(req: NextRequest) {
   const internalKey = process.env.INTERNAL_API_KEY;
   if (internalKey) extraHeaders['x-internal-api-key'] = internalKey;
 
-  const { ok, status, data } = await backendFetch<CreateOrderResponse>(
-    '/ecommerce/orders',
+  const { ok, status, data } = await backendFetch<CardPaymentResponse>(
+    '/ecommerce/orders/card-payment',
     {
       method: 'POST',
       body: JSON.stringify(body),
