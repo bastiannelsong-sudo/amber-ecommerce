@@ -46,6 +46,14 @@ const META: Record<string, OrderStatusMeta> = {
     step: 0,
     isTerminal: false,
   },
+  authorized: {
+    label: 'En preparación',
+    description: 'Tu pago fue autorizado. Estamos confirmando y preparando tu pedido.',
+    badge: 'bg-blue-100 text-blue-800',
+    accentColor: 'blue',
+    step: 1,
+    isTerminal: false,
+  },
   paid: {
     label: 'Pago confirmado',
     description: 'Recibimos tu pago. Estamos por preparar tu pedido.',
