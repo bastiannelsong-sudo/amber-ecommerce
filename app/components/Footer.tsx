@@ -115,7 +115,7 @@ export default function Footer() {
 
             {/* Contacto de ayuda */}
             <p className="text-sm text-pearl-400">
-              Necesitas ayuda? <a href="/contacto" className="text-amber-gold-400 hover:text-amber-gold-300 transition-colors">Contactanos</a>
+              Necesitas ayuda? <a href="/contacto" className="text-amber-gold-400 hover:text-amber-gold-300 underline underline-offset-4 transition-colors">Contactanos</a>
             </p>
           </div>
 

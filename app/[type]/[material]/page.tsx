@@ -29,6 +29,11 @@ export async function generateStaticParams() {
   return TYPE_MATERIAL_COMBOS.map((c) => ({ type: c.type, material: c.material }));
 }
 
+// Threshold para thin content. Combinaciones type×material con menos de N
+// productos quedan noindex (siguen indexables las URLs cuando crezca el
+// catálogo y total cruce el umbral).
+const THIN_CONTENT_THRESHOLD = 3;
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { type, material } = await params;
   if (!isProductTypeSlug(type) || !isMaterialSlug(material)) return {};
@@ -39,10 +44,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = `${typeCopy.h1} en ${materialLabel.toLowerCase()}. ${typeCopy.description}`;
   const url = `${SITE_URL}/${type}/${material}`;
 
+  // Thin content check: si la combinación tiene <3 productos, noindex,follow.
+  // El fetch se deduplica con la del componente vía React server cache (RSC
+  // dedupes idénticas requests fetch dentro del mismo render request).
+  const backendType = slugToProductType(type);
+  const backendMaterial = slugToMaterial(material);
+  let thin = false;
+  if (backendType && backendMaterial) {
+    try {
+      const { total } = await fetchCatalog({
+        product_type: backendType,
+        material: backendMaterial,
+        limit: 48,
+        sort: 'featured',
+      });
+      thin = total < THIN_CONTENT_THRESHOLD;
+    } catch {
+      // Si el catálogo no responde, no marcamos noindex — preferimos que la
+      // URL siga indexable a quemar SEO por un fetch transitorio fallido.
+    }
+  }
+
   return {
     title,
     description,
     alternates: { canonical: url },
+    ...(thin ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title,
       description,

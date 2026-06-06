@@ -145,6 +145,12 @@ export const proxyToBackend = async (
       ...extraHeaders,
     };
     if (token) headers.Authorization = `Bearer ${token}`;
+    // Capa 1 hardening: identifica el request como proveniente del BFF.
+    // Sin esto, el backend rechaza con 401 (excepto webhooks/healthcheck).
+    const internalKey = process.env.INTERNAL_API_KEY;
+    if (internalKey) {
+      headers['x-internal-api-key'] = internalKey;
+    }
     return headers;
   };
 

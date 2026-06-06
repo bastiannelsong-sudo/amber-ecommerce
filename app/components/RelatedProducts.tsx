@@ -8,17 +8,28 @@ interface RelatedProductsProps {
   currentProductId: number;
   categoryId?: number;
   material?: string;
+  /**
+   * Products pre-fetched server-side. Si se pasa, el componente renderea
+   * directo sin fetch en cliente — los links salen en el HTML SSR y son
+   * crawleables (clave para SEO interno linking, SEO-001 #6).
+   */
+  initialProducts?: Product[];
 }
 
 export default function RelatedProducts({
   currentProductId,
   categoryId,
   material,
+  initialProducts,
 }: RelatedProductsProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [loading, setLoading] = useState(!initialProducts);
 
   useEffect(() => {
+    // Si vinieron pre-fetched, no hacemos client fetch — preservamos los
+    // products del SSR y evitamos un round-trip innecesario.
+    if (initialProducts && initialProducts.length > 0) return;
+
     const fetchRelated = async () => {
       try {
         // BFF same-origin: Next.js reenvía al backend privado.
@@ -45,7 +56,7 @@ export default function RelatedProducts({
     };
 
     fetchRelated();
-  }, [currentProductId, categoryId, material]);
+  }, [currentProductId, categoryId, material, initialProducts]);
 
   if (loading) {
     return (

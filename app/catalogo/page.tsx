@@ -58,27 +58,62 @@ function paramsToBackendFilters(sp: Record<string, string | string[] | undefined
   return filters;
 }
 
-export const metadata: Metadata = {
-  title: 'Catálogo Completo | AMBER Joyas',
-  description:
-    'Explora toda nuestra colección de joyería en plata 925, amuletos, pulseras, collares y aros. Envío a todo Chile con cambios y devoluciones sin costo.',
-  alternates: { canonical: CATALOG_URL },
-  openGraph: {
-    title: 'Catálogo Completo | AMBER',
+// Filtros que cuando están presentes vuelven la URL "facetada" → noindex
+// para no malgastar crawl budget en combinaciones infinitas. `page` queda
+// fuera porque las paginated SI deben indexarse con canonical propio.
+const FILTER_PARAMS = ['mat', 'col', 'tag', 'tags', 'pmin', 'pmax', 'sort'] as const;
+
+function hasActiveFilters(sp: Record<string, string | string[] | undefined>): boolean {
+  return FILTER_PARAMS.some((k) => {
+    const v = sp[k];
+    if (!v) return false;
+    if (Array.isArray(v)) return v.some((s) => s.length > 0);
+    return v.length > 0;
+  });
+}
+
+export async function generateMetadata({
+  searchParams,
+}: CatalogoPageProps): Promise<Metadata> {
+  const sp = await searchParams;
+  const pageParam = Array.isArray(sp.page) ? sp.page[0] : sp.page;
+  const pageNum = pageParam ? parseInt(pageParam, 10) : 1;
+  const isPaginated = !isNaN(pageNum) && pageNum > 1;
+  const filtered = hasActiveFilters(sp);
+
+  // Canonical: paginadas conservan ?page=N (NO colapsar a /catalogo, eso causa
+  // de-indexing). URLs con filtros NO declaran canonical alternativo.
+  const canonical = isPaginated ? `${CATALOG_URL}?page=${pageNum}` : CATALOG_URL;
+
+  const title = isPaginated
+    ? `Catálogo Completo — Página ${pageNum} | AMBER Joyas`
+    : 'Catálogo Completo | AMBER Joyas';
+
+  return {
+    title,
     description:
-      'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
-    url: CATALOG_URL,
-    siteName: 'AMBER Joyería',
-    type: 'website',
-    locale: 'es_CL',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Catálogo Completo | AMBER',
-    description:
-      'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
-  },
-};
+      'Explora toda nuestra colección de joyería en plata 925, amuletos, pulseras, collares y aros. Envío a todo Chile con cambios y devoluciones sin costo.',
+    alternates: { canonical },
+    // noindex cuando la URL tiene filtros activos — evita que Google indexe
+    // /catalogo?mat=X&col=Y, preservamos crawl budget para landings reales.
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      title: 'Catálogo Completo | AMBER',
+      description:
+        'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
+      url: canonical,
+      siteName: 'AMBER Joyería',
+      type: 'website',
+      locale: 'es_CL',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Catálogo Completo | AMBER',
+      description:
+        'Joyería artesanal en plata 925 y amuletos de protección. Piezas con significado real.',
+    },
+  };
+}
 
 async function getProducts(filters: CatalogFilters): Promise<Product[]> {
   try {

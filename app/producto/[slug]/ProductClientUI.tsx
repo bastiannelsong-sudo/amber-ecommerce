@@ -17,6 +17,8 @@ import type { Product } from '@/app/lib/types';
 
 interface ProductClientUIProps {
   product: Product;
+  /** Productos relacionados pre-fetched server-side (SEO-001 #6). */
+  relatedProducts?: Product[];
 }
 
 /* --- Animation variants --- */
@@ -34,7 +36,7 @@ const fadeUp = {
   },
 };
 
-export default function ProductClientUI({ product }: ProductClientUIProps) {
+export default function ProductClientUI({ product, relatedProducts }: ProductClientUIProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
@@ -560,6 +562,7 @@ export default function ProductClientUI({ product }: ProductClientUIProps) {
             currentProductId={product.product_id}
             categoryId={product.category?.category_id}
             material={product.material}
+            initialProducts={relatedProducts}
           />
         </div>
       </div>

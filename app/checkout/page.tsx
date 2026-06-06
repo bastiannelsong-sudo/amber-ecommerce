@@ -127,8 +127,20 @@ export default function CheckoutPage() {
 
   const handleSubmitShipping = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.firstName || !formData.lastName || !formData.address || !formData.city) {
-      toast.error('Por favor completa todos los campos obligatorios');
+    // Identificamos qué falta para dar copy específico (humano > genérico).
+    const missing: string[] = [];
+    if (!formData.email) missing.push('email');
+    if (!formData.firstName) missing.push('nombre');
+    if (!formData.lastName) missing.push('apellido');
+    if (!formData.address) missing.push('dirección');
+    if (!formData.city) missing.push('comuna');
+    if (missing.length > 0) {
+      const list = missing.length === 1
+        ? missing[0]
+        : missing.length === 2
+          ? `${missing[0]} y ${missing[1]}`
+          : `${missing.slice(0, -1).join(', ')} y ${missing[missing.length - 1]}`;
+      toast.error(`Falta ${list} para continuar.`);
       return;
     }
     setStep('payment');
@@ -177,7 +189,7 @@ export default function CheckoutPage() {
       }>('/orders', payload);
 
       if (!res.data?.init_point) {
-        throw new Error('No se recibio el link de pago. Intenta nuevamente.');
+        throw new Error('MercadoPago no respondió a tiempo. Intentá de nuevo en unos segundos.');
       }
 
       // Snapshot del carrito por si volvemos a esta pagina y necesitamos
@@ -193,15 +205,21 @@ export default function CheckoutPage() {
       // window.location triggea full navigation, sale del flujo Next.
       window.location.href = res.data.init_point;
     } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? typeof err.data === 'object' && err.data && 'error' in err.data
-            ? String((err.data as { error?: string }).error)
-            : err.message
+      // Copy humano: priorizamos el error específico del backend si vino,
+      // pero la fallback es empática (no técnica).
+      const backendMessage =
+        err instanceof ApiError &&
+        typeof err.data === 'object' &&
+        err.data &&
+        'error' in err.data
+          ? String((err.data as { error?: string }).error)
           : err instanceof Error
             ? err.message
-            : 'No se pudo iniciar el pago. Intenta nuevamente.';
-      toast.error(message);
+            : null;
+      toast.error(
+        backendMessage ||
+          'No pudimos iniciar el pago. Revisá tu conexión y volvé a intentar — tu carrito sigue intacto.',
+      );
       submitGuard.current = false;
       setIsProcessingPayment(false);
     }
@@ -569,6 +587,38 @@ export default function CheckoutPage() {
                       )}
                     </button>
                   </div>
+
+                  {/* Trust signals bajo el CTA — refuerzan seguridad y reducen fricción
+                      en el momento de mayor ansiedad del usuario. */}
+                  <div className="grid grid-cols-3 gap-3 pt-3 text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <svg className="w-4 h-4 text-amber-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                      <p className="text-[10px] uppercase tracking-wider font-medium text-obsidian-700">
+                        Pago seguro
+                      </p>
+                      <p className="text-[10px] text-platinum-500">SSL + MercadoPago</p>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <svg className="w-4 h-4 text-amber-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                      </svg>
+                      <p className="text-[10px] uppercase tracking-wider font-medium text-obsidian-700">
+                        Tus datos
+                      </p>
+                      <p className="text-[10px] text-platinum-500">Nunca se almacenan</p>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <svg className="w-4 h-4 text-amber-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                      </svg>
+                      <p className="text-[10px] uppercase tracking-wider font-medium text-obsidian-700">
+                        Devolución
+                      </p>
+                      <p className="text-[10px] text-platinum-500">10 días sin costo</p>
+                    </div>
+                  </div>
                 </div>
               </form>
             )}
@@ -845,6 +895,26 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Sticky bottom bar mobile: total siempre visible mientras se llena el form.
+          Solo se renderea fuera del step confirmation y solo en mobile (< lg). */}
+      {step !== 'confirmation' && displayItems.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-pearl-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] z-40 px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-platinum-500">
+              Total
+            </span>
+            <span className="text-lg font-medium text-obsidian-900">
+              ${displayTotal.toLocaleString('es-CL')}
+            </span>
+          </div>
+          <span className="text-xs text-platinum-600 text-right max-w-[140px]">
+            {step === 'shipping'
+              ? 'Completá envío para continuar'
+              : 'Listo para pagar'}
+          </span>
+        </div>
+      )}
 
       <Footer />
     </div>

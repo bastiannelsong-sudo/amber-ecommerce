@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { getOrderByNumber } from '../../lib/server-api/orders';
+import { getSession } from '../../lib/session';
+import { getOrderStatusMeta } from '../../lib/order-status';
 import PrintButton from './PrintButton';
 import type { EcommerceOrderDetail } from '../../lib/types';
 
@@ -17,17 +19,51 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ orderNumber: string }>;
+  searchParams: Promise<{ email?: string }>;
 }
 
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  pending: { label: 'Pendiente de pago', cls: 'bg-amber-gold-100 text-amber-gold-800' },
-  paid: { label: 'Pagado', cls: 'bg-green-100 text-green-800' },
-  processing: { label: 'En preparación', cls: 'bg-blue-100 text-blue-800' },
-  shipped: { label: 'Enviado', cls: 'bg-blue-100 text-blue-800' },
-  delivered: { label: 'Entregado', cls: 'bg-green-100 text-green-800' },
-  cancelled: { label: 'Cancelado', cls: 'bg-red-100 text-red-800' },
-  refunded: { label: 'Reembolsado', cls: 'bg-platinum-200 text-platinum-700' },
-};
+/**
+ * Verifica que el visitante tiene derecho a ver esta orden.
+ *
+ * Reglas:
+ *   - Si hay sesion logueada y el customer_id de la orden matchea con
+ *     el de la sesion → permitido.
+ *   - Si NO hay sesion (guest), debe llegar con `?email=` en la URL
+ *     (el email se manda en el link de confirmacion por mail) y debe
+ *     matchear con order.customer_email (case-insensitive, trimmed).
+ *   - Cualquier otro caso → 404 (notFound).
+ *
+ * Por que 404 en vez de 401/403: no queremos confirmar la existencia
+ * del order_number a alguien que no tiene como verlo. Todos los
+ * accesos invalidos son indistinguibles de "esta orden no existe".
+ *
+ * Tradeoff: no bloqueamos enumeracion si tienen el order_number Y
+ * el email correcto (los dos vienen en el email de confirmacion al
+ * mismo cliente). El email actua como "token compartido". No es
+ * cripto-seguro pero es el patron estandar en ecommerce (Shopify,
+ * WooCommerce hacen igual) y suficiente para PII de bajo valor.
+ */
+function canAccessOrder(
+  order: { customer_id?: number | null; customer_email: string },
+  session: { user_id: number } | null,
+  emailParam: string | undefined,
+): boolean {
+  // Logged user que es el dueño de la orden.
+  if (session && order.customer_id != null && order.customer_id === session.user_id) {
+    return true;
+  }
+
+  // Guest con email en la URL que matchea.
+  if (emailParam) {
+    const provided = emailParam.trim().toLowerCase();
+    const stored = order.customer_email.trim().toLowerCase();
+    if (provided && provided === stored) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  * MP retorna `payment_method_id` con valores como "visa", "master", "amex",
@@ -74,11 +110,22 @@ function formatDate(iso: string): string {
   }
 }
 
-export default async function OrderReceiptPage({ params }: PageProps) {
+export default async function OrderReceiptPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { orderNumber } = await params;
+  const { email: emailParam } = await searchParams;
   const order = await getOrderByNumber(orderNumber);
 
   if (!order) {
+    notFound();
+  }
+
+  const session = await getSession();
+  if (!canAccessOrder(order, session, emailParam)) {
+    // 404 en vez de 401: no confirmamos la existencia del order_number
+    // a alguien que no tiene derecho a verlo.
     notFound();
   }
 
@@ -115,13 +162,16 @@ export default async function OrderReceiptPage({ params }: PageProps) {
             </div>
 
             <div className="flex flex-col items-start sm:items-end gap-2">
-              <span
-                className={`inline-block px-3 py-1 text-xs uppercase tracking-wider font-medium rounded ${
-                  STATUS_LABEL[order.status]?.cls ?? 'bg-platinum-200 text-platinum-700'
-                }`}
-              >
-                {STATUS_LABEL[order.status]?.label ?? order.status}
-              </span>
+              {(() => {
+                const statusMeta = getOrderStatusMeta(order.status);
+                return (
+                  <span
+                    className={`inline-block px-3 py-1 text-xs uppercase tracking-wider font-medium rounded ${statusMeta.badge}`}
+                  >
+                    {statusMeta.label}
+                  </span>
+                );
+              })()}
               <p
                 className="text-2xl font-light text-obsidian-900"
                 style={{ fontFamily: 'var(--font-cormorant)' }}
