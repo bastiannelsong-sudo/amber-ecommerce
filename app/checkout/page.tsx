@@ -15,6 +15,7 @@ import CheckoutSkeleton from '../components/skeletons/CheckoutSkeleton';
 import { apiClient, ApiError } from '../lib/api-client';
 import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
+import { shippingCost, cartTotal } from '@/features/cart/domain/cart.rules';
 
 export default function CheckoutPage() {
   const items = useCartStore((state) => state.items);
@@ -112,8 +113,8 @@ export default function CheckoutPage() {
   };
 
   const subtotal = getTotal;
-  const shipping = subtotal > 30000 ? 0 : 5000;
-  const total = subtotal + shipping;
+  const shipping = shippingCost(subtotal);
+  const total = cartTotal(subtotal);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
