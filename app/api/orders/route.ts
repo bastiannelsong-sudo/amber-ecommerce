@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { backendFetch } from '../../lib/bff-proxy';
 import { getSession } from '../../lib/session';
 import { setOrderAccessCookie } from '../../lib/order-access';
+import { validateBody } from '../../lib/validation';
+import { createOrderSchema } from '../../lib/ecommerce/schemas';
 
 interface CreateOrderResponse {
   order_number?: string;
@@ -23,10 +25,12 @@ interface CreateOrderResponse {
  * firmado contiene solo el order_number + exp (CERO PII).
  */
 export async function POST(req: NextRequest) {
+  // Validate body first — sole body reader (ADR S2-001, BFF-NAV-02)
+  const v = await validateBody(req, createOrderSchema);
+  if (!v.ok) return v.response;
+
   const session = await getSession();
   const userToken = session?.access_token ?? null;
-
-  const body = await req.json().catch(() => ({}));
 
   // Construir headers: Bearer opcional (guest sin sesión no envía token)
   // + x-internal-api-key para autenticar la request ante el backend privado.
@@ -39,7 +43,7 @@ export async function POST(req: NextRequest) {
     '/ecommerce/orders',
     {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(v.data),
       headers: extraHeaders,
     },
   );
