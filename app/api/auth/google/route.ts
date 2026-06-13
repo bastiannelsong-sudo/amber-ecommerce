@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { backendFetch } from '../../../lib/bff-proxy';
 import { setSession } from '../../../lib/session';
+import { validateBody } from '../../../lib/validation';
+import { googleAuthSchema } from '../../../lib/auth/schemas';
 
 interface BackendGoogleResponse {
   access_token: string;
@@ -17,16 +19,14 @@ interface BackendGoogleResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  if (!body?.id_token) {
-    return NextResponse.json({ message: 'id_token requerido' }, { status: 400 });
-  }
+  const v = await validateBody(req, googleAuthSchema);
+  if (!v.ok) return v.response;
 
   const { ok, status, data } = await backendFetch<BackendGoogleResponse>(
     '/ecommerce-auth/google',
     {
       method: 'POST',
-      body: JSON.stringify({ id_token: body.id_token }),
+      body: JSON.stringify({ credential: v.data.credential }),
     },
   );
 

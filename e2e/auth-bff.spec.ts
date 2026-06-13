@@ -62,8 +62,13 @@ test.describe('BFF: validación de payloads', () => {
     expect(res.status()).toBe(400);
   });
 
-  test('/api/auth/google rechaza sin id_token con 400', async ({ request }) => {
+  test('/api/auth/google rechaza sin credential con 400', async ({ request }) => {
     const res = await request.post('/api/auth/google', { data: {} });
+    expect(res.status()).toBe(400);
+  });
+
+  test('/api/auth/google rechaza id_token (campo obsoleto) con 400', async ({ request }) => {
+    const res = await request.post('/api/auth/google', { data: { id_token: 'tok' } });
     expect(res.status()).toBe(400);
   });
 });

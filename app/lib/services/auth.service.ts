@@ -27,7 +27,7 @@ export const authService = {
 
   async googleAuth(idToken: string): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/auth/google', {
-      id_token: idToken,
+      credential: idToken,
     });
     return response.data;
   },
@@ -81,7 +81,7 @@ export const authService = {
 
   async linkGoogle(idToken: string): Promise<{ success: boolean }> {
     const response = await apiClient.post<{ success: boolean }>('/auth/link-google', {
-      id_token: idToken,
+      credential: idToken,
     });
     return response.data;
   },
