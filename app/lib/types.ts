@@ -85,7 +85,8 @@ export interface Platform {
 }
 
 // Cart types — CartItem is defined in the domain layer; re-exported here for backwards compatibility
-export type { CartItem } from '@/features/cart/domain/cart.types';
+import type { CartItem } from '@/features/cart/domain/cart.types';
+export type { CartItem };
 
 export interface Cart {
   items: CartItem[];
