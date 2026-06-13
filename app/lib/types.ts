@@ -84,15 +84,9 @@ export interface Platform {
   code: string;
 }
 
-// Cart types
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  selectedVariant?: {
-    color: string;
-    size?: string;
-  };
-}
+// Cart types — CartItem is defined in the domain layer; re-exported here for backwards compatibility
+import type { CartItem } from '@/features/cart/domain/cart.types';
+export type { CartItem };
 
 export interface Cart {
   items: CartItem[];

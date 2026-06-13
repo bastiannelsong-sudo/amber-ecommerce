@@ -9,6 +9,8 @@ import { useCartStore } from '../lib/stores/cart.store';
 import { trackViewCart } from '../lib/analytics';
 import CartSkeleton from '../components/skeletons/CartSkeleton';
 import toast from 'react-hot-toast';
+import { shippingCost, cartTotal } from '@/features/cart/domain/cart.rules';
+import { FREE_SHIPPING_THRESHOLD } from '@/features/cart/domain/cart.constants';
 
 export default function CarritoPage() {
   const items = useCartStore((state) => state.items);
@@ -36,8 +38,8 @@ export default function CarritoPage() {
   }, [mounted]);
 
   const subtotal = getTotal;
-  const shipping = subtotal > 30000 ? 0 : 5000;
-  const total = subtotal + shipping;
+  const shipping = shippingCost(subtotal);
+  const total = cartTotal(subtotal);
 
   const handleRemoveItem = (productId: number, name: string) => {
     removeItem(productId);
@@ -217,7 +219,7 @@ export default function CarritoPage() {
                   )}
                   {shipping > 0 && (
                     <div className="text-xs text-platinum-600 bg-pearl-100 p-2 rounded">
-                      Agrega ${(30000 - subtotal).toLocaleString('es-CL')} más para envío gratis
+                      Agrega ${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString('es-CL')} más para envío gratis
                     </div>
                   )}
                 </div>

@@ -1,17 +1,18 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { FREE_SHIPPING_THRESHOLD } from '@/features/cart/domain/cart.constants';
 
 interface FreeShippingProgressProps {
   /** Current cart total */
   cartTotal: number;
-  /** Threshold for free shipping (default: 50000 CLP) */
+  /** Threshold for free shipping (default: FREE_SHIPPING_THRESHOLD = 30000 CLP) */
   threshold?: number;
 }
 
 export default function FreeShippingProgress({
   cartTotal,
-  threshold = 30000,
+  threshold = FREE_SHIPPING_THRESHOLD,
 }: FreeShippingProgressProps) {
   const remaining = threshold - cartTotal;
   const progress = Math.min((cartTotal / threshold) * 100, 100);
