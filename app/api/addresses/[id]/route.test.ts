@@ -42,7 +42,10 @@ describe('PATCH /api/addresses/[id]', () => {
       access_token: 'test-token',
       refresh_token: 'refresh-token',
       expires_at: Math.floor(Date.now() / 1000) + 3600,
-      customer: { user_id: 1, email: 'user@example.com', first_name: 'Test', last_name: 'User' },
+      user_id: 1,
+      email: 'user@example.com',
+      first_name: 'Test',
+      last_name: 'User',
     });
 
     proxyToBackend.mockResolvedValue(
