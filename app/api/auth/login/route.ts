@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { backendFetch } from '../../../lib/bff-proxy';
 import { setSession } from '../../../lib/session';
+import { validateBody } from '../../../lib/validation';
+import { loginSchema } from '../../../lib/auth/schemas';
 
 interface BackendAuthResponse {
   access_token: string;
@@ -15,16 +17,14 @@ interface BackendAuthResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  if (!body?.email || !body?.password) {
-    return NextResponse.json({ message: 'Email y contraseña requeridos' }, { status: 400 });
-  }
+  const v = await validateBody(req, loginSchema);
+  if (!v.ok) return v.response;
 
   const { ok, status, data } = await backendFetch<BackendAuthResponse>(
     '/ecommerce-auth/login',
     {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(v.data),
     },
   );
 
@@ -42,6 +42,5 @@ export async function POST(req: NextRequest) {
     expires_at: Math.floor(Date.now() / 1000) + (data.expires_in ?? 3600),
   });
 
-  // Devolvemos solo el customer. Los tokens viven en cookie httpOnly.
   return NextResponse.json({ customer: data.customer });
 }
