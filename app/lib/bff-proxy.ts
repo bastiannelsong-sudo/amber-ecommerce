@@ -19,6 +19,13 @@ interface ProxyOptions {
   extraHeaders?: Record<string, string>;
   /** Parsear body del request para reenviar */
   forwardBody?: boolean;
+  /**
+   * Pre-parsed body to forward instead of re-reading req.json().
+   * Use this when the body has already been consumed by validateBody()
+   * to avoid the NextRequest double-read empty-body bug (ADR-003).
+   * When set, req.json() is skipped entirely.
+   */
+  body?: unknown;
 }
 
 interface RefreshResult {
@@ -119,6 +126,7 @@ export const proxyToBackend = async (
     optionalAuth = false,
     extraHeaders = {},
     forwardBody = true,
+    body: prevalidatedBody,
   } = options;
 
   const url = new URL(backendPath, BASE);
@@ -130,7 +138,11 @@ export const proxyToBackend = async (
   const hasBody = forwardBody && !['GET', 'HEAD'].includes(method);
 
   let body: string | undefined;
-  if (hasBody) {
+  if (prevalidatedBody !== undefined) {
+    // Body was pre-validated by validateBody() — use it directly to avoid
+    // NextRequest double-read (body stream is one-shot, ADR-003).
+    body = JSON.stringify(prevalidatedBody);
+  } else if (hasBody) {
     try {
       const parsed = await req.json();
       body = JSON.stringify(parsed);
