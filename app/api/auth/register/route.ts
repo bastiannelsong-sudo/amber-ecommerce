@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { backendFetch } from '../../../lib/bff-proxy';
 import { setSession } from '../../../lib/session';
+import { validateBody } from '../../../lib/validation';
+import { registerSchema } from '../../../lib/auth/schemas';
 
 interface BackendAuthResponse {
   access_token: string;
@@ -15,19 +17,14 @@ interface BackendAuthResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  if (!body?.email || !body?.password || !body?.first_name || !body?.last_name) {
-    return NextResponse.json(
-      { message: 'Email, contraseña, nombre y apellido son requeridos' },
-      { status: 400 },
-    );
-  }
+  const v = await validateBody(req, registerSchema);
+  if (!v.ok) return v.response;
 
   const { ok, status, data } = await backendFetch<BackendAuthResponse>(
     '/ecommerce-auth/register',
     {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(v.data),
     },
   );
 
