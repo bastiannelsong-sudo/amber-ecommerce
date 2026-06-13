@@ -3,6 +3,7 @@ import { backendFetch } from '../../../lib/bff-proxy';
 import { setSession } from '../../../lib/session';
 import { validateBody } from '../../../lib/validation';
 import { loginSchema } from '../../../lib/auth/schemas';
+import { enforceRateLimit } from '../../../lib/rate-limit/enforce';
 
 interface BackendAuthResponse {
   access_token: string;
@@ -17,6 +18,9 @@ interface BackendAuthResponse {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await enforceRateLimit(req, 'login');
+  if (limited) return limited;
+
   const v = await validateBody(req, loginSchema);
   if (!v.ok) return v.response;
 
