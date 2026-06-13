@@ -11,28 +11,21 @@ import {
   itemCount,
   itemQuantity,
 } from './cart.rules';
-import type { CartItem } from './cart.types';
-import type { Product } from '@/app/lib/types';
+import type { CartItem, CartProduct } from './cart.types';
 
-// Minimal product fixtures — only cart-relevant fields
-const productA: Product = {
+// Minimal CartProduct fixtures — no app-layer Product fields needed
+const productA: CartProduct = {
   product_id: 1,
   internal_sku: 'A',
   name: 'Product A',
-  stock: 10,
-  stock_bodega: 0,
-  cost: 0,
   price: 1000,
   image_url: '',
 };
 
-const productB: Product = {
+const productB: CartProduct = {
   product_id: 2,
   internal_sku: 'B',
   name: 'Product B',
-  stock: 5,
-  stock_bodega: 0,
-  cost: 0,
   price: 2000,
   image_url: '',
 };

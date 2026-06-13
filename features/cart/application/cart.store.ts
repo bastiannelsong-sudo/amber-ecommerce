@@ -10,6 +10,7 @@ import {
   itemCount as domainItemCount,
   itemQuantity as domainItemQuantity,
 } from '@/features/cart/domain/cart.rules';
+import { toCartProduct } from './cart.mapper';
 import { trackAddToCart, trackRemoveFromCart } from '@/app/lib/analytics';
 
 interface CartStore {
@@ -38,7 +39,8 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
 
       addItem: (product, quantity = 1) => {
-        set((state) => ({ items: domainAddItem(state.items, product, quantity) }));
+        const cartProduct = toCartProduct(product);
+        set((state) => ({ items: domainAddItem(state.items, cartProduct, quantity) }));
         trackAddToCart(product, quantity);
       },
 

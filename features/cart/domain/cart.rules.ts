@@ -1,12 +1,11 @@
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from './cart.constants';
-import type { CartItem } from './cart.types';
-import type { Product } from '@/app/lib/types';
+import type { CartItem, CartProduct } from './cart.types';
 
 // ─── Mutation rules ───────────────────────────────────────────────────────────
 
 export const addItem = (
   items: CartItem[],
-  product: Product,
+  product: CartProduct,
   quantity = 1,
 ): CartItem[] => {
   const existing = items.find((i) => i.product.product_id === product.product_id);

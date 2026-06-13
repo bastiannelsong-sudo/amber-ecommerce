@@ -16,6 +16,7 @@
  */
 
 import type { Product, CartItem } from './types';
+import type { CartProduct } from '@/features/cart/domain/cart.types';
 
 interface DataLayerWindow extends Window {
   dataLayer?: Record<string, unknown>[];
@@ -101,11 +102,17 @@ export const trackAddToCart = (product: Product, quantity = 1): void => {
 };
 
 /** Click "remover del carrito". */
-export const trackRemoveFromCart = (product: Product, quantity = 1): void => {
+export const trackRemoveFromCart = (product: Product | CartProduct, quantity = 1): void => {
   push('remove_from_cart', {
     currency: CURRENCY,
     value: Number(product.price) * quantity,
-    items: [productToItem(product, quantity)],
+    items: [{
+      item_id: product.internal_sku,
+      item_name: product.name,
+      price: Number(product.price),
+      quantity,
+      ...(product.product_type && { item_category: product.product_type }),
+    }],
   });
 };
 
