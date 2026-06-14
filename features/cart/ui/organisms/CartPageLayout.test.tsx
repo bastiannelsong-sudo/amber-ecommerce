@@ -73,4 +73,25 @@ describe('CartPageLayout', () => {
     expect(container).toHaveTextContent('Anillo Jade');
     expect(container).toHaveTextContent('31.980');
   });
+
+  it('forwards checkoutHref to CartSummaryPanel so checkout CTA renders as a link', () => {
+    render(
+      <CartPageLayout
+        items={[mockItem]}
+        summary={{
+          ...mockSummary,
+          checkoutHref: '/checkout',
+          onCheckout: vi.fn(),
+          onContinueShopping: vi.fn(),
+        }}
+        onIncrement={vi.fn()}
+        onDecrement={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+
+    const checkoutLink = screen.getByRole('link', { name: /finalizar compra/i });
+    expect(checkoutLink).toBeInTheDocument();
+    expect(checkoutLink).toHaveAttribute('href', '/checkout');
+  });
 });

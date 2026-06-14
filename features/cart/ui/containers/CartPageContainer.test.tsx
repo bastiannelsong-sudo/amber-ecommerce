@@ -116,4 +116,15 @@ describe('CartPageContainer', () => {
 
     expect(trackViewCart).toHaveBeenCalledTimes(1);
   });
+
+  it('checkout CTA on cart page navigates to /checkout (bug fix: was no-op button)', async () => {
+    await act(async () => {
+      render(<CartPageContainer />);
+    });
+
+    // Must be an anchor link (next/link renders as <a>) pointing to /checkout
+    const checkoutLink = screen.getByRole('link', { name: /finalizar compra/i });
+    expect(checkoutLink).toBeInTheDocument();
+    expect(checkoutLink).toHaveAttribute('href', '/checkout');
+  });
 });

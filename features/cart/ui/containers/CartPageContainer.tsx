@@ -99,6 +99,7 @@ export function CartPageContainer() {
           shipping,
           discountAmount,
           finalTotal,
+          checkoutHref: '/checkout',
           onCheckout: () => {},
           onContinueShopping: () => {},
         }}
