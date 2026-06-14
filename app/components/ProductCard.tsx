@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import ScarcityIndicator from './marketing/ScarcityIndicator';
 import { useCartStore } from '../lib/stores/cart.store';
 import type { Product } from '../lib/types';
+import { formatPrice, calcDiscount } from '@/features/catalog/domain/catalog.rules';
 
 interface ProductCardProps {
   product: Product;
@@ -27,10 +28,8 @@ export default function ProductCard({
   // Upgrade MercadoLibre images from thumbnail (-O) to full size (-F)
   const rawImage = image_url || '/placeholder-product.svg';
   const image = rawImage.replace(/-O\.jpg$/, '-F.jpg');
-  const hasDiscount = compare_at_price && Number(compare_at_price) > Number(price);
-  const discountPercent = hasDiscount
-    ? Math.round((1 - Number(price) / Number(compare_at_price)) * 100)
-    : 0;
+  const discountPercent = calcDiscount(Number(price), compare_at_price != null ? Number(compare_at_price) : null);
+  const hasDiscount = discountPercent !== null;
 
   return (
     <div
@@ -142,11 +141,11 @@ export default function ProductCard({
 
         <div className="flex items-center justify-center gap-2">
           <p className="text-xs sm:text-sm font-medium text-obsidian-900 tracking-wide">
-            ${Math.round(Number(price) || 0).toLocaleString('es-CL')}
+            ${formatPrice(price)}
           </p>
           {hasDiscount && (
             <p className="text-[10px] sm:text-xs text-platinum-500 line-through">
-              ${Math.round(Number(compare_at_price)).toLocaleString('es-CL')}
+              ${formatPrice(compare_at_price!)}
             </p>
           )}
         </div>

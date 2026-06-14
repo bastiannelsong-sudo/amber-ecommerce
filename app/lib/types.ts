@@ -64,10 +64,9 @@ export interface SearchResponse extends PaginatedResponse<Product> {
   query: string;
 }
 
-export interface SearchSuggestions {
-  products: { name: string; slug: string; image_url: string; price: number }[];
-  collections: { name: string; slug: string }[];
-}
+// SearchSuggestions is now the canonical domain type — re-exported here for
+// backwards compatibility. Consumers importing from app/lib/types compile unchanged.
+export type { SearchSuggestions } from '@/features/catalog/domain/catalog.types';
 
 export interface SecondarySku {
   secondary_sku_id: number;

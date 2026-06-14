@@ -16,8 +16,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { productsService } from '../lib/services/products.service';
-import type { SearchSuggestions } from '../lib/types';
+import { useSearchSuggestions } from '@/features/catalog/application/use-search-suggestions';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -26,7 +25,6 @@ interface SearchModalProps {
 
 const RECENT_SEARCHES_KEY = 'amber_recent_searches';
 const MAX_RECENT = 5;
-const DEBOUNCE_MS = 300;
 
 function getRecentSearches(): string[] {
   if (typeof window === 'undefined') return [];
@@ -55,10 +53,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<SearchSuggestions | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // Replace hand-rolled debounce + productsService call with domain hook.
+  // HARD boundary: only fetch layer replaced — all UX below is verbatim.
+  const { suggestions, isLoading } = useSearchSuggestions(query);
 
   // Total interactive items for keyboard nav
   const totalItems =
@@ -80,7 +80,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       });
     } else {
       setQuery('');
-      setSuggestions(null);
       setActiveIndex(-1);
     }
   }, [isOpen]);
@@ -118,24 +117,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
-  // Debounced suggestions fetch
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setSuggestions(null);
-      setActiveIndex(-1);
-      return;
-    }
-
-    setIsLoading(true);
-    const timer = setTimeout(async () => {
-      const result = await productsService.getSuggestions(query.trim());
-      setSuggestions(result);
-      setActiveIndex(-1);
-      setIsLoading(false);
-    }, DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [query]);
 
   // Navigate to full results page
   const goToResults = useCallback(
