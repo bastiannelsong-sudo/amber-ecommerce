@@ -39,6 +39,19 @@ export const validateCouponSchema = z.object({
   cart_total: z.number(),
 });
 
+// Source: amber-back/src/ecommerce/dto/create-card-payment.dto.ts — CreateCardPaymentDto
+// Backend contract: order (nested CreateOrderDto) + MP Bricks card fields.
+export const cardPaymentSchema = z.object({
+  order: createOrderSchema,
+  card_token: z.string().min(1),
+  payment_method_id: z.string().min(1),
+  installments: z.number().int().min(1),
+  issuer_id: z.number().optional(),
+  payer_identification_type: z.string().optional(),
+  payer_identification_number: z.string().optional(),
+});
+
 // Inferred types for use in route handlers
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;
 export type ValidateCouponDto = z.infer<typeof validateCouponSchema>;
+export type CardPaymentDto = z.infer<typeof cardPaymentSchema>;
