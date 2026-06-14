@@ -4,10 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import CatalogClient from '../components/CatalogClient';
+import { CatalogContainer } from '@/features/catalog/ui/containers/CatalogContainer';
 import { fetchCatalog, type CatalogFilters } from '../lib/catalog-api';
 import { SITE_URL } from '../lib/seo-copy';
-import { dummyProducts } from '../lib/data/dummy-products';
 import type { Product, Collection } from '../lib/types';
 
 const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
@@ -118,10 +117,11 @@ export async function generateMetadata({
 async function getProducts(filters: CatalogFilters): Promise<Product[]> {
   try {
     const { data } = await fetchCatalog(filters);
-    if (data.length === 0) return dummyProducts;
     return data;
   } catch {
-    return dummyProducts;
+    // Network rejection: return empty list; CatalogContainer renders CatalogEmptyState.
+    // Do NOT return dummies — empty state is honest, dummies are misleading.
+    return [];
   }
 }
 
@@ -229,7 +229,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
         </nav>
 
         <Suspense fallback={<CatalogSkeleton />}>
-          <CatalogClient products={products} collections={collections} />
+          <CatalogContainer products={products} collections={collections} />
         </Suspense>
       </section>
 
