@@ -150,19 +150,19 @@ describe('subtotal', () => {
 });
 
 // ─────────────────────────────────────────────
-// CART-R6 + CART-T2: qualifiesForFreeShipping — boundary 29999 / 30000 / 30001
+// CART-R6 + CART-T2: qualifiesForFreeShipping — boundary 39999 / 40000 / 40001
 // ─────────────────────────────────────────────
 describe('qualifiesForFreeShipping', () => {
-  it('returns false when subtotal is one below threshold (29999)', () => {
-    expect(qualifiesForFreeShipping(29999)).toBe(false);
+  it('returns false when subtotal is one below threshold (39999)', () => {
+    expect(qualifiesForFreeShipping(39999)).toBe(false);
   });
 
-  it('returns true when subtotal is exactly at threshold (30000) — boundary', () => {
-    expect(qualifiesForFreeShipping(30000)).toBe(true);
+  it('returns true when subtotal is exactly at threshold (40000) — boundary', () => {
+    expect(qualifiesForFreeShipping(40000)).toBe(true);
   });
 
-  it('returns true when subtotal is one above threshold (30001)', () => {
-    expect(qualifiesForFreeShipping(30001)).toBe(true);
+  it('returns true when subtotal is one above threshold (40001)', () => {
+    expect(qualifiesForFreeShipping(40001)).toBe(true);
   });
 });
 
@@ -171,11 +171,11 @@ describe('qualifiesForFreeShipping', () => {
 // ─────────────────────────────────────────────
 describe('shippingCost', () => {
   it('returns 0 when subtotal qualifies for free shipping', () => {
-    expect(shippingCost(30000)).toBe(0);
+    expect(shippingCost(40000)).toBe(0);
   });
 
   it('returns SHIPPING_COST (5000) when subtotal does not qualify', () => {
-    expect(shippingCost(29999)).toBe(5000);
+    expect(shippingCost(39999)).toBe(5000);
   });
 });
 
@@ -188,7 +188,7 @@ describe('cartTotal', () => {
   });
 
   it('has no shipping when at threshold', () => {
-    expect(cartTotal(30000)).toBe(30000); // 30000 + 0
+    expect(cartTotal(40000)).toBe(40000); // 40000 + 0
   });
 });
 

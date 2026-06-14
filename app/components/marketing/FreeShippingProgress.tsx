@@ -6,7 +6,7 @@ import { FREE_SHIPPING_THRESHOLD } from '@/features/cart/domain/cart.constants';
 interface FreeShippingProgressProps {
   /** Current cart total */
   cartTotal: number;
-  /** Threshold for free shipping (default: FREE_SHIPPING_THRESHOLD = 30000 CLP) */
+  /** Threshold for free shipping (default: FREE_SHIPPING_THRESHOLD = 40000 CLP) */
   threshold?: number;
 }
 
