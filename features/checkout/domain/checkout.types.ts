@@ -56,4 +56,4 @@ export interface OrderDraft {
 export type CheckoutMode = 'guest' | 'authenticated';
 
 /** Current step in the checkout funnel. */
-export type CheckoutStep = 'shipping' | 'payment' | 'confirmation';
+export type CheckoutStep = 'shipping' | 'payment';
