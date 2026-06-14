@@ -72,7 +72,7 @@ describe('toCartSnapshot', () => {
   });
 
   it('snapshot with zero discount: subtotal=29990, shipping=5000, total=34990', () => {
-    // 29990 < FREE_SHIPPING_THRESHOLD (30000) → shipping = 5000
+    // 29990 < FREE_SHIPPING_THRESHOLD (40000) → shipping = 5000
     const items = [makeItem(29990)];
     const snapshot = toCartSnapshot(items, 0);
     expect(snapshot.subtotal).toBe(29990);
@@ -91,12 +91,12 @@ describe('toCartSnapshot', () => {
     expect(snapshot.total).toBe(32990);
   });
 
-  it('free shipping threshold: subtotal ≥ 30000 → shipping 0', () => {
-    // 30000 >= FREE_SHIPPING_THRESHOLD → shipping=0, total=30000
-    const items = [makeItem(30000)];
+  it('free shipping threshold: subtotal ≥ 40000 → shipping 0', () => {
+    // 40000 >= FREE_SHIPPING_THRESHOLD → shipping=0, total=40000
+    const items = [makeItem(40000)];
     const snapshot = toCartSnapshot(items, 0);
     expect(snapshot.shipping).toBe(0);
-    expect(snapshot.total).toBe(30000);
+    expect(snapshot.total).toBe(40000);
   });
 });
 
