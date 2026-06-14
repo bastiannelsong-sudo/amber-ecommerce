@@ -414,18 +414,88 @@ No per-environment configuration needed.
 
 ---
 
+## Coupon State (added by checkout-hexagonal-slice)
+
+### Requirement: CART-A7 — Store Gains Coupon State and Actions (ADDED)
+
+`features/cart/application/cart.store.ts` MUST add three new fields and two new actions to the persisted Zustand store:
+
+- `appliedCoupon: string | null` — default `null`
+- `discountAmount: number` — default `0`
+- `setCoupon(code: string, amount: number): void` — sets both fields atomically
+- `clearCoupon(): void` — resets both to defaults
+
+All four MUST be included in the `persist` middleware configuration so coupon state survives page navigation.
+
+#### Scenario: Coupon is set and persisted
+
+- GIVEN the store is hydrated with no coupon
+- WHEN `setCoupon('PROMO20', 5000)` is called
+- THEN `appliedCoupon === 'PROMO20'` and `discountAmount === 5000`
+
+#### Scenario: Coupon is cleared
+
+- GIVEN `appliedCoupon='PROMO20'` and `discountAmount=5000`
+- WHEN `clearCoupon()` is called
+- THEN `appliedCoupon === null` and `discountAmount === 0`
+
+#### Scenario: Hydration with old persisted cart (missing coupon fields)
+
+- GIVEN a localStorage entry that has no `appliedCoupon` or `discountAmount` keys (old cart)
+- WHEN the store hydrates from localStorage
+- THEN `appliedCoupon` defaults to `null` and `discountAmount` defaults to `0`
+- AND no runtime error occurs
+
+---
+
+### Requirement: CART-A8 — CartDrawer Reads and Writes Coupon via Store (ADDED)
+
+`app/components/CartDrawer.tsx` MUST read `appliedCoupon` and `discountAmount` from `useCartStore`, and MUST write coupon state via `setCoupon`/`clearCoupon` store actions. Local component state for coupon MUST be removed. The displayed discount MUST come from `discountAmount` in the store.
+
+#### Scenario: Coupon survives drawer close and checkout navigation
+
+- GIVEN a coupon is applied in CartDrawer (`setCoupon` called)
+- WHEN the drawer is closed and the user navigates to `/checkout`
+- THEN `useCartStore.getState().appliedCoupon` is non-null
+- AND `useCartStore.getState().discountAmount` is the applied amount
+
+#### Scenario: Clearing coupon in drawer updates store
+
+- GIVEN `appliedCoupon='SAVE10'` in the store
+- WHEN the user removes the coupon in CartDrawer
+- THEN `clearCoupon()` is called and store returns to defaults
+
+---
+
+### Requirement: CART-A9 — Coupon Wired Through Checkout Payload (ADDED)
+
+`app/checkout/page.tsx` MUST read `appliedCoupon` and `discountAmount` from `useCartStore`, pass them to `toOrderPayload` via `couponCode`, and render a discount line in the order summary. This is a MINIMAL surgical edit — no strangle of the page.
+
+#### Scenario: End-to-end coupon in order payload
+
+- GIVEN a user applies coupon `'PROMO10'` in CartDrawer (store: `appliedCoupon='PROMO10'`, `discountAmount=2000`)
+- WHEN the user navigates to checkout and submits the order
+- THEN the payload sent to `/api/orders` includes `coupon_code: 'PROMO10'`
+- AND the checkout summary displays a discount line of `2000`
+
+#### Scenario: No coupon — no coupon_code in payload
+
+- GIVEN `appliedCoupon === null`
+- WHEN the order is submitted
+- THEN `coupon_code` is absent from the payload
+
+---
+
 ## Out of Scope
 
 The following are explicitly deferred and MUST NOT be introduced in this change:
 
 | Topic | Reason |
 |---|---|
-| Coupon-disconnect bug | Dedicated follow-up slice |
 | Price snapshot at add-time | Explicitly out of scope (live price kept) |
 | Stock validation in domain addItem | Future guard, not this slice |
 | selectedVariant field removal | Leave as-is |
 | UI container-presentational migration | Follow-up slice |
-| Checkout CartSnapshot boundary | Future checkout slice |
 
 ---
 
