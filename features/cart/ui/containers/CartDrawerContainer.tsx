@@ -15,14 +15,16 @@ import { CartDrawerPanel } from '../organisms/CartDrawerPanel';
 import FreeShippingProgress from '@/app/components/marketing/FreeShippingProgress';
 import CouponInput from '@/app/components/marketing/CouponInput';
 import CartCrossSell from '@/app/components/CartCrossSell';
+import { formatPrice } from '@/features/catalog/domain/catalog.rules';
 
 export function CartDrawerContainer() {
   const { items, removeItem, updateQuantity } = useCart();
-  const { subtotal, shipping, discountAmount, finalTotal } = useCartSummary();
+  const { subtotal, shipping, finalTotal } = useCartSummary();
   const { isOpen, closeCart } = useCartDrawer();
 
   // Coupon state — simple store reads (not hook delegation, per ADR-6)
   const appliedCoupon = useCartStore((state) => state.appliedCoupon);
+  const discountAmount = useCartStore((state) => state.discountAmount);
   const setCoupon = useCartStore((state) => state.setCoupon);
   const clearCoupon = useCartStore((state) => state.clearCoupon);
 
@@ -87,7 +89,7 @@ export function CartDrawerContainer() {
             {discountAmount > 0 && (
               <div className="flex items-center justify-between text-sm text-green-700">
                 <span>Descuento:</span>
-                <span>-${discountAmount.toLocaleString('es-CL')}</span>
+                <span>-${formatPrice(discountAmount)}</span>
               </div>
             )}
           </div>

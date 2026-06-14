@@ -6,7 +6,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useCart } from '@/features/cart/application/use-cart';
@@ -14,10 +13,12 @@ import { useCartSummary } from '@/features/cart/application/use-cart-summary';
 import { trackViewCart } from '@/app/lib/analytics';
 import CartSkeleton from '@/app/components/skeletons/CartSkeleton';
 import { CartPageLayout } from '../organisms/CartPageLayout';
+import { useCartStore } from '@/features/cart/application/cart.store';
 
 export function CartPageContainer() {
   const { items, removeItem, updateQuantity, clearCart } = useCart();
-  const { subtotal, shipping, discountAmount, finalTotal } = useCartSummary();
+  const { subtotal, shipping, finalTotal } = useCartSummary();
+  const discountAmount = useCartStore((state) => state.discountAmount);
 
   // Hydration guard — Zustand persist does not hydrate until after mount
   const [mounted, setMounted] = useState(false);

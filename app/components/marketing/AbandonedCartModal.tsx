@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCartStore } from '../../lib/stores/cart.store';
+import { subtotal as domainSubtotal } from '@/features/cart/domain/cart.rules';
 
 const LAST_VISIT_KEY = 'amber-last-visit';
 const MODAL_SHOWN_KEY = 'amber-welcome-back-shown';
@@ -51,10 +52,8 @@ export default function AbandonedCartModal() {
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce(
-    (sum, item) => sum + (item.product.price || 0) * item.quantity,
-    0
-  );
+  // CARTUI-FIX: replaced inline reduce arithmetic with domain subtotal (surgical fix per ADR-10)
+  const totalPrice = domainSubtotal(items);
 
   return (
     <AnimatePresence>
