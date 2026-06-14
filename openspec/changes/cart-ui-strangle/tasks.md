@@ -101,6 +101,18 @@ Chain strategy: stacked-to-main
 
 ---
 
+---
+
+## Verify-Fix Batch (post-verify findings)
+
+- [x] S3-fix: Add `checkoutHref?: string` prop to `CartSummaryPanel`; render `Link` when provided; `CartDrawerContainer` passes `checkoutHref='/checkout'`; restores /checkout navigation from drawer
+- [x] W1-fix: Move page header (`h1` + item-count `p`) from `app/carrito/page.tsx` into `CartPageContainer`; shell now a pure thin wrapper with zero hook calls
+- [x] W3-fix: Add `vi.mock('@/app/components/CartCrossSell', () => ({ default: () => null }))` to `CartDrawerContainer.test.tsx`; eliminates act() warnings
+- [x] S2-fix: Add exact-value assertions to `use-cart-summary.test.ts` — `finalTotal=35000` (subtotal=40000, discount=5000, shipping=0); `finalTotal=0` when discount exceeds total
+- [x] Final: 449 tests passing, tsc clean, commit 7f1edfb
+
+---
+
 ## Parallelism Notes
 
 - Tasks 2.1–2.8 can be done as 4 parallel RED→GREEN pairs after Phase 1 completes.
