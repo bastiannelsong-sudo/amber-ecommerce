@@ -83,14 +83,14 @@ Spec refs: CHKUI-MOL-1..7, CHKUI-T2. Compose atoms only. No store/hook imports. 
 
 Spec refs: CHKUI-ORG-1..3 + mobile sticky bar. No store/hook imports.
 
-- [ ] 4.1 **RED** Create `features/checkout/ui/organisms/ShippingStepForm.test.tsx` — contact fields and address fields both present with mock props. Est. ~35 lines.
-- [ ] 4.2 **GREEN** Create `features/checkout/ui/organisms/ShippingStepForm.tsx` — accepts form/GEO/saved-address/submit props; composes `SavedAddressPicker` (from `app/components/`), `ContactInfoForm`, `ShippingAddressForm`, `CheckoutSubmitButton`; no store/hook imports. Make 4.1 green. Est. ~70 lines.
-- [ ] 4.3 **RED** Create `features/checkout/ui/organisms/PaymentStepForm.test.tsx` — back button calls `onBack` once; `isProcessingPayment=true` disables submit button. Est. ~35 lines.
-- [ ] 4.4 **GREEN** Create `features/checkout/ui/organisms/PaymentStepForm.tsx` — `{ formData, isProcessingPayment, onBack, onSubmitPayment, summary }`; composes `ShippingSummaryCard`, `MercadoPagoInfoCard`, back `<button>` calling `onBack`, `CheckoutSubmitButton`, `PaymentTrustSignals`; no store/hook imports. Make 4.3 green. Est. ~65 lines.
-- [ ] 4.5 **RED** Create `features/checkout/ui/organisms/CheckoutEmptyState.test.tsx` — empty-cart message + catalog CTA present. Est. ~20 lines.
-- [ ] 4.6 **GREEN** Create `features/checkout/ui/organisms/CheckoutEmptyState.tsx` — static empty-cart message + link/button to catalog; no store/hook imports. Make 4.5 green. Est. ~25 lines.
-- [ ] 4.7 **RED** Create `features/checkout/ui/organisms/CheckoutMobileStickyBar.test.tsx` — summary totals visible in sticky bar. Est. ~20 lines.
-- [ ] 4.8 **GREEN** Create `features/checkout/ui/organisms/CheckoutMobileStickyBar.tsx` — accepts summary totals props; mobile-sticky order summary bar; no store/hook imports. Make 4.7 green. Est. ~30 lines.
+- [x] 4.1 **RED** Create `features/checkout/ui/organisms/ShippingStepForm.test.tsx` — contact fields and address fields both present with mock props. Est. ~35 lines.
+- [x] 4.2 **GREEN** Create `features/checkout/ui/organisms/ShippingStepForm.tsx` — accepts form/GEO/saved-address/submit props; composes `SavedAddressPicker` (from `app/components/`), `ContactInfoForm`, `ShippingAddressForm`, `CheckoutSubmitButton`; no store/hook imports. Make 4.1 green. Est. ~70 lines.
+- [x] 4.3 **RED** Create `features/checkout/ui/organisms/PaymentStepForm.test.tsx` — back button calls `onBack` once; `isProcessingPayment=true` disables submit button. Est. ~35 lines.
+- [x] 4.4 **GREEN** Create `features/checkout/ui/organisms/PaymentStepForm.tsx` — `{ formData, isProcessingPayment, onBack, onSubmitPayment, summary }`; composes `ShippingSummaryCard`, `MercadoPagoInfoCard`, back `<button>` calling `onBack`, `CheckoutSubmitButton`, `PaymentTrustSignals`; no store/hook imports. Make 4.3 green. Est. ~65 lines.
+- [x] 4.5 **RED** Create `features/checkout/ui/organisms/CheckoutEmptyState.test.tsx` — empty-cart message + catalog CTA present. Est. ~20 lines.
+- [x] 4.6 **GREEN** Create `features/checkout/ui/organisms/CheckoutEmptyState.tsx` — static empty-cart message + link/button to catalog; no store/hook imports. Make 4.5 green. Est. ~25 lines.
+- [x] 4.7 **RED** Create `features/checkout/ui/organisms/CheckoutMobileStickyBar.test.tsx` — summary totals visible in sticky bar. Est. ~20 lines.
+- [x] 4.8 **GREEN** Create `features/checkout/ui/organisms/CheckoutMobileStickyBar.tsx` — accepts summary totals props; mobile-sticky order summary bar; no store/hook imports. Make 4.7 green. Est. ~30 lines.
 
 ## Phase 5 — Container [PR3]
 
