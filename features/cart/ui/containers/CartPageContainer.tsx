@@ -67,6 +67,8 @@ export function CartPageContainer() {
     return <CartSkeleton />;
   }
 
+  const itemCountLabel = `${items.length} ${items.length === 1 ? 'producto' : 'productos'}`;
+
   const breadcrumb = (
     <div className="flex items-center gap-2 text-sm text-platinum-600 mb-8">
       <Link href="/" className="hover:text-amber-gold-500 transition-colors">
@@ -79,6 +81,17 @@ export function CartPageContainer() {
 
   return (
     <>
+      {/* Page header — owned by container so shell stays a pure thin wrapper */}
+      <div className="mb-12">
+        <h1
+          className="text-4xl lg:text-5xl font-light text-obsidian-900 mb-2"
+          style={{ fontFamily: 'var(--font-cormorant)' }}
+        >
+          Carrito de Compras
+        </h1>
+        <p className="text-platinum-600">{itemCountLabel}</p>
+      </div>
+
       <CartPageLayout
         items={items}
         summary={{

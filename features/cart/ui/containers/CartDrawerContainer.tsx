@@ -68,6 +68,7 @@ export function CartDrawerContainer() {
         shipping,
         discountAmount,
         finalTotal,
+        checkoutHref: '/checkout',
         onCheckout: closeCart,
         onContinueShopping: closeCart,
       }}

@@ -2,7 +2,12 @@
  * CARTUI-MOL-2 — Cart summary panel molecule.
  * All amounts displayed via formatPrice; conditional discount row.
  * Zero store/hook imports: pure presentational molecule.
+ *
+ * checkoutHref: when provided, the "Finalizar Compra" CTA renders as a next/link
+ * (navigates to /checkout). onCheckout is still called on click (e.g. to close
+ * the drawer). When absent, CTA renders as a plain button.
  */
+import Link from 'next/link';
 import { formatPrice } from '@/features/catalog/domain/catalog.rules';
 
 export interface CartSummaryPanelProps {
@@ -10,6 +15,8 @@ export interface CartSummaryPanelProps {
   shipping: number;
   discountAmount: number;
   finalTotal: number;
+  /** When set, the checkout CTA renders as a navigable Link to this href. */
+  checkoutHref?: string;
   onCheckout: () => void;
   onContinueShopping: () => void;
 }
@@ -19,6 +26,7 @@ export function CartSummaryPanel({
   shipping,
   discountAmount,
   finalTotal,
+  checkoutHref,
   onCheckout,
   onContinueShopping,
 }: CartSummaryPanelProps) {
@@ -60,13 +68,23 @@ export function CartSummaryPanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={onCheckout}
-          className="w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
-        >
-          Finalizar Compra
-        </button>
+        {checkoutHref ? (
+          <Link
+            href={checkoutHref}
+            onClick={onCheckout}
+            className="flex items-center justify-center gap-2 w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+          >
+            Finalizar Compra
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={onCheckout}
+            className="w-full py-4 bg-obsidian-900 text-white text-center text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+          >
+            Finalizar Compra
+          </button>
+        )}
 
         <button
           type="button"

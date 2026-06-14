@@ -74,4 +74,41 @@ describe('CartSummaryPanel', () => {
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('renders checkout CTA as a link to /checkout when checkoutHref is provided', () => {
+    render(
+      <CartSummaryPanel
+        subtotal={10000}
+        shipping={0}
+        discountAmount={0}
+        finalTotal={10000}
+        checkoutHref="/checkout"
+        onCheckout={vi.fn()}
+        onContinueShopping={vi.fn()}
+      />,
+    );
+
+    const link = screen.getByRole('link', { name: /finalizar compra/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/checkout');
+  });
+
+  it('calls onCheckout when checkout link is clicked (for close-drawer side effect)', () => {
+    const onCheckout = vi.fn();
+    render(
+      <CartSummaryPanel
+        subtotal={10000}
+        shipping={0}
+        discountAmount={0}
+        finalTotal={10000}
+        checkoutHref="/checkout"
+        onCheckout={onCheckout}
+        onContinueShopping={vi.fn()}
+      />,
+    );
+
+    const link = screen.getByRole('link', { name: /finalizar compra/i });
+    link.click();
+    expect(onCheckout).toHaveBeenCalledTimes(1);
+  });
 });

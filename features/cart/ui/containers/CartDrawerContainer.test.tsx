@@ -9,6 +9,9 @@ import type { CartItem } from '@/features/cart/domain/cart.types';
 
 // ─── Module-level mocks (must be before imports that use them) ────────────────
 
+// Isolate container from CartCrossSell's internal async state (prevents act() warnings)
+vi.mock('@/app/components/CartCrossSell', () => ({ default: () => null }));
+
 vi.mock('@/features/cart/application/use-cart', () => ({
   useCart: vi.fn(),
 }));
@@ -105,5 +108,14 @@ describe('CartDrawerContainer', () => {
 
     // Drawer panel header should be visible
     expect(screen.getByText('Carrito')).toBeInTheDocument();
+  });
+
+  it('checkout CTA navigates to /checkout (S3 regression fix)', () => {
+    render(<CartDrawerContainer />);
+
+    // Must be an anchor link (next/link renders as <a>) pointing to /checkout
+    const checkoutLink = screen.getByRole('link', { name: /finalizar compra/i });
+    expect(checkoutLink).toBeInTheDocument();
+    expect(checkoutLink).toHaveAttribute('href', '/checkout');
   });
 });

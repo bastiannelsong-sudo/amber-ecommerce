@@ -81,6 +81,54 @@ describe('useCartSummary', () => {
       expect(result.current.finalTotal).toBeLessThanOrEqual(result.current.total + 1);
     });
 
+    it('finalTotal exact: subtotal=40000, discount=5000, shipping=0 → finalTotal=35000', () => {
+      // Add items so subtotal=40000 (free shipping threshold met → shipping=0)
+      useCartStore.getState().addItem(
+        {
+          product_id: 2,
+          internal_sku: 'SKU-002',
+          name: 'Collar',
+          price: 20000,
+          image_url: '',
+          stock: 10,
+          stock_bodega: 0,
+          cost: 0,
+        },
+        2,
+      );
+      // subtotal = 20000 * 2 = 40000 → free shipping (over threshold)
+      useCartStore.getState().setCoupon('DISC5', 5000);
+
+      const { result } = renderHook(() => useCartSummary());
+
+      expect(result.current.subtotal).toBe(40000);
+      expect(result.current.shipping).toBe(0);
+      // finalTotal = orderTotal(40000, 5000, 0) = max(0, 40000 - 5000 + 0) = 35000
+      expect(result.current.finalTotal).toBe(35000);
+    });
+
+    it('finalTotal exact: discount > total clamps to 0', () => {
+      useCartStore.getState().addItem(
+        {
+          product_id: 3,
+          internal_sku: 'SKU-003',
+          name: 'Pulsera',
+          price: 1000,
+          image_url: '',
+          stock: 5,
+          stock_bodega: 0,
+          cost: 0,
+        },
+        1,
+      );
+      // subtotal=1000, apply huge discount
+      useCartStore.getState().setCoupon('BIG', 50000);
+
+      const { result } = renderHook(() => useCartSummary());
+
+      expect(result.current.finalTotal).toBe(0);
+    });
+
     it('finalTotal is never negative', () => {
       // discountAmount much larger than subtotal
       useCartStore.getState().setCoupon('HUGE', 999999);

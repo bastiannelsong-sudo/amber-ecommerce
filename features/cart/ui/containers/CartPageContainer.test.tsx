@@ -92,6 +92,15 @@ describe('CartPageContainer', () => {
     expect(trackViewCart).toHaveBeenCalledWith([mockItem]);
   });
 
+  it('renders item-count subtitle from items (W1: pure shell fix)', async () => {
+    await act(async () => {
+      render(<CartPageContainer />);
+    });
+
+    // CartPageContainer now owns the item-count subtitle; shell must NOT call useCart
+    expect(screen.getByText(/1 producto/i)).toBeInTheDocument();
+  });
+
   it('does not call trackViewCart twice on re-render', async () => {
     const { rerender } = await (async () => {
       let result!: ReturnType<typeof render>;
