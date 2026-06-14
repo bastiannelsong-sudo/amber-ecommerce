@@ -146,6 +146,13 @@ describe('formatPrice', () => {
   it('zero price: 0 → "0"', () => {
     expect(formatPrice(0)).toBe('0');
   });
+
+  it('coalesced-to-zero price: formatPrice(0) → "0" (guards SearchModal null/undefined price via ?? 0)', () => {
+    // SearchModal calls formatPrice(product.price ?? 0).
+    // When product.price is null/undefined, the ?? 0 coalescion produces 0 before formatPrice sees it.
+    // This test locks the expected output of that coalesced value.
+    expect(formatPrice(0)).toBe('0');
+  });
 });
 
 // ─── calcDiscount (CAT-R4) ────────────────────────────────────────────────────

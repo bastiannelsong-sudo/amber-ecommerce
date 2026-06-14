@@ -28,15 +28,6 @@ export interface CatalogFilter {
   priceMax?: number;
 }
 
-/** A single typeahead product suggestion from the BFF. */
-export interface SearchSuggestion {
-  product_id: number | string;
-  name: string;
-  slug: string;
-  image_url?: string;
-  price: number;
-}
-
 /** BFF response shape for /api/products/suggestions. */
 export interface SearchSuggestions {
   products: { name: string; slug: string; image_url: string; price: number }[];

@@ -17,6 +17,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchSuggestions } from '@/features/catalog/application/use-search-suggestions';
+import { formatPrice } from '@/features/catalog/domain/catalog.rules';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -64,6 +65,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const totalItems =
     (suggestions?.products.length || 0) +
     (suggestions?.collections.length || 0);
+
+  // Reset keyboard-nav cursor whenever new suggestion results arrive,
+  // matching the original behaviour (setActiveIndex(-1) inside the fetch callback).
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [suggestions]);
 
   // Load recent searches on open
   useEffect(() => {
@@ -301,7 +308,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     {product.name}
                   </span>
                   <span className="text-sm font-medium text-obsidian-800 tabular-nums">
-                    ${Math.round(Number(product.price) || 0).toLocaleString('es-CL')}
+                    ${formatPrice(product.price ?? 0)}
                   </span>
                 </button>
               ))}
