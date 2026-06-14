@@ -82,3 +82,13 @@ All five units ship as one PR given the medium-budget estimate. Work units defin
 - [x] 6.3 Confirm no `features/catalog/index.ts` file exists (design ADR #1, per-file shim only).
 - [x] 6.4 Confirm `app/lib/types.ts` re-export resolves without duplicate-declaration error (CAT-W3).
 - [x] 6.5 Final `pnpm test:run` — exits 0, all ≥358 + new catalog tests pass (CAT-T7).
+
+---
+
+## Phase 7: Post-Verify Warning Fixes (W-2, W-3, W-4)
+
+> Continuation batch after verify-report (id 967). W-1 accepted as design decision — not touched.
+
+- [x] W-2 Add `useEffect(() => { setActiveIndex(-1); }, [suggestions])` in `app/components/SearchModal.tsx` to reset keyboard-nav cursor when suggestion results update — restoring original fetch-callback behaviour.
+- [x] W-3 Remove orphan `SearchSuggestion` (singular) interface from `features/catalog/domain/catalog.types.ts` — confirmed zero source imports before deletion.
+- [x] W-4 Replace `${Math.round(Number(product.price) || 0).toLocaleString('es-CL')}` in SearchModal product row with `${formatPrice(product.price ?? 0)}` (import from domain). Added `catalog.rules.test.ts` test locking the coalesced-to-zero output. `pnpm test:run`: 397 tests, 0 failed. `tsc --noEmit`: 0 errors.
