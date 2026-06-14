@@ -36,23 +36,40 @@ Framework-free pure functions and types. Zero React, Zustand, fetch, browser, or
 
 `features/catalog/domain/catalog.types.ts` MUST also define:
 - `SortOption`: `'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'`
-- `CatalogFilter`: `{ collections?: string[]; material?: string; style?: string; priceMin?: number; priceMax?: number }`
+- `CatalogFilter`: `{ collections?: string[]; materials?: string[]; styles?: string[]; material?: string; style?: string; priceMin?: number; priceMax?: number }`
+- `ActiveFilters`: `{ collections: string[]; materials: string[]; styles: string[]; priceMin: number; priceMax: number }` — UI-facing multi-select filter state (NEW)
+- `emptyFilters`: `ActiveFilters` constant with all arrays empty and prices `0`/`Infinity` (NEW, moved from FilterSidebar)
 - `SearchSuggestion`: `{ product_id: number | string; name: string; slug: string; image_url?: string; price: number }`
 - `SearchSuggestions`: `{ suggestions: SearchSuggestion[]; query: string }`
+
+**MODIFICATIONS** (catalog-ui-strangle PR #42):
+- `CatalogFilter` extended with `materials?: string[]` and `styles?: string[]` (additive, backward-compatible; single `material?`/`style?` retained for legacy filters)
+- `ActiveFilters` + `emptyFilters` relocated from FilterSidebar.tsx to domain types (living reference for state shape)
 
 **NOTE (DESIGN CORRECTION)**: The `SearchSuggestions` shape returned by the BFF is actually `{ products: [], collections: [{ name, slug }] }` (without image_url per collections). The design corrected this during implementation. The spec above documents the **intended canonical domain shape**; future API updates should push the BFF to match this shape, not the reverse. Until then, the mapper in catalog-application performs shape transformation.
 
 #### Scenario: Types are importable from domain index
 
-- GIVEN a consumer imports `SortOption`, `CatalogFilter`, `SearchSuggestion`, `SearchSuggestions` from `@/features/catalog`
+- GIVEN a consumer imports `SortOption`, `CatalogFilter`, `ActiveFilters`, `emptyFilters`, `SearchSuggestion`, `SearchSuggestions` from `@/features/catalog`
 - WHEN TypeScript compiles
-- THEN all four resolve without error and match the shapes above
+- THEN all resolve without error and match the shapes above
+
+#### Scenario: emptyFilters is the zero-value for ActiveFilters
+
+- GIVEN `emptyFilters` is imported from domain
+- WHEN its fields are inspected
+- THEN `collections`, `materials`, `styles` are empty arrays and `priceMin === 0`, `priceMax === Infinity`
 
 ---
 
 ### Requirement: CAT-R1 — filterProducts Matches Active Filters
 
-`filterProducts(products: CatalogProduct[], filters: CatalogFilter): CatalogProduct[]` MUST return only products that match ALL non-empty filter properties. Empty or absent filter properties MUST be treated as match-all (no filtering on that dimension).
+`filterProducts(products: CatalogProduct[], filters: CatalogFilter): CatalogProduct[]` MUST return only products matching ALL non-empty filter properties. `materials` and `styles` MUST be treated as inclusive arrays: a product matches if its `material` field is included in the `materials` array (or the array is empty). Empty or absent filter properties MUST be treated as match-all.
+
+**MODIFICATIONS** (catalog-ui-strangle PR #42):
+- Added support for `materials: string[]` and `styles: string[]` as multi-select arrays
+- Single-value `material?` and `style?` remain supported for backward compatibility
+- Empty or absent arrays are treated as match-all (no filtering on that dimension)
 
 #### Scenario: No active filters returns all products
 
@@ -66,6 +83,34 @@ Framework-free pure functions and types. Zero React, Zustand, fetch, browser, or
 - AND `filters = { collections: ['anillos'] }`
 - WHEN `filterProducts(products, filters)` is called
 - THEN only the `anillos` product is returned
+
+#### Scenario: Multi-material filter includes all matching products
+
+- GIVEN products `[{ material: 'plata' }, { material: 'oro' }, { material: 'cobre' }]`
+- AND `filters = { materials: ['plata', 'oro'] }`
+- WHEN `filterProducts(products, filters)` is called
+- THEN the products with `plata` and `oro` are returned and `cobre` is excluded
+
+#### Scenario: Multi-style filter includes all matching products
+
+- GIVEN products `[{ style: 'minimalista' }, { style: 'bohemio' }, { style: 'clasico' }]`
+- AND `filters = { styles: ['minimalista', 'bohemio'] }`
+- WHEN `filterProducts(products, filters)` is called
+- THEN the `minimalista` and `bohemio` products are returned and `clasico` is excluded
+
+#### Scenario: Empty materials array matches all (no filter)
+
+- GIVEN products with mixed materials
+- AND `filters = { materials: [] }`
+- WHEN `filterProducts(products, filters)` is called
+- THEN all products are returned unchanged
+
+#### Scenario: Single-value materials array behaves like previous single-string filter
+
+- GIVEN products `[{ material: 'plata' }, { material: 'oro' }]`
+- AND `filters = { materials: ['plata'] }`
+- WHEN `filterProducts(products, filters)` is called
+- THEN only the `plata` product is returned
 
 #### Scenario: Price range filter excludes out-of-range products
 
@@ -388,6 +433,18 @@ All functions in `features/catalog/domain/catalog.rules.ts` MUST have unit tests
 
 ---
 
+### Requirement: CAT-T1a — Domain Multi-Select Tests Extended (NEW — catalog-ui-strangle)
+
+`features/catalog/domain/catalog.rules.test.ts` MUST be extended with tests for: multi-material filter, multi-style filter, empty-array match-all, and single-item array backward compat. All new tests follow existing RED → GREEN strict TDD pattern.
+
+#### Scenario: Multi-select tests added and passing
+
+- GIVEN the extended `catalog.rules.test.ts` with 4+ new multi-select scenarios
+- WHEN `pnpm test:run` executes
+- THEN all new tests pass and no existing tests regress
+
+---
+
 ### Requirement: CAT-T2 — formatPrice Exact-Output Scenarios Are Mandatory (BOUNDARY — locked)
 
 `catalog.rules.test.ts` MUST contain at minimum four separate test cases for `formatPrice`: integer price, decimal price (rounds up), string-coerced price, and zero price. Each MUST assert the exact string output. These tests MUST NOT be omitted, combined, or softened to regex matchers.
@@ -518,3 +575,18 @@ Module-singleton DI (via default export) is pragmatic for this scale. Future sli
 - W-4: inline toLocaleString in SearchModal product row (replaced with formatPrice)
 
 **Test Results**: 37 test files, 397 tests, 0 failed. tsc --noEmit: 0 errors.
+
+---
+
+## Modifications — catalog-ui-strangle (PR #42–#44, merged via stacked-to-main)
+
+**PR #42** (commit b25845e) extended domain with multi-select support:
+- `features/catalog/domain/catalog.types.ts`: added `materials?: string[]`, `styles?: string[]` to `CatalogFilter`; added `ActiveFilters`, `emptyFilters` (moved from FilterSidebar)
+- `features/catalog/domain/catalog.rules.ts`: extended `filterProducts` with additive array branches for `materials`, `styles`
+- `features/catalog/domain/catalog.rules.test.ts`: 5 new tests for multi-material, multi-style, empty-array match-all, single-value backward compat (total: 28 tests)
+
+**Application Hook** (new):
+- `features/catalog/application/use-catalog-filters.ts`: owns filters, sort, pagination, viewMode, isFilterOpen, URL sync, facet derivation, domain-wired filtering+sorting, trackViewItemList once
+- `features/catalog/application/use-catalog-filters.test.ts`: 14 tests covering initialization, URL sync, loadMore, facet derivation, cooldown guard
+
+**Test Results (post-PR #44)**: 618 tests (550 baseline + 68 new), 0 failed. tsc --noEmit: 0 errors.
