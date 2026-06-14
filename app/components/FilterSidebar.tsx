@@ -3,21 +3,13 @@
 import { useState, useMemo } from 'react';
 import type { Collection, Product } from '../lib/types';
 
-export interface ActiveFilters {
-  collections: string[];
-  materials: string[];
-  styles: string[];
-  priceMin: number;
-  priceMax: number;
-}
+// Re-exports for backward compatibility — sources of truth now live in domain.
+// PR3 will delete this file once CatalogClient is replaced by CatalogContainer.
+export type { ActiveFilters } from '@/features/catalog/domain/catalog.types';
+export { emptyFilters } from '@/features/catalog/domain/catalog.types';
 
-export const emptyFilters: ActiveFilters = {
-  collections: [],
-  materials: [],
-  styles: [],
-  priceMin: 0,
-  priceMax: 0,
-};
+import type { ActiveFilters } from '@/features/catalog/domain/catalog.types';
+import { emptyFilters } from '@/features/catalog/domain/catalog.types';
 
 interface FilterSidebarProps {
   collections?: Collection[];
