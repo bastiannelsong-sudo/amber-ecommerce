@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Image from 'next/image';
 import { useCartStore } from '../lib/stores/cart.store';
 import FreeShippingProgress from './marketing/FreeShippingProgress';
@@ -16,9 +16,11 @@ export default function CartDrawer() {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const getTotal = useCartStore((state) => state.getTotal());
-  const [discount, setDiscount] = useState(0);
-  const [appliedCoupon, setAppliedCoupon] = useState('');
-  const finalTotal = Math.max(0, getTotal - discount);
+  const appliedCoupon = useCartStore((state) => state.appliedCoupon);
+  const discountAmount = useCartStore((state) => state.discountAmount);
+  const setCoupon = useCartStore((state) => state.setCoupon);
+  const clearCoupon = useCartStore((state) => state.clearCoupon);
+  const finalTotal = Math.max(0, getTotal - discountAmount);
 
   // Lock body scroll when cart is open
   useEffect(() => {
@@ -155,15 +157,15 @@ export default function CartDrawer() {
                 {/* Coupon Input */}
                 <CouponInput
                   cartTotal={getTotal}
-                  onApply={(amt, code) => { setDiscount(amt); setAppliedCoupon(code); }}
-                  onRemove={() => { setDiscount(0); setAppliedCoupon(''); }}
-                  appliedCode={appliedCoupon}
+                  onApply={(amt, code) => setCoupon(code, amt)}
+                  onRemove={() => clearCoupon()}
+                  appliedCode={appliedCoupon ?? ''}
                 />
 
-                {discount > 0 && (
+                {discountAmount > 0 && (
                   <div className="flex items-center justify-between text-sm text-green-700">
                     <span>Descuento:</span>
-                    <span>-${discount.toLocaleString('es-CL')}</span>
+                    <span>-${discountAmount.toLocaleString('es-CL')}</span>
                   </div>
                 )}
 

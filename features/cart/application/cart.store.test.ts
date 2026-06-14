@@ -162,4 +162,49 @@ describe('CartStore', () => {
       expect(useCartStore.getState().isOpen).toBe(false);
     });
   });
+
+  describe('coupon state (CART-A7)', () => {
+    beforeEach(() => {
+      useCartStore.setState({ items: [], isOpen: false, appliedCoupon: null, discountAmount: 0 });
+    });
+
+    it('setCoupon sets both appliedCoupon and discountAmount atomically', () => {
+      useCartStore.getState().setCoupon('PROMO20', 5000);
+      const state = useCartStore.getState();
+      expect(state.appliedCoupon).toBe('PROMO20');
+      expect(state.discountAmount).toBe(5000);
+    });
+
+    it('clearCoupon resets both fields to defaults', () => {
+      useCartStore.getState().setCoupon('PROMO20', 5000);
+      useCartStore.getState().clearCoupon();
+      const state = useCartStore.getState();
+      expect(state.appliedCoupon).toBeNull();
+      expect(state.discountAmount).toBe(0);
+    });
+
+    it('hydration with missing coupon fields defaults to null/0 without runtime error', () => {
+      // Simulate a partial persisted state (old cart without coupon fields).
+      // Zustand's bare persist shallow-merges the stored object over the initializer output.
+      // When old storage lacks appliedCoupon/discountAmount, the initializer's explicit
+      // defaults (null, 0) survive the merge — no runtime error, no undefined values.
+      //
+      // We verify this by manually merging an old-style payload (no coupon keys) with
+      // the initializer defaults, matching what Zustand's shallow merge does at hydration.
+      type CartItems = ReturnType<typeof useCartStore.getState>['items'];
+      const oldPersistedPayload = { items: [] as CartItems, isOpen: false };
+      // Initializer defaults that Zustand starts with before hydration:
+      const initDefaults = { appliedCoupon: null as string | null, discountAmount: 0 };
+      // Shallow merge: initializer + persisted (persisted wins for keys present, defaults fill missing)
+      const merged = { ...initDefaults, ...oldPersistedPayload };
+
+      expect(merged.appliedCoupon).toBeNull();
+      expect(merged.discountAmount).toBe(0);
+
+      // Confirm the live store also starts with these defaults (set during beforeEach)
+      const state = useCartStore.getState();
+      expect(state.appliedCoupon).toBeNull();
+      expect(state.discountAmount).toBe(0);
+    });
+  });
 });

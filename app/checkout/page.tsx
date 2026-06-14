@@ -15,12 +15,16 @@ import CheckoutSkeleton from '../components/skeletons/CheckoutSkeleton';
 import { apiClient, ApiError } from '../lib/api-client';
 import type { CartItem, ChileGeoResponse, CustomerAddress } from '../lib/types';
 import toast from 'react-hot-toast';
-import { shippingCost, cartTotal } from '@/features/cart/domain/cart.rules';
+import { shippingCost } from '@/features/cart/domain/cart.rules';
+import { orderTotal } from '@/features/checkout/domain/checkout.rules';
+import { toCartSnapshot, toOrderPayload } from '@/features/checkout/application/checkout.mapper';
 
 export default function CheckoutPage() {
   const items = useCartStore((state) => state.items);
   const getTotal = useCartStore((state) => state.getTotal());
   const clearCart = useCartStore((state) => state.clearCart);
+  const appliedCoupon = useCartStore((state) => state.appliedCoupon);
+  const discountAmount = useCartStore((state) => state.discountAmount);
   const [orderNumber] = useState(() => Math.floor(Math.random() * 10000));
 
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
@@ -114,7 +118,7 @@ export default function CheckoutPage() {
 
   const subtotal = getTotal;
   const shipping = shippingCost(subtotal);
-  const total = cartTotal(subtotal);
+  const total = orderTotal(subtotal, discountAmount, shipping);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     let { name, value } = e.target;
@@ -164,25 +168,19 @@ export default function CheckoutPage() {
     setIsProcessingPayment(true);
 
     try {
-      const payload = {
-        customer_email: formData.email,
-        customer_name: `${formData.firstName} ${formData.lastName}`.trim(),
-        customer_phone: formData.phone || undefined,
-        shipping_address: formData.apartment
-          ? `${formData.address}, ${formData.apartment}`
-          : formData.address,
-        shipping_city: formData.city,
-        shipping_region: formData.region,
-        shipping_postal_code: formData.postalCode || undefined,
-        items: items.map((ci: CartItem) => ({
-          product_id: ci.product.product_id,
-          name: ci.product.name,
-          internal_sku: ci.product.internal_sku,
-          quantity: ci.quantity,
-          unit_price: Number(ci.product.price),
-          image_url: ci.product.image_url,
-        })),
+      const snapshot = toCartSnapshot(items, discountAmount);
+      const checkoutFormData = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        address: formData.address,
+        apartment: formData.apartment,
+        region: formData.region,
+        commune: formData.city,
+        postalCode: formData.postalCode,
       };
+      const payload = toOrderPayload(snapshot, checkoutFormData, appliedCoupon);
 
       const res = await apiClient.post<{
         order: { order_number: string };
@@ -875,6 +873,12 @@ export default function CheckoutPage() {
                   <span className="text-platinum-600">Subtotal</span>
                   <span className="text-obsidian-900">${displaySubtotal.toLocaleString('es-CL')}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-700">
+                    <span>Descuento{appliedCoupon ? ` (${appliedCoupon})` : ''}</span>
+                    <span>-${discountAmount.toLocaleString('es-CL')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-platinum-600">Envio</span>
                   <span className="text-obsidian-900">
