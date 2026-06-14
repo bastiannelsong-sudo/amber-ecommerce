@@ -94,31 +94,31 @@ Each molecule: create file → RED test → GREEN → `pnpm test:run`.
 
 ### Phase 3.1 — Organisms (ref: CATUI-ORG-1)
 
-- [ ] 3.1.1 `features/catalog/ui/organisms/ProductGrid.tsx` — props `{ products: Product[]; onAddToCart: (p,qty)=>void; emptyState: ReactNode; onReachEnd: () => void }`; renders `ProductCard` per product; renders `emptyState` when products empty; mounts `IntersectionObserver` on sentinel for `onReachEnd` (stagger animation via CSS/inline); test: mock `vi.stubGlobal('IntersectionObserver', ...)`, assert empty renders emptyState, assert 2 products renders 2 cards (CATUI-ORG-1 scenarios)
-- [ ] 3.1.2 `features/catalog/ui/organisms/FilterSidebarPanel.tsx` — pure props (filters, facets, handlers); composes `FilterSection` + `FilterPriceRange` + `ActiveFilterChips`; test: renders with required props without crash
-- [ ] 3.1.3 `features/catalog/ui/organisms/MobileFilterDrawer.tsx` — props `{ isOpen: boolean; onClose: () => void; children: ReactNode }`; CSS animation only (no motion); NO dedicated unit test (exercised via CatalogContainer test per CartDrawerPanel precedent)
-- [ ] 3.1.4 `features/catalog/ui/organisms/CatalogLayout.tsx` — two-column layout; props `{ sidebar: ReactNode; grid: ReactNode }`; test: renders both slots
-- [ ] 3.1.5 Create `features/catalog/ui/organisms/index.ts` — barrel re-export all 4 organisms
+- [x] 3.1.1 `features/catalog/ui/organisms/ProductGrid.tsx` — props `{ products: Product[]; onAddToCart: (p,qty)=>void; emptyState: ReactNode; onReachEnd: () => void }`; renders `ProductCard` per product; renders `emptyState` when products empty; mounts `IntersectionObserver` on sentinel for `onReachEnd` (stagger animation via CSS/inline); test: mock `vi.stubGlobal('IntersectionObserver', ...)`, assert empty renders emptyState, assert 2 products renders 2 cards (CATUI-ORG-1 scenarios)
+- [x] 3.1.2 `features/catalog/ui/organisms/FilterSidebarPanel.tsx` — pure props (filters, facets, handlers); composes `FilterSection` + `FilterPriceRange` + `ActiveFilterChips`; test: renders with required props without crash
+- [x] 3.1.3 `features/catalog/ui/organisms/MobileFilterDrawer.tsx` — props `{ isOpen: boolean; onClose: () => void; children: ReactNode }`; CSS animation only (no motion); NO dedicated unit test (exercised via CatalogContainer test per CartDrawerPanel precedent)
+- [x] 3.1.4 `features/catalog/ui/organisms/CatalogLayout.tsx` — two-column layout; props `{ sidebar: ReactNode; grid: ReactNode }`; test: renders both slots
+- [x] 3.1.5 Create `features/catalog/ui/organisms/index.ts` — barrel re-export all 4 organisms
 
 ### Phase 3.2 — CatalogContainer (ref: CATUI-ARCH, CATUI-SWAP, CATUI-FIX-DOMAIN)
 
-- [ ] 3.2.1 Create `features/catalog/ui/containers/CatalogContainer.tsx` — imports `use-catalog-filters`; passes explicit `onAddToCart` (using `useCartStore().addItem`) to `ProductGrid`; composes `CatalogLayout` with `FilterSidebarPanel`, `CatalogControlsBar`, `ProductGrid`, `MobileFilterDrawer`; no inline filter/sort logic
-- [ ] 3.2.2 Create `features/catalog/ui/containers/index.ts` — re-exports `CatalogContainer`
-- [ ] 3.2.3 RED→GREEN: create `features/catalog/ui/containers/CatalogContainer.test.tsx` — mock `use-catalog-filters` return; mock `useCartStore`; mock `next/navigation`; assert: renders product count from hook, MobileFilterDrawer toggled by `setFilterOpen`, `onAddToCart` passed to grid calls `addItem`; run `pnpm test:run` → exits 0
+- [x] 3.2.1 Create `features/catalog/ui/containers/CatalogContainer.tsx` — imports `use-catalog-filters`; passes explicit `onAddToCart` (using `useCartStore().addItem`) to `ProductGrid`; composes `CatalogLayout` with `FilterSidebarPanel`, `CatalogControlsBar`, `ProductGrid`, `MobileFilterDrawer`; no inline filter/sort logic
+- [x] 3.2.2 Create `features/catalog/ui/containers/index.ts` — re-exports `CatalogContainer`
+- [x] 3.2.3 RED→GREEN: create `features/catalog/ui/containers/CatalogContainer.test.tsx` — mock `use-catalog-filters` return; mock `useCartStore`; mock `next/navigation`; assert: renders product count from hook, MobileFilterDrawer toggled by `setFilterOpen`, `onAddToCart` passed to grid calls `addItem`; run `pnpm test:run` → exits 0
 
 ### Phase 3.3 — Page Swap + Dummy Removal (ref: CATUI-SWAP, CATUI-FIX-DUMMY)
 
-- [ ] 3.3.1 Edit `app/catalogo/page.tsx` — replace `CatalogClient` import+JSX with `CatalogContainer`; remove `dummyProducts` import and empty-check fallback; keep `try { ... } catch { return [] }` for network rejection safety; keep `Hero`, `Breadcrumb`, `JSON-LD`, `Suspense` unchanged
-- [ ] 3.3.2 Verify `app/sitemap.ts` is NOT modified (still has `dummyProducts` build-time fallback)
+- [x] 3.3.1 Edit `app/catalogo/page.tsx` — replace `CatalogClient` import+JSX with `CatalogContainer`; remove `dummyProducts` import and empty-check fallback; keep `try { ... } catch { return [] }` for network rejection safety; keep `Hero`, `Breadcrumb`, `JSON-LD`, `Suspense` unchanged
+- [x] 3.3.2 Verify `app/sitemap.ts` is NOT modified (still has `dummyProducts` build-time fallback)
 
 ### Phase 3.4 — Dead Code Deletion
 
-- [ ] 3.4.1 Delete `app/components/CatalogClient.tsx`
-- [ ] 3.4.2 Delete `app/components/FilterSidebar.tsx` (only CatalogClient consumed it; `ActiveFilters`/`emptyFilters` now live in domain)
+- [x] 3.4.1 Delete `app/components/CatalogClient.tsx`
+- [x] 3.4.2 Delete `app/components/FilterSidebar.tsx` (only CatalogClient consumed it; `ActiveFilters`/`emptyFilters` now live in domain)
 
 ### Phase 3.5 — Final Verification (ref: CATUI-T5)
 
-- [ ] 3.5.1 Run `pnpm test:run` — all 550+ tests green (no regression)
-- [ ] 3.5.2 Run `tsc --noEmit` — zero TypeScript errors; confirm all 11 `ProductCard` consumers compile via shim
-- [ ] 3.5.3 Confirm `features/catalog/ui/atoms/`, `molecules/`, `organisms/` have zero imports from stores, hooks, or infrastructure (CATUI-ARCH)
-- [ ] 3.5.4 Confirm `CatalogContainer.tsx` is the sole `use-catalog-filters` + `useCartStore` consumer inside `ui/`
+- [x] 3.5.1 Run `pnpm test:run` — 617/617 tests green (603 baseline + 14 new from PR3)
+- [x] 3.5.2 Run `tsc --noEmit` — zero TypeScript errors; all 11 `ProductCard` consumers compile via shim
+- [x] 3.5.3 Confirmed `features/catalog/ui/atoms/`, `molecules/`, `organisms/` have zero imports from stores, hooks, or infrastructure (CATUI-ARCH)
+- [x] 3.5.4 Confirmed `CatalogContainer.tsx` is the sole `use-catalog-filters` + `useCartStore` consumer inside `ui/`
