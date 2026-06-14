@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { fetchCollectionsTree } from '../lib/catalog-api';
 import type { Collection } from '../lib/types';
 
 export const metadata: Metadata = {
@@ -17,8 +18,6 @@ export const metadata: Metadata = {
     canonical: '/colecciones',
   },
 };
-
-const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 
 const universeStyles: Record<string, { color: string; fallbackImage: string }> = {
   'proteccion-y-energia': {
@@ -43,20 +42,8 @@ const subcategoryColors = [
   'from-teal-900/80 to-teal-800/60',
 ];
 
-async function getCollectionTree(): Promise<Collection[]> {
-  try {
-    const res = await fetch(`${API_URL}/collections/tree`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error('API error');
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
 export default async function ColeccionesPage() {
-  const universes = await getCollectionTree();
+  const universes = await fetchCollectionsTree();
 
   return (
     <div className="min-h-screen bg-pearl-50">
@@ -112,7 +99,7 @@ export default async function ColeccionesPage() {
 
           {/* Universe Cards (Level 1) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            {universes.map((universe, index) => {
+            {universes.map((universe: Collection, index: number) => {
               const style = universeStyles[universe.slug] || {
                 color: subcategoryColors[index % subcategoryColors.length],
                 fallbackImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1000&fit=crop',
@@ -160,7 +147,7 @@ export default async function ColeccionesPage() {
           </div>
 
           {/* Subcategories per Universe */}
-          {universes.map((universe) => (
+          {universes.map((universe: Collection) => (
             <div key={universe.id} className="mt-24">
               <div className="text-center mb-12">
                 <p className="text-xs uppercase tracking-[0.3em] text-amber-gold-500 mb-4 font-medium">
@@ -176,7 +163,7 @@ export default async function ColeccionesPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
-                {universe.children?.map((category, catIndex) => (
+                {universe.children?.map((category: Collection, catIndex: number) => (
                   <Link
                     key={category.id}
                     href={`/colecciones/${category.slug}`}
