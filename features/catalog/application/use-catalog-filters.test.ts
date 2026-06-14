@@ -154,6 +154,34 @@ describe('useCatalogFilters', () => {
       const { result } = renderHook(() => useCatalogFilters(products));
       expect(result.current.hasMore).toBe(false);
     });
+
+    it('rapid double-call to loadMore only advances visibleCount once within the cooldown window', async () => {
+      // Need more than 2 × 24 = 48 products so both calls would produce an observable difference
+      const manyProducts = Array.from({ length: 60 }, (_, i) =>
+        makeProduct({ product_id: i + 1, name: `Product ${i + 1}` })
+      );
+
+      const { result } = renderHook(() => useCatalogFilters(manyProducts));
+
+      const initialVisible = result.current.visibleProducts.length; // 24
+
+      vi.useFakeTimers();
+      try {
+        await act(async () => {
+          // Fire loadMore twice in rapid succession — second call must be ignored by cooldown guard
+          result.current.loadMore();
+          result.current.loadMore();
+          // Advance past the 300ms cooldown + a small margin
+          vi.advanceTimersByTime(350);
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+
+      // Without cooldown guard: visibleCount would be 24 + 24 + 24 = 72 (both calls went through)
+      // With cooldown guard: visibleCount is exactly 24 + 24 = 48 (second call was ignored)
+      expect(result.current.visibleProducts.length).toBe(initialVisible + 24);
+    });
   });
 
   describe('facet derivation from products', () => {

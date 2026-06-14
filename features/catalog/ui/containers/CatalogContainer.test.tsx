@@ -128,7 +128,6 @@ const baseHookResult = {
   activeFilterCount: 0,
   materialOptions: [],
   styleOptions: [],
-  collectionOptions: [],
   minPrice: 0,
   maxPrice: 100000,
   onFiltersChange: vi.fn(),

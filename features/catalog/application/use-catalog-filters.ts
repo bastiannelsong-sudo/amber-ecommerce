@@ -100,7 +100,6 @@ export interface UseCatalogFiltersResult {
   // Facets
   materialOptions: string[];
   styleOptions: string[];
-  collectionOptions: { label: string; value: string }[];
   minPrice: number;
   maxPrice: number;
   // Handlers
@@ -130,6 +129,7 @@ export const useCatalogFilters = (
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid-3');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const cooldownRef = useRef(false);
 
   // ─── URL sync ────────────────────────────────────────────────────────────
 
@@ -164,10 +164,13 @@ export const useCatalogFilters = (
   );
 
   const loadMore = useCallback(() => {
+    if (cooldownRef.current) return;
+    cooldownRef.current = true;
     setIsLoadingMore(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + PRODUCTS_PER_BATCH);
       setIsLoadingMore(false);
+      cooldownRef.current = false;
     }, 300);
   }, []);
 
@@ -265,7 +268,6 @@ export const useCatalogFilters = (
     activeFilterCount,
     materialOptions,
     styleOptions,
-    collectionOptions: [],
     minPrice,
     maxPrice,
     onFiltersChange,
