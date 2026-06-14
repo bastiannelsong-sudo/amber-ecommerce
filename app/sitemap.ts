@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { dummyProducts } from './lib/data/dummy-products';
+import { fetchCatalog } from './lib/catalog-api';
 import { PRODUCT_TYPE_SLUGS, TYPE_MATERIAL_COMBOS, getSupportedTagSlugs } from './lib/seo-copy';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://amberjoyeria.cl';
@@ -44,19 +44,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Fetch real products for slug-based URLs; fall back to dummy data
-  let products = dummyProducts;
-  try {
-    const res = await fetch(`${process.env.INTERNAL_API_URL || 'http://localhost:3000'}/products/ecommerce?limit=500`, {
-      next: { revalidate: 3600 },
-    });
-    if (res.ok) {
-      const json = await res.json();
-      products = json.data || json;
-    }
-  } catch {}
+  // Fetch real products for slug-based URLs; return empty on failure so errors surface.
+  // Uses the centralized catalog-api layer — no ad-hoc INTERNAL_API_URL fetches in sitemap.
+  const { data: products } = await fetchCatalog({ limit: 500 }, 3600);
 
-  const productPages: MetadataRoute.Sitemap = products.map((product: any) => ({
+  const productPages: MetadataRoute.Sitemap = products.map((product) => ({
     url: `${SITE_URL}/producto/${product.slug || product.product_id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,

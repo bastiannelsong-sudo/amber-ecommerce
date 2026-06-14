@@ -1,5 +1,4 @@
 import { apiClient } from '../api-client';
-import { dummyProducts, getDummyProductById } from '../data/dummy-products';
 import type { Product, SearchResponse, SearchSuggestions } from '../types';
 
 /**
@@ -23,38 +22,20 @@ function mapBackendProduct(raw: any): Product {
 
 export const productsService = {
   async getAll(): Promise<Product[]> {
-    try {
-      const response = await apiClient.get<Array<Record<string, unknown>>>('/products');
-      return response.data.map(mapBackendProduct);
-    } catch {
-      return dummyProducts;
-    }
+    const response = await apiClient.get<Array<Record<string, unknown>>>('/products');
+    return response.data.map(mapBackendProduct);
   },
 
   async getById(id: number): Promise<Product> {
-    try {
-      const response = await apiClient.get<Record<string, unknown>>(`/products/${id}`);
-      return mapBackendProduct(response.data);
-    } catch {
-      const product = getDummyProductById(id);
-      if (!product) throw new Error('Product not found');
-      return product;
-    }
+    const response = await apiClient.get<Record<string, unknown>>(`/products/${id}`);
+    return mapBackendProduct(response.data);
   },
 
   async getBySlug(slug: string): Promise<Product> {
-    try {
-      const response = await apiClient.get<Record<string, unknown>>(
-        `/products/by-slug/${slug}`,
-      );
-      return mapBackendProduct(response.data);
-    } catch {
-      const idMatch = slug.match(/-(\d+)$/);
-      if (idMatch) {
-        return this.getById(Number(idMatch[1]));
-      }
-      throw new Error('Product not found');
-    }
+    const response = await apiClient.get<Record<string, unknown>>(
+      `/products/by-slug/${slug}`,
+    );
+    return mapBackendProduct(response.data);
   },
 
   async search(
@@ -68,28 +49,12 @@ export const productsService = {
       sort?: string;
     } = {},
   ): Promise<SearchResponse> {
-    try {
-      const response = await apiClient.get<SearchResponse>('/products/search', {
-        params: { q: query, ...params },
-      });
-      const res = response.data;
-      res.data = res.data.map(mapBackendProduct);
-      return res;
-    } catch {
-      const allProducts = await this.getAll();
-      const q = query.toLowerCase();
-      const filtered = allProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) || p.internal_sku.toLowerCase().includes(q),
-      );
-      return {
-        data: filtered.slice(0, params.limit || 20),
-        total: filtered.length,
-        page: params.page || 1,
-        limit: params.limit || 20,
-        query,
-      };
-    }
+    const response = await apiClient.get<SearchResponse>('/products/search', {
+      params: { q: query, ...params },
+    });
+    const res = response.data;
+    res.data = res.data.map(mapBackendProduct);
+    return res;
   },
 
   async getSuggestions(query: string): Promise<SearchSuggestions> {
