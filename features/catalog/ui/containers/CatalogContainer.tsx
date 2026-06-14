@@ -122,7 +122,7 @@ export function CatalogContainer({ products, collections = [] }: CatalogContaine
         </div>
       )}
 
-      {!hook.hasMore && hook.totalCount > 24 && <AllProductsShown />}
+      {!hook.hasMore && hook.totalCount > 24 && <AllProductsShown total={hook.totalCount} />}
     </>
   );
 
