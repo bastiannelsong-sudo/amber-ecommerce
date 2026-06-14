@@ -9,6 +9,7 @@ export interface CartSnapshot {
     readonly internal_sku: string;
     readonly quantity: number;
     readonly unit_price: number;
+    readonly image_url?: string;
   }[];
   readonly subtotal: number;
   readonly shipping: number;

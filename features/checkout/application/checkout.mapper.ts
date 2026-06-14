@@ -28,6 +28,7 @@ export const toCartSnapshot = (
       internal_sku: item.product.internal_sku,
       quantity: item.quantity,
       unit_price: item.product.price, // LOCKED: always sourced from item.product.price
+      ...(item.product.image_url ? { image_url: item.product.image_url } : {}),
     })),
     subtotal,
     shipping,

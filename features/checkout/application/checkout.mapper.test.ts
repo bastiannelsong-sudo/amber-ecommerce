@@ -50,6 +50,27 @@ describe('toCartSnapshot', () => {
     });
   });
 
+  it('maps image_url from item.product.image_url when present', () => {
+    const items = [makeItem(29990)];
+    const snapshot = toCartSnapshot(items, 0);
+    expect(snapshot.items[0].image_url).toBe('https://images.unsplash.com/test');
+  });
+
+  it('omits image_url from snapshot item when product has no image_url', () => {
+    const itemWithoutImage: CartItem = {
+      product: {
+        product_id: 2,
+        internal_sku: 'AMB-COL-002',
+        name: 'Collar Sin Imagen',
+        price: 15000,
+        image_url: '',
+      },
+      quantity: 1,
+    };
+    const snapshot = toCartSnapshot([itemWithoutImage], 0);
+    expect(snapshot.items[0].image_url).toBeUndefined();
+  });
+
   it('snapshot with zero discount: subtotal=29990, shipping=5000, total=34990', () => {
     // 29990 < FREE_SHIPPING_THRESHOLD (30000) → shipping = 5000
     const items = [makeItem(29990)];
@@ -115,6 +136,13 @@ describe('toOrderPayload', () => {
     const snapshot = toCartSnapshot(items, 0);
     const payload = toOrderPayload(snapshot, formData, 'PROMO');
     expect(payload.items).toBe(snapshot.items);
+  });
+
+  it('payload items include image_url when product has one', () => {
+    const items = [makeItem(29990)];
+    const snapshot = toCartSnapshot(items, 0);
+    const payload = toOrderPayload(snapshot, formData);
+    expect(payload.items[0].image_url).toBe('https://images.unsplash.com/test');
   });
 
   it('assembles full customer fields', () => {
