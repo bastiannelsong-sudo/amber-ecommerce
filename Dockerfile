@@ -5,8 +5,10 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
+# pnpm@9: el lockfile es lockfileVersion 9.0 y la base es node:20. corepack
+# bajaba pnpm 11 (requiere Node >=22) y crasheaba con node:sqlite.
 RUN \
-  if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --frozen-lockfile; \
+  if [ -f pnpm-lock.yaml ]; then npm install -g pnpm@9 && pnpm install --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
   else npm install; \
   fi
