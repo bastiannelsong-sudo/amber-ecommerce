@@ -179,6 +179,65 @@ describe('calcDiscount', () => {
   });
 });
 
+// ─── filterProducts multi-select extensions (CATUI-T1) ───────────────────────
+
+describe('filterProducts — multi-select', () => {
+  it('multi-material: filters includes two materials, matches both, excludes third', () => {
+    const plata = makeProduct({ product_id: 1, material: 'plata' });
+    const oro = makeProduct({ product_id: 2, material: 'oro' });
+    const cobre = makeProduct({ product_id: 3, material: 'cobre' });
+    const result = filterProducts([plata, oro, cobre], { materials: ['plata', 'oro'] });
+    expect(result).toHaveLength(2);
+    expect(result.map((p) => p.material)).toEqual(expect.arrayContaining(['plata', 'oro']));
+    expect(result.find((p) => p.material === 'cobre')).toBeUndefined();
+  });
+
+  it('multi-style: filters includes two styles, matches both, excludes third', () => {
+    const minimalista = makeProduct({ product_id: 1, style: 'minimalista' });
+    const bohemio = makeProduct({ product_id: 2, style: 'bohemio' });
+    const clasico = makeProduct({ product_id: 3, style: 'clasico' });
+    const result = filterProducts([minimalista, bohemio, clasico], { styles: ['minimalista', 'bohemio'] });
+    expect(result).toHaveLength(2);
+    expect(result.find((p) => p.style === 'clasico')).toBeUndefined();
+  });
+
+  it('empty materials array matches all products (no filter applied)', () => {
+    const plata = makeProduct({ product_id: 1, material: 'plata' });
+    const oro = makeProduct({ product_id: 2, material: 'oro' });
+    const result = filterProducts([plata, oro], { materials: [] });
+    expect(result).toHaveLength(2);
+  });
+
+  it('single-item materials array behaves like previous single-string filter', () => {
+    const plata = makeProduct({ product_id: 1, material: 'plata' });
+    const oro = makeProduct({ product_id: 2, material: 'oro' });
+    const result = filterProducts([plata, oro], { materials: ['plata'] });
+    expect(result).toHaveLength(1);
+    expect(result[0].material).toBe('plata');
+  });
+
+  it('parity: collectionSlugs projection via tags matches same products as old productMatchesCollections logic', () => {
+    // OLD: productMatchesCollections checked Product.productCollections[].collection.slug
+    // NEW: hook projects those slugs into CatalogProduct.tags before calling domain
+    // This test verifies that the domain filter on tags produces identical results.
+    //
+    // Simulate: two products, one belonging to 'anillos', one to 'collares'.
+    // The hook would project productCollections -> tags=['anillos'] / tags=['collares'].
+    const anilloProduct = makeProduct({ product_id: 1, tags: ['anillos'] });
+    const collarProduct = makeProduct({ product_id: 2, tags: ['collares'] });
+
+    // Old inline logic equivalent: productMatchesCollections(p, ['anillos'])
+    // = p.productCollections.some(pc => pc.collection && ['anillos'].includes(pc.collection.slug))
+    // After projection: p.tags.some(tag => ['anillos'].includes(tag))
+    const result = filterProducts([anilloProduct, collarProduct], { collections: ['anillos'] });
+
+    // Must match exactly one product — the one tagged 'anillos'
+    expect(result).toHaveLength(1);
+    expect(result[0].product_id).toBe(1);
+    expect(result[0].tags).toContain('anillos');
+  });
+});
+
 // ─── isInStock (CAT-R5) ───────────────────────────────────────────────────────
 
 describe('isInStock', () => {

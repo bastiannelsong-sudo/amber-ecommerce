@@ -26,6 +26,14 @@ export const filterProducts = (
     if (filters.material && p.material !== filters.material) return false;
     if (filters.style && p.style !== filters.style) return false;
 
+    // Multi-select array branches (CATUI-T1 / CAT-R1 extension)
+    // NOTE: collection matching uses CatalogProduct.tags (string[]).
+    // The hook is responsible for projecting Product.productCollections[].collection.slug
+    // into a collectionSlugs array and passing it as CatalogProduct.tags before calling domain,
+    // so that domain stays pure and the matching is identical to the old inline productMatchesCollections.
+    if (filters.materials?.length && !(p.material && filters.materials.includes(p.material))) return false;
+    if (filters.styles?.length && !(p.style && filters.styles.includes(p.style))) return false;
+
     if (filters.priceMin !== undefined && p.price < filters.priceMin) return false;
     if (filters.priceMax !== undefined && p.price > filters.priceMax) return false;
 
