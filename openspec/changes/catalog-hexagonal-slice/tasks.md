@@ -34,33 +34,33 @@ All five units ship as one PR given the medium-budget estimate. Work units defin
 
 > Strict TDD. Write failing test first, then implement. Runner: `pnpm test:run`.
 
-- [ ] 1.1 Create `features/catalog/domain/catalog.types.ts` — define `CatalogProduct`, `SortOption`, `CatalogFilter`, `SearchSuggestion`, `SearchSuggestions` (per CAT-D1, CAT-D2). Zero imports from `app/`.
-- [ ] 1.2 Create `features/catalog/domain/catalog.rules.test.ts` (RED) — write failing tests for `filterProducts`, `sortProducts`, `formatPrice` (4 cases: integer, decimal, string, zero), `calcDiscount` (4 cases: valid, null, equal, inverted), `isInStock` (2 cases) per CAT-T1, CAT-T2, CAT-T3. Assert exact string outputs for `formatPrice`.
-- [ ] 1.3 Create `features/catalog/domain/catalog.rules.ts` (GREEN) — implement `filterProducts`, `sortProducts`, `formatPrice`, `calcDiscount`, `isInStock` until all tests in 1.2 pass. Verify `pnpm test:run` is green.
-- [ ] 1.4 Verify ICU locale for `es-CL`: confirm `Math.round(15990).toLocaleString('es-CL')` outputs `'15.990'` in the Vitest Node process. If full ICU is missing, document and flag — do NOT patch the test.
+- [x] 1.1 Create `features/catalog/domain/catalog.types.ts` — define `CatalogProduct`, `SortOption`, `CatalogFilter`, `SearchSuggestion`, `SearchSuggestions` (per CAT-D1, CAT-D2). Zero imports from `app/`.
+- [x] 1.2 Create `features/catalog/domain/catalog.rules.test.ts` (RED) — write failing tests for `filterProducts`, `sortProducts`, `formatPrice` (4 cases: integer, decimal, string, zero), `calcDiscount` (4 cases: valid, null, equal, inverted), `isInStock` (2 cases) per CAT-T1, CAT-T2, CAT-T3. Assert exact string outputs for `formatPrice`.
+- [x] 1.3 Create `features/catalog/domain/catalog.rules.ts` (GREEN) — implement `filterProducts`, `sortProducts`, `formatPrice`, `calcDiscount`, `isInStock` until all tests in 1.2 pass. Verify `pnpm test:run` is green.
+- [x] 1.4 Verify ICU locale for `es-CL`: confirm `Math.round(15990).toLocaleString('es-CL')` outputs `'15.990'` in the Vitest Node process. If full ICU is missing, document and flag — do NOT patch the test.
 
 ---
 
 ## Phase 2: Application Layer — Port + Mapper (CAT-A1, CAT-A2, CAT-T4)
 
-- [ ] 2.1 Create `features/catalog/application/ports/CatalogPort.ts` — interface with `fetchSuggestions(query: string, signal?: AbortSignal): Promise<SearchSuggestions>` only (CAT-A1). No other methods.
-- [ ] 2.2 Create `features/catalog/application/catalog.mapper.test.ts` (RED) — failing tests for BFF DTO → `SearchSuggestions` (happy path: `data` array with items; empty path: `data: []`). Assert `query` field is present; collections shape `{name,slug}` only — no `image_url` invented (CAT-T4, design contradiction #2).
-- [ ] 2.3 Create `features/catalog/application/catalog.mapper.ts` (GREEN) — implement mapper from raw BFF response to `SearchSuggestions`. Field extraction only, no business logic. Passes tests from 2.2.
+- [x] 2.1 Create `features/catalog/application/ports/CatalogPort.ts` — interface with `fetchSuggestions(query: string, signal?: AbortSignal): Promise<SearchSuggestions>` only (CAT-A1). No other methods.
+- [x] 2.2 Create `features/catalog/application/catalog.mapper.test.ts` (RED) — failing tests for BFF DTO → `SearchSuggestions` (happy path: `data` array with items; empty path: `data: []`). Assert `query` field is present; collections shape `{name,slug}` only — no `image_url` invented (CAT-T4, design contradiction #2).
+- [x] 2.3 Create `features/catalog/application/catalog.mapper.ts` (GREEN) — implement mapper from raw BFF response to `SearchSuggestions`. Field extraction only, no business logic. Passes tests from 2.2.
 
 ---
 
 ## Phase 3: Infrastructure — BFF Adapter (CAT-I1, CAT-T5)
 
-- [ ] 3.1 Create `features/catalog/infrastructure/bff-catalog.adapter.test.ts` (RED) — failing tests: `vi.mock('@/app/lib/api-client')`; assert `apiClient.get('/products/suggestions', { params: { q }, signal })` is called; result matches `SearchSuggestions` shape; BFF error (non-2xx / ApiError) propagates as rejected Promise (no dummy fallback).
-- [ ] 3.2 Create `features/catalog/infrastructure/bff-catalog.adapter.ts` (GREEN) — module-singleton `const bffCatalogAdapter: CatalogPort`. `fetchSuggestions(query, signal?)` → `apiClient.get('/products/suggestions', { params: { q: query }, signal })` → `catalog.mapper` → throws on error. Passes tests from 3.1.
+- [x] 3.1 Create `features/catalog/infrastructure/bff-catalog.adapter.test.ts` (RED) — failing tests: `vi.mock('@/app/lib/api-client')`; assert `apiClient.get('/products/suggestions', { params: { q }, signal })` is called; result matches `SearchSuggestions` shape; BFF error (non-2xx / ApiError) propagates as rejected Promise (no dummy fallback).
+- [x] 3.2 Create `features/catalog/infrastructure/bff-catalog.adapter.ts` (GREEN) — module-singleton `const bffCatalogAdapter: CatalogPort`. `fetchSuggestions(query, signal?)` → `apiClient.get('/products/suggestions', { params: { q: query }, signal })` → `catalog.mapper` → throws on error. Passes tests from 3.1.
 
 ---
 
 ## Phase 4: Application Layer — React Query Hook (CAT-A3, CAT-T6)
 
-- [ ] 4.1 Create `features/catalog/application/use-search-suggestions.test.ts` (RED) — sets FIRST `renderHook` precedent in repo. Use `renderHook` from `@testing-library/react` + `QueryClientProvider` wrapper with `retry: false`. `vi.mock` the adapter. Failing tests for: (a) `query.length < 2` → no fetch; (b) query changes rapidly within 300ms → no fetch (use `vi.useFakeTimers`); (c) query after 300ms → `fetchSuggestions` called once; (d) successful suggestions (`isEmpty === false`); (e) empty result (`isEmpty === true`); (f) port rejection → `isError` non-null, `suggestions === []`.
-- [ ] 4.2 Create `features/catalog/application/use-search-suggestions.ts` (GREEN) — `useState + setTimeout(300)` debounce → `debouncedQ`; `useQuery({ queryKey: ['catalog','suggestions',debouncedQ], queryFn: ({signal}) => bffCatalogAdapter.fetchSuggestions(debouncedQ, signal), enabled: debouncedQ.length >= 2, placeholderData: keepPreviousData, staleTime: 60_000 })`. Returns `{ suggestions, isLoading, isError, isEmpty }`. Passes tests from 4.1.
-- [ ] 4.3 Run `pnpm test:run` — all catalog tests (domain + mapper + adapter + hook) pass. Existing 358 tests still green.
+- [x] 4.1 Create `features/catalog/application/use-search-suggestions.test.ts` (RED) — sets FIRST `renderHook` precedent in repo. Use `renderHook` from `@testing-library/react` + `QueryClientProvider` wrapper with `retry: false`. `vi.mock` the adapter. Failing tests for: (a) `query.length < 2` → no fetch; (b) query changes rapidly within 300ms → no fetch (use `vi.useFakeTimers`); (c) query after 300ms → `fetchSuggestions` called once; (d) successful suggestions (`isEmpty === false`); (e) empty result (`isEmpty === true`); (f) port rejection → `isError` non-null, `suggestions === []`.
+- [x] 4.2 Create `features/catalog/application/use-search-suggestions.ts` (GREEN) — `useState + setTimeout(300)` debounce → `debouncedQ`; `useQuery({ queryKey: ['catalog','suggestions',debouncedQ], queryFn: ({signal}) => bffCatalogAdapter.fetchSuggestions(debouncedQ, signal), enabled: debouncedQ.length >= 2, placeholderData: keepPreviousData, staleTime: 60_000 })`. Returns `{ suggestions, isLoading, isError, isEmpty }`. Passes tests from 4.1.
+- [x] 4.3 Run `pnpm test:run` — all catalog tests (domain + mapper + adapter + hook) pass. Existing 358 tests still green.
 
 ---
 
@@ -68,17 +68,17 @@ All five units ship as one PR given the medium-budget estimate. Work units defin
 
 > HARD boundary on SearchModal: replace ONLY the fetch layer. Do not touch keyboard nav, selection, rendering, or no-results UI.
 
-- [ ] 5.1 Modify `app/lib/types.ts` — add per-file re-export shim: `export type { SearchSuggestions } from '@/features/catalog/domain/catalog.types'` (CAT-W3). Match cart's per-file shim pattern. No barrel file at `features/catalog/index.ts`.
-- [ ] 5.2 Modify `app/components/SearchModal.tsx` — remove: `productsService.getSuggestions` import, `isLoading`/`suggestions` useState, debounced `useEffect` (~lines 57–59, 121–138). Add: `const { suggestions, isLoading } = useSearchSuggestions(query)`. Keep all keyboard nav/selection/recent/render/no-results logic verbatim. Preserve existing optional-chaining guards on `suggestions` (CAT-W1).
-- [ ] 5.3 Modify `app/components/ProductCard.tsx` — import `formatPrice` and `calcDiscount` from `@/features/catalog/domain/catalog.rules`. Replace inline `Math.round(Number(price)).toLocaleString('es-CL')` with `formatPrice(price)`. Replace inline `Math.round((1 - price / compare_at_price) * 100)` with `calcDiscount(price, compare_at_price)`. Guard null returns from `calcDiscount` identically to current guard (CAT-W2).
-- [ ] 5.4 Run `pnpm test:run` — full suite green including all new catalog tests (CAT-T7).
+- [x] 5.1 Modify `app/lib/types.ts` — add per-file re-export shim: `export type { SearchSuggestions } from '@/features/catalog/domain/catalog.types'` (CAT-W3). Match cart's per-file shim pattern. No barrel file at `features/catalog/index.ts`.
+- [x] 5.2 Modify `app/components/SearchModal.tsx` — remove: `productsService.getSuggestions` import, `isLoading`/`suggestions` useState, debounced `useEffect` (~lines 57–59, 121–138). Add: `const { suggestions, isLoading } = useSearchSuggestions(query)`. Keep all keyboard nav/selection/recent/render/no-results logic verbatim. Preserve existing optional-chaining guards on `suggestions` (CAT-W1).
+- [x] 5.3 Modify `app/components/ProductCard.tsx` — import `formatPrice` and `calcDiscount` from `@/features/catalog/domain/catalog.rules`. Replace inline `Math.round(Number(price)).toLocaleString('es-CL')` with `formatPrice(price)`. Replace inline `Math.round((1 - price / compare_at_price) * 100)` with `calcDiscount(price, compare_at_price)`. Guard null returns from `calcDiscount` identically to current guard (CAT-W2).
+- [x] 5.4 Run `pnpm test:run` — full suite green including all new catalog tests (CAT-T7).
 
 ---
 
 ## Phase 6: Verification
 
-- [ ] 6.1 Confirm domain directory has zero imports from `app/` (TypeScript check, CAT-D1 isolation scenario).
-- [ ] 6.2 Confirm `CatalogPort.ts` declares exactly one method — `fetchSuggestions` (CAT-A1 scenario).
-- [ ] 6.3 Confirm no `features/catalog/index.ts` file exists (design ADR #1, per-file shim only).
-- [ ] 6.4 Confirm `app/lib/types.ts` re-export resolves without duplicate-declaration error (CAT-W3).
-- [ ] 6.5 Final `pnpm test:run` — exits 0, all ≥358 + new catalog tests pass (CAT-T7).
+- [x] 6.1 Confirm domain directory has zero imports from `app/` (TypeScript check, CAT-D1 isolation scenario).
+- [x] 6.2 Confirm `CatalogPort.ts` declares exactly one method — `fetchSuggestions` (CAT-A1 scenario).
+- [x] 6.3 Confirm no `features/catalog/index.ts` file exists (design ADR #1, per-file shim only).
+- [x] 6.4 Confirm `app/lib/types.ts` re-export resolves without duplicate-declaration error (CAT-W3).
+- [x] 6.5 Final `pnpm test:run` — exits 0, all ≥358 + new catalog tests pass (CAT-T7).
