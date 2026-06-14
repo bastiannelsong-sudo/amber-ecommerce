@@ -2,13 +2,23 @@ import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 import { clearSession, getSession, setSession } from './session';
 
-const INTERNAL_API_URL = process.env.INTERNAL_API_URL;
-
-if (!INTERNAL_API_URL && process.env.NODE_ENV === 'production') {
-  throw new Error('INTERNAL_API_URL es obligatoria en producción (backend privado VPC)');
-}
-
-const BASE = INTERNAL_API_URL ?? 'http://localhost:3000';
+/**
+ * Resuelve la base del backend privado en RUNTIME. La validación es lazy
+ * (no a nivel de módulo) a propósito: `INTERNAL_API_URL` se inyecta en runtime
+ * (ECS task env, ARCH-001), NO en build-time. Un throw al cargar el módulo
+ * rompe `next build` (collect page data) porque la env no está presente.
+ * En prod sin la env → throw al primer request; en dev → fallback a localhost.
+ */
+const getBackendBase = (): string => {
+  const url = process.env.INTERNAL_API_URL;
+  if (!url) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('INTERNAL_API_URL es obligatoria en producción (backend privado VPC)');
+    }
+    return 'http://localhost:3000';
+  }
+  return url;
+};
 
 interface ProxyOptions {
   /** Si true, inyecta Bearer token desde la cookie de sesión y rechaza con 401 si no hay sesión */
@@ -46,7 +56,7 @@ const tryRefreshAccessToken = async (): Promise<string | null> => {
   if (!session?.refresh_token) return null;
 
   try {
-    const res = await fetch(`${BASE}/ecommerce-auth/refresh`, {
+    const res = await fetch(`${getBackendBase()}/ecommerce-auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: session.refresh_token }),
@@ -129,7 +139,7 @@ export const proxyToBackend = async (
     body: prevalidatedBody,
   } = options;
 
-  const url = new URL(backendPath, BASE);
+  const url = new URL(backendPath, getBackendBase());
   if (!backendPath.includes('?')) {
     req.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
   }
@@ -223,7 +233,7 @@ export const backendFetch = async <T = unknown>(
     token = session?.access_token ?? null;
   }
 
-  let res = await fetch(`${BASE}${path}`, {
+  let res = await fetch(`${getBackendBase()}${path}`, {
     ...rest,
     headers: buildHeaders(token),
     cache: 'no-store',
@@ -232,7 +242,7 @@ export const backendFetch = async <T = unknown>(
   if (authenticated && res.status === 401) {
     const newToken = await tryRefreshAccessToken();
     if (newToken) {
-      res = await fetch(`${BASE}${path}`, {
+      res = await fetch(`${getBackendBase()}${path}`, {
         ...rest,
         headers: buildHeaders(newToken),
         cache: 'no-store',
