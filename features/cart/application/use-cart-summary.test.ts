@@ -34,6 +34,7 @@ describe('useCartSummary', () => {
 
   it('returns correct subtotal and itemCount with items', () => {
     // Add items directly via store
+    // useCartStore.addItem expects a Product (app/lib/types).
     useCartStore.getState().addItem(
       {
         product_id: 1,
@@ -41,9 +42,10 @@ describe('useCartSummary', () => {
         name: 'Ring',
         price: 20000,
         image_url: '',
-        slug: undefined,
-        // Product shape for addItem (app/lib/types Product)
-      } as Parameters<typeof useCartStore.getState.prototype.addItem>[0],
+        stock: 10,
+        stock_bodega: 0,
+        cost: 0,
+      },
       2,
     );
 
