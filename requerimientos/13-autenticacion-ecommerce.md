@@ -149,7 +149,7 @@ Módulo separado del `auth/` existente (MercadoLibre admin) siguiendo principio 
 |--------|------|------|-------------|
 | POST | `/ecommerce-auth/register` | No | Registro con email/password |
 | POST | `/ecommerce-auth/login` | No | Login → JWT (access + refresh) |
-| POST | `/ecommerce-auth/google` | No | Login/registro con Google id_token |
+| POST | `/ecommerce-auth/google` | No | Login/registro con Google credential |
 | POST | `/ecommerce-auth/forgot-password` | No | Enviar email de reset |
 | POST | `/ecommerce-auth/reset-password` | No | Cambiar password con token |
 | POST | `/ecommerce-auth/refresh` | No | Renovar access token con refresh token |
@@ -210,8 +210,8 @@ Siguiendo best practice `security-auth-jwt`:
 1. Frontend: Usuario clickea "Continuar con Google"
 2. Frontend: google.accounts.id.initialize() → popup de Google
 3. Frontend: Google devuelve credential (id_token JWT)
-4. Frontend: POST /ecommerce-auth/google { id_token }
-5. Backend: Verificar id_token con Google OAuth2Client
+4. Frontend: POST /ecommerce-auth/google { credential }
+5. Backend: Verificar credential con Google OAuth2Client
 6. Backend: Extraer email, google_id, given_name, family_name
 7. Backend: Buscar customer por email:
    a. No existe → Crear con auth_providers: ['google'], google_id seteado
@@ -393,7 +393,7 @@ NO redirige fuera del sitio.
 3. Click botón → google.accounts.id.prompt() o renderButton()
 4. Google muestra popup de selección de cuenta
 5. Callback recibe { credential: id_token_jwt }
-6. Frontend: POST /ecommerce-auth/google { id_token: credential }
+6. Frontend: POST /ecommerce-auth/google { credential }
 7. Backend verifica → responde con JWT propio
 8. Frontend guarda en auth store → cierra modal
 ```
