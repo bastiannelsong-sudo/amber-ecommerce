@@ -91,7 +91,7 @@ function buildCspHeader(nonce: string, isDev: boolean): string {
     `style-src-elem 'self' 'unsafe-inline' fonts.googleapis.com`,
     `style-src-attr 'unsafe-inline'`,
     `font-src 'self' fonts.gstatic.com`,
-    `img-src 'self' data: blob: images.unsplash.com http2.mlstatic.com *.mlstatic.com`,
+    `img-src 'self' data: blob: images.unsplash.com http2.mlstatic.com *.mlstatic.com dkjxw0qm8pdns.cloudfront.net`,
     `connect-src ${connectSrc}`,
     `frame-src accounts.google.com`,
     `frame-ancestors 'none'`,

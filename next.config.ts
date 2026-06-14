@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'http2.mlstatic.com',
       },
+      // CDN propio (FEAT-007): catalogo servido desde S3 privado + CloudFront.
+      // mlstatic se mantiene durante la transicion; se quita en el cleanup final.
+      {
+        protocol: 'https',
+        hostname: 'dkjxw0qm8pdns.cloudfront.net',
+      },
     ],
   },
   async redirects() {
