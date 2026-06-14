@@ -18,8 +18,28 @@
  *
  * Smoke manual completo (incluyendo UI de MP) usar las creds de
  * `memory/reference_mp_sandbox_test_user.md`.
+ *
+ * ─── SAFETY GATE ────────────────────────────────────────────────────────────
+ * This spec performs a REAL POST /api/orders which triggers a live call to the
+ * MercadoPago preference-creation API on whatever MP_ACCESS_TOKEN the backend
+ * has loaded. If that token is a PRODUCTION token, this test creates a real
+ * MP preference (and may charge real money in edge cases).
+ *
+ * The spec is SKIPPED by default in automated runs. To enable it you MUST:
+ *   1. Set ALLOW_MP_SANDBOX=1 in your environment.
+ *   2. Confirm the backend is running with a SANDBOX MP_ACCESS_TOKEN
+ *      (prefix "TEST-" on MercadoPago accounts).
+ *
+ * Example (local, safe):
+ *   ALLOW_MP_SANDBOX=1 npx playwright test e2e/checkout-mp-sandbox.spec.ts
+ * ────────────────────────────────────────────────────────────────────────────
  */
 import { test, expect } from '@playwright/test';
+
+// Skip the entire file unless explicitly opted-in via ALLOW_MP_SANDBOX=1.
+// This prevents accidental hits against a live MP_ACCESS_TOKEN in CI or
+// local runs where the env var is not explicitly set.
+test.skip(!process.env.ALLOW_MP_SANDBOX, 'Gated: set ALLOW_MP_SANDBOX=1 and ensure backend uses a sandbox MP token before running');
 
 test.describe('Checkout → MercadoPago sandbox', () => {
   test('flujo completo: catalogo → carrito → checkout → redirect a MP', async ({ page }) => {

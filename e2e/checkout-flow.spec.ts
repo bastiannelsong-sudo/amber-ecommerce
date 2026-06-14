@@ -23,6 +23,14 @@ import {
  *
  * Limpieza: al final de la suite borra todas las ordenes con email
  * 'e2e-test-*' creadas durante la corrida.
+ *
+ * ─── DATABASE SAFETY NOTE ───────────────────────────────────────────────────
+ * The db helper (e2e/helpers/db.ts) writes directly to Postgres via pg.Client.
+ * Connection defaults: host=localhost, database=TEST_PG_DATABASE (default: 'amber').
+ * NEVER point TEST_PG_HOST / TEST_PG_DATABASE at a production Postgres instance.
+ * The helper guards against NODE_ENV=production in cleanupRecentTestOrders, but
+ * it does NOT guard createTestOrderInDb — wrong env vars will INSERT into prod.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 test.describe('Checkout flow E2E', () => {
   // Serial: cada spec abre su propia conexion pg, en paralelo saturan
