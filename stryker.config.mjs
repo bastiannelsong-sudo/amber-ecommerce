@@ -14,6 +14,10 @@ const config = {
     '!app/lib/**/*.test.ts',
     '!app/lib/**/*.test.tsx',
     '!app/lib/types/**/*.ts',
+    'features/*/domain/**/*.ts',
+    'features/*/application/**/*.ts',
+    '!features/*/domain/**/*.test.ts',
+    '!features/*/application/**/*.test.ts',
   ],
 
   reporters: ['html', 'clear-text', 'progress'],
