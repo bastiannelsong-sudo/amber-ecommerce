@@ -4,53 +4,12 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SearchResultsClient from '../components/SearchResultsClient';
-import type { Product, SearchResponse } from '../lib/types';
-
-const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
+import { searchProducts, sanitizeSearchQuery } from '../lib/catalog-api';
+import type { SearchResponse } from '../lib/types';
 
 type Props = {
   searchParams: Promise<{ q?: string; page?: string; sort?: string; material?: string; style?: string; collection?: string }>;
 };
-
-async function searchProducts(
-  q: string,
-  params: { page?: number; limit?: number; sort?: string; material?: string; style?: string; collection?: string },
-): Promise<SearchResponse> {
-  try {
-    const urlParams = new URLSearchParams();
-    urlParams.set('q', q);
-    if (params.page) urlParams.set('page', String(params.page));
-    if (params.limit) urlParams.set('limit', String(params.limit));
-    if (params.sort) urlParams.set('sort', params.sort);
-    if (params.material) urlParams.set('material', params.material);
-    if (params.style) urlParams.set('style', params.style);
-    if (params.collection) urlParams.set('collection', params.collection);
-
-    const res = await fetch(`${API_URL}/products/ecommerce/search?${urlParams.toString()}`, {
-      next: { revalidate: 30 },
-    });
-
-    if (!res.ok) throw new Error('Search API error');
-    const json = await res.json();
-
-    // Map backend product shape
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    json.data = (json.data || []).map((raw: any) => ({
-      ...raw,
-      category: raw.category
-        ? {
-            category_id: raw.category.category_id ?? raw.category.platform_id,
-            name: raw.category.name ?? raw.category.platform_name,
-            description: raw.category.description,
-          }
-        : undefined,
-    }));
-
-    return json as SearchResponse;
-  } catch {
-    return { data: [], total: 0, page: 1, limit: 24, query: q };
-  }
-}
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { q } = await searchParams;
@@ -63,7 +22,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     };
   }
 
-  const query = q.trim();
+  const query = sanitizeSearchQuery(q);
   return {
     title: `"${query}" — Buscar en AMBER Joyeria`,
     description: `Resultados de busqueda para "${query}" en AMBER Joyeria. Joyas en Plata 925, amuletos y accesorios con significado.`,
@@ -79,7 +38,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function BuscarPage({ searchParams }: Props) {
   const { q, page, sort, material, style, collection } = await searchParams;
-  const query = q?.trim() || '';
+  const query = sanitizeSearchQuery(q || '');
   const currentPage = page ? Number(page) : 1;
 
   let results: SearchResponse | null = null;

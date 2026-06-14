@@ -5,33 +5,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import { SITE_URL } from '../../lib/seo-copy';
-import type { Collection, Product } from '../../lib/types';
-
-const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
-
-async function getCollection(slug: string): Promise<Collection | null> {
-  try {
-    const res = await fetch(`${API_URL}/collections/${slug}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
-
-async function getCollectionProducts(slug: string): Promise<{ data: Product[]; total: number }> {
-  try {
-    const res = await fetch(`${API_URL}/collections/${slug}/products?limit=60&sort=bestseller`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return { data: [], total: 0 };
-    return res.json();
-  } catch {
-    return { data: [], total: 0 };
-  }
-}
+import { fetchCollectionBySlug, fetchCollectionProducts } from '../../lib/catalog-api';
 
 export async function generateMetadata({
   params,
@@ -39,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const collection = await getCollection(slug);
+  const collection = await fetchCollectionBySlug(slug);
   if (!collection) return { title: 'Colección no encontrada | AMBER Joyas' };
 
   const url = `${SITE_URL}/colecciones/${slug}`;
@@ -73,8 +47,8 @@ export async function generateMetadata({
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [collection, productsResult] = await Promise.all([
-    getCollection(slug),
-    getCollectionProducts(slug),
+    fetchCollectionBySlug(slug),
+    fetchCollectionProducts(slug, { limit: 60, sort: 'bestseller' }),
   ]);
 
   if (!collection) {
