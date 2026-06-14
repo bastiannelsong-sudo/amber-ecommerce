@@ -96,28 +96,28 @@ Spec refs: CHKUI-ORG-1..3 + mobile sticky bar. No store/hook imports.
 
 Spec refs: CHKUI-CONT-1, CHKUI-T4. Sole hook/store consumer inside `ui/`. Owns step state machine.
 
-- [ ] 5.1 **RED** Create `features/checkout/ui/containers/CheckoutPageContainer.test.tsx` — `vi.mock` all four deps (`useCheckoutForm`, `useCheckoutSubmit`, `useCheckoutSummary`, `useCartStore`); tests: `CheckoutSkeleton` in DOM before `mounted` fires; `ShippingStepForm` content visible when `step='shipping'` + items present; `PaymentStepForm` content visible when `step='payment'`; `CheckoutEmptyState` when `items=[]`; `trackBeginCheckout` called exactly once via `act()` flush (strict-mode guard). Est. ~100 lines.
-- [ ] 5.2 **GREEN** Create `features/checkout/ui/containers/CheckoutPageContainer.tsx` — imports `useCheckoutForm`, `useCheckoutSubmit`, `useCheckoutSummary`, `useCartStore`; `step` state `'shipping' | 'payment'`; `mounted` + `useEffect` hydration guard → `CheckoutSkeleton` while unmounted; `checkoutTracked` ref → `trackBeginCheckout(items)` once; `items.length === 0` → `CheckoutEmptyState`; `step === 'shipping'` → `ShippingStepForm`; `step === 'payment'` → `PaymentStepForm`; aside: `CheckoutOrderSummary` + `TrustBadges` + `CheckoutMobileStickyBar` + `CheckoutProgressBar`. Make 5.1 green. Est. ~120 lines.
+- [x] 5.1 **RED** Create `features/checkout/ui/containers/CheckoutPageContainer.test.tsx` — `vi.mock` all four deps (`useCheckoutForm`, `useCheckoutSubmit`, `useCheckoutSummary`, `useCartStore`); tests: `CheckoutSkeleton` in DOM before `mounted` fires; `ShippingStepForm` content visible when `step='shipping'` + items present; `PaymentStepForm` content visible when `step='payment'`; `CheckoutEmptyState` when `items=[]`; `trackBeginCheckout` called exactly once via `act()` flush (strict-mode guard). Est. ~100 lines.
+- [x] 5.2 **GREEN** Create `features/checkout/ui/containers/CheckoutPageContainer.tsx` — imports `useCheckoutForm`, `useCheckoutSubmit`, `useCheckoutSummary`, `useCartStore`; `step` state `'shipping' | 'payment'`; `mounted` + `useEffect` hydration guard → `CheckoutSkeleton` while unmounted; `checkoutTracked` ref → `trackBeginCheckout(items)` once; `items.length === 0` → `CheckoutEmptyState`; `step === 'shipping'` → `ShippingStepForm`; `step === 'payment'` → `PaymentStepForm`; aside: `CheckoutOrderSummary` + `TrustBadges` + `CheckoutMobileStickyBar` + `CheckoutProgressBar`. Make 5.1 green. Est. ~120 lines.
 
 ## Phase 6 — Consumer Swap + Dead Code Removal [PR3]
 
 Spec refs: CHKUI-SWAP, CHKUI-FIX-MATHRANDOM, CHKUI-FIX-S001, CHK-D1. ADRs: ADR-4 (step in container), ADR-6 (Math.random removal).
 
-- [ ] 6.1 **RED** Add to `CheckoutPageContainer.test.tsx`: assert `CheckoutStep` does not include `'confirmation'` (TypeScript `@ts-expect-error` or type assertion test); assert no `Math.random` reference survives in checkout implementation files. Est. ~15 lines added.
-- [ ] 6.2 **GREEN** Modify `app/checkout/page.tsx` (924 lines → ~25 lines thin shell): delete `orderNumber` useState + `Math.random()` init; delete `orderSnapshot` ref; delete all `display*` vars (`displayItems`, `displaySubtotal`, `displayShipping`, `displayTotal`); delete entire confirmation step JSX block (original lines 625–831); remove all inline hooks, state, validation, and handler logic; retain only `'use client'` directive + import of `CheckoutPageContainer` + thin render `<CheckoutPageContainer />`. (`CheckoutProgressBar`, `CheckoutSkeleton`, `TrustBadges` are now composed inside the container.) Est. ~924 deleted + ~25 new = ~949 delta lines. Make 6.1 green.
-- [ ] 6.3 **VERIFY** Inspect `features/checkout/domain/checkout.types.ts`: `CheckoutStep` MUST be `'shipping' | 'payment'` only — remove `'confirmation'` variant if still present (CHK-D1). Est. ~3–5 lines modified.
-- [ ] 6.4 **VERIFY** Run `pnpm test:run` — all 449 pre-existing tests green + all new RTL tests pass; zero `Math.random` in any checkout file; zero `step === 'confirmation'` in checkout UI layer; `tsc --noEmit` exits zero (CHKUI-T5).
+- [x] 6.1 **RED** Add to `CheckoutPageContainer.test.tsx`: assert `CheckoutStep` does not include `'confirmation'` (TypeScript `@ts-expect-error` or type assertion test); assert no `Math.random` reference survives in checkout implementation files. Est. ~15 lines added.
+- [x] 6.2 **GREEN** Modify `app/checkout/page.tsx` (924 lines → ~25 lines thin shell): delete `orderNumber` useState + `Math.random()` init; delete `orderSnapshot` ref; delete all `display*` vars (`displayItems`, `displaySubtotal`, `displayShipping`, `displayTotal`); delete entire confirmation step JSX block (original lines 625–831); remove all inline hooks, state, validation, and handler logic; retain only `'use client'` directive + import of `CheckoutPageContainer` + thin render `<CheckoutPageContainer />`. (`CheckoutProgressBar`, `CheckoutSkeleton`, `TrustBadges` are now composed inside the container.) Est. ~924 deleted + ~25 new = ~949 delta lines. Make 6.1 green.
+- [x] 6.3 **VERIFY** Inspect `features/checkout/domain/checkout.types.ts`: `CheckoutStep` MUST be `'shipping' | 'payment'` only — remove `'confirmation'` variant if still present (CHK-D1). Est. ~3–5 lines modified.
+- [x] 6.4 **VERIFY** Run `pnpm test:run` — all 449 pre-existing tests green + all new RTL tests pass; zero `Math.random` in any checkout file; zero `step === 'confirmation'` in checkout UI layer; `tsc --noEmit` exits zero (CHKUI-T5).
 
 ---
 
 ## Architecture Guards (run after each PR merge)
 
-- [ ] G.1 Verify zero imports from `features/cart/ui/` anywhere in `features/checkout/ui/` (ADR-1, CHKUI-ARCH).
-- [ ] G.2 Verify atoms/molecules/organisms have zero imports from stores, hooks, or `features/*/infrastructure/` (CHKUI-ARCH).
-- [ ] G.3 Verify `CheckoutPageContainer` is the SOLE consumer of the three hooks + `useCartStore` inside `ui/` (CHKUI-ARCH).
-- [ ] G.4 Verify `sanitizePhone` is called ONLY in `use-checkout-submit.ts` at payload boundary — NOT inside `toOrderPayload`, NOT in `handleInputChange` (ADR-5).
-- [ ] G.5 Verify `apiClient.post('/orders', payload)` is the direct call — NOT via `ecommerceService` (design note).
-- [ ] G.6 Verify GEO effect uses `let cancelled` flag — NOT AbortController (design note).
+- [x] G.1 Verify zero imports from `features/cart/ui/` anywhere in `features/checkout/ui/` (ADR-1, CHKUI-ARCH). VERIFIED PR2b.
+- [x] G.2 Verify atoms/molecules/organisms have zero imports from stores, hooks, or `features/*/infrastructure/` (CHKUI-ARCH). VERIFIED PR2b.
+- [x] G.3 Verify `CheckoutPageContainer` is the SOLE consumer of the three hooks + `useCartStore` inside `ui/` (CHKUI-ARCH). VERIFIED PR2b.
+- [x] G.4 Verify `sanitizePhone` is called ONLY in `use-checkout-submit.ts` at payload boundary — NOT inside `toOrderPayload`, NOT in `handleInputChange` (ADR-5). VERIFIED PR1.
+- [x] G.5 Verify `apiClient.post('/orders', payload)` is the direct call — NOT via `ecommerceService` (design note). VERIFIED PR1.
+- [x] G.6 Verify GEO effect uses `let cancelled` flag — NOT AbortController (design note). VERIFIED PR1.
 
 ---
 
