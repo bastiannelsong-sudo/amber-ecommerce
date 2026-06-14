@@ -4,10 +4,11 @@ import { backendFetch } from '../../../../lib/bff-proxy';
 /**
  * PATCH /api/reviews/[id]/helpful
  *
- * ⚠️  TODO (backend-pendiente al 2026-04-20):
- * El endpoint `PATCH /ecommerce/reviews/:id/helpful` NO está implementado en
- * NestJS (ecommerce.controller solo tiene GET reviews). Este BFF queda listo;
- * cuando el backend sume la feature, funciona automáticamente.
+ * NOTE: The backend endpoint PATCH /ecommerce/reviews/:id/helpful is NOT
+ * implemented in NestJS (ecommerce.controller only exposes GET reviews and
+ * POST reviews). This BFF handler is a forward-compatible stub; when the
+ * backend adds the helpful endpoint, this route will work automatically.
+ * No request body is involved, so no validation is needed here.
  */
 export async function PATCH(
   _req: NextRequest,

@@ -51,7 +51,19 @@ export const cardPaymentSchema = z.object({
   payer_identification_number: z.string().optional(),
 });
 
+// Source: amber-back/src/ecommerce/dto/create-review.dto.ts — CreateReviewDto
+export const createReviewSchema = z.object({
+  product_id: z.number(),
+  customer_name: z.string().min(1),
+  customer_email: z.string().email(),
+  rating: z.number().int().min(1).max(5),
+  title: z.string().optional(),
+  comment: z.string().min(1),
+  order_number: z.string().optional(),
+});
+
 // Inferred types for use in route handlers
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;
 export type ValidateCouponDto = z.infer<typeof validateCouponSchema>;
 export type CardPaymentDto = z.infer<typeof cardPaymentSchema>;
+export type CreateReviewDto = z.infer<typeof createReviewSchema>;
