@@ -7,6 +7,11 @@ import ProductCard from '../../components/ProductCard';
 import { SITE_URL } from '../../lib/seo-copy';
 import { fetchCollectionBySlug, fetchCollectionProducts } from '../../lib/catalog-api';
 
+// Render dynamically at request time: both generateMetadata and the page
+// component call the backend. Without INTERNAL_API_URL in CI the
+// localhost:3000 fallback returns non-JSON, crashing static prerendering.
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {

@@ -15,24 +15,32 @@ interface FetchOptions {
 
 export const getBestsellerIds = cache(
   async (opts: FetchOptions = {}): Promise<number[]> => {
-    const res = await internalFetch(`/ecommerce/bestsellers`, {
-      next: { revalidate: opts.revalidate ?? 300 },
-    });
-    if (!res.ok) return [];
-    return res.json();
+    try {
+      const res = await internalFetch(`/ecommerce/bestsellers`, {
+        next: { revalidate: opts.revalidate ?? 300 },
+      });
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 );
 
 export const getFeaturedProducts = cache(
   async (limit = 8, opts: FetchOptions = {}): Promise<Product[]> => {
     // Usa el catálogo ecommerce con sort=featured. Fallback silencioso a lista vacía.
-    const res = await internalFetch(
-      `/products/catalog?limit=${limit}&sort=featured`,
-      { next: { revalidate: opts.revalidate ?? 120 } },
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data?.data ?? []) as Product[];
+    try {
+      const res = await internalFetch(
+        `/products/catalog?limit=${limit}&sort=featured`,
+        { next: { revalidate: opts.revalidate ?? 120 } },
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data?.data ?? []) as Product[];
+    } catch {
+      return [];
+    }
   },
 );
 
@@ -57,14 +65,18 @@ export const getRelatedProducts = cache(
     if (opts.material) params.set('material', opts.material);
 
     const fetchWith = async (qs: string): Promise<Product[]> => {
-      const res = await internalFetch(`/products/catalog?${qs}`, {
-        next: { revalidate: opts.revalidate ?? 120 },
-      });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return ((data?.data ?? []) as Product[]).filter(
-        (p) => p.product_id !== productId,
-      );
+      try {
+        const res = await internalFetch(`/products/catalog?${qs}`, {
+          next: { revalidate: opts.revalidate ?? 120 },
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return ((data?.data ?? []) as Product[]).filter(
+          (p) => p.product_id !== productId,
+        );
+      } catch {
+        return [];
+      }
     };
 
     let related = await fetchWith(params.toString());

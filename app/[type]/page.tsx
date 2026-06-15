@@ -17,15 +17,13 @@ import {
   type ProductTypeSlug,
 } from '../lib/seo-copy';
 
-export const dynamicParams = false;
-export const revalidate = 300;
+// Render dynamically at request time: the backend is not available during
+// build (CI has no INTERNAL_API_URL), so static prerendering would fail.
+// Product counts and availability must stay fresh anyway.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ type: string }>;
-}
-
-export async function generateStaticParams() {
-  return PRODUCT_TYPE_SLUGS.map((type) => ({ type }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

@@ -9,6 +9,10 @@ import { fetchCatalog, type CatalogFilters } from '../lib/catalog-api';
 import { SITE_URL } from '../lib/seo-copy';
 import type { Product, Collection } from '../lib/types';
 
+// Render dynamically at request time: depends on searchParams (URL filters)
+// and backend data that must not be prerendered at build.
+export const dynamic = 'force-dynamic';
+
 const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 const CATALOG_URL = `${SITE_URL}/catalogo`;
 
