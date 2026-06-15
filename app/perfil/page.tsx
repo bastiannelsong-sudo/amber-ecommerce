@@ -10,20 +10,8 @@ import { getOrderStatusMeta } from '../lib/order-status';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
 import { saveProfile } from './profile.service';
-
-interface MyOrder {
-  order_id: number;
-  order_number: string;
-  status: string;
-  total: number | string;
-  items: { name: string; quantity: number }[];
-  created_at: string;
-}
-
-interface OrdersResponse {
-  orders: MyOrder[];
-  total: number;
-}
+import { fetchOrders } from './orders.fetch';
+import type { MyOrder } from './types';
 
 export default function PerfilPage() {
   const user = useAuthStore((state) => state.user);
@@ -80,25 +68,24 @@ export default function PerfilPage() {
 
   useEffect(() => {
     if (activeTab !== 'orders' || ordersStatus === 'loading' || ordersStatus === 'ok') return;
+
+    const controller = new AbortController();
     setOrdersStatus('loading');
     setOrdersError(null);
-    fetch('/api/orders/me', { credentials: 'include' })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || `HTTP ${res.status}`);
-        }
-        return res.json() as Promise<OrdersResponse>;
-      })
-      .then((data) => {
-        setOrders(data.orders ?? []);
+
+    fetchOrders(controller.signal)
+      .then((orders) => {
+        setOrders(orders);
         setOrdersStatus('ok');
       })
       .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         const msg = err instanceof Error ? err.message : 'Error desconocido';
         setOrdersError(msg);
         setOrdersStatus('error');
       });
+
+    return () => controller.abort();
   }, [activeTab, ordersStatus]);
 
   return (
