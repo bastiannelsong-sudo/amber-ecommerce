@@ -13,7 +13,10 @@ import {
 } from '@/app/lib/seo-copy';
 import ProductClientUI from './ProductClientUI';
 
-export const revalidate = 120;
+// Render dynamically at request time: fetchProductBySlug is called in both
+// generateMetadata and the page component. The backend is not available
+// during build (CI has no INTERNAL_API_URL), so static prerendering fails.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ slug: string }>;

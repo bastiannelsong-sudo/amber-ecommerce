@@ -7,15 +7,12 @@ import ProductCard from '../../components/ProductCard';
 import { fetchCatalog } from '../../lib/catalog-api';
 import { SITE_URL, getSupportedTagSlugs, getTagCopy } from '../../lib/seo-copy';
 
-export const dynamicParams = false;
-export const revalidate = 300;
+// Render dynamically at request time: the backend is not available during
+// build (CI has no INTERNAL_API_URL), so static prerendering would fail.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ tag: string }>;
-}
-
-export async function generateStaticParams() {
-  return getSupportedTagSlugs().map((tag) => ({ tag }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

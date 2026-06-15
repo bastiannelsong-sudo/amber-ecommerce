@@ -18,15 +18,13 @@ import {
   type ProductTypeSlug,
 } from '../../lib/seo-copy';
 
-export const dynamicParams = false;
-export const revalidate = 300;
+// Render dynamically at request time: the backend is not available during
+// build (CI has no INTERNAL_API_URL), so static prerendering would fail.
+// Thin-content check in generateMetadata requires a live catalog response.
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ type: string; material: string }>;
-}
-
-export async function generateStaticParams() {
-  return TYPE_MATERIAL_COMBOS.map((c) => ({ type: c.type, material: c.material }));
 }
 
 // Threshold para thin content. Combinaciones type×material con menos de N

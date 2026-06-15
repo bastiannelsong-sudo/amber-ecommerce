@@ -6,7 +6,9 @@ import ProductCard from '../components/ProductCard';
 import { fetchCatalog } from '../lib/catalog-api';
 import { SITE_URL, TAG_COPY, getSupportedTagSlugs } from '../lib/seo-copy';
 
-export const revalidate = 300;
+// Render dynamically at request time: the backend is not available during
+// build (CI has no INTERNAL_API_URL), so static prerendering would fail.
+export const dynamic = 'force-dynamic';
 
 const AMULETOS_URL = `${SITE_URL}/amuletos`;
 
