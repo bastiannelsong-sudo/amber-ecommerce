@@ -93,3 +93,95 @@ describe('validateSessionSecret — startup validation (Fix #11)', () => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fix #3: Zod shape validation on decoded session payload
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('getSession — Zod shape validation (Fix #3)', () => {
+  afterEach(() => {
+    mockCookiesGet.mockReset();
+  });
+
+  it('returns null when decoded payload is missing required fields', async () => {
+    // Signed correctly but missing last_name, access_token, refresh_token, expires_at
+    const incomplete = {
+      user_id: 1,
+      email: 'user@example.com',
+      first_name: 'Alice',
+    };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(incomplete) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when user_id is a string instead of a number', async () => {
+    const wrongType = {
+      user_id: 'not-a-number',
+      email: 'user@example.com',
+      first_name: 'Alice',
+      last_name: 'Smith',
+      access_token: 'tok',
+      refresh_token: 'ref',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(wrongType) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when email is missing (triangulation)', async () => {
+    const noEmail = {
+      user_id: 1,
+      first_name: 'Alice',
+      last_name: 'Smith',
+      access_token: 'tok',
+      refresh_token: 'ref',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(noEmail) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when expires_at is a string instead of a number', async () => {
+    const wrongExpiresType = {
+      user_id: 1,
+      email: 'user@example.com',
+      first_name: 'Alice',
+      last_name: 'Smith',
+      access_token: 'tok',
+      refresh_token: 'ref',
+      expires_at: 'not-a-timestamp',
+    };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(wrongExpiresType) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns the typed session when payload has all required fields with correct types', async () => {
+    const validSession = {
+      user_id: 42,
+      email: 'test@example.com',
+      first_name: 'Bob',
+      last_name: 'Jones',
+      access_token: 'access-token-value',
+      refresh_token: 'refresh-token-value',
+      expires_at: Math.floor(Date.now() / 1000) + 7200,
+    };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(validSession) });
+
+    const result = await getSession();
+    expect(result).not.toBeNull();
+    expect(result?.user_id).toBe(42);
+    expect(result?.email).toBe('test@example.com');
+    expect(result?.first_name).toBe('Bob');
+    expect(result?.last_name).toBe('Jones');
+    expect(result?.access_token).toBe('access-token-value');
+    expect(result?.refresh_token).toBe('refresh-token-value');
+  });
+});
