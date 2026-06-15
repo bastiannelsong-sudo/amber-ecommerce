@@ -85,7 +85,7 @@ export const setSession = async (session: AmberSession): Promise<void> => {
   const store = await cookies();
   store.set(COOKIE_NAME, encode(session), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // Browsers exempt localhost from Secure; always-secure is safe for dev
     sameSite: 'lax',
     path: '/',
     maxAge: COOKIE_MAX_AGE,
