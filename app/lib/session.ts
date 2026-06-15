@@ -1,6 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { z } from 'zod';
 
 const COOKIE_NAME = 'amber_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 días
@@ -12,8 +13,19 @@ export interface AmberSession {
   last_name: string;
   access_token: string;
   refresh_token: string;
-  expires_at: number; // Unix timestamp
+  expires_at: number; // Unix timestamp (seconds)
 }
+
+/** Runtime schema for AmberSession — mirrors the interface field-for-field. */
+const amberSessionSchema = z.object({
+  user_id: z.number(),
+  email: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  access_token: z.string(),
+  refresh_token: z.string(),
+  expires_at: z.number(),
+});
 
 const getSecret = (): string => {
   const secret = process.env.SESSION_SECRET;
@@ -50,7 +62,8 @@ const decode = (cookieValue: string): AmberSession | null => {
   if (!safeEqual(signature, expected)) return null;
   try {
     const json = Buffer.from(payload, 'base64url').toString('utf-8');
-    return JSON.parse(json) as AmberSession;
+    const result = amberSessionSchema.safeParse(JSON.parse(json));
+    return result.success ? result.data : null;
   } catch {
     return null;
   }
@@ -60,7 +73,12 @@ export const getSession = async (): Promise<AmberSession | null> => {
   const store = await cookies();
   const raw = store.get(COOKIE_NAME)?.value;
   if (!raw) return null;
-  return decode(raw);
+  const session = decode(raw);
+  if (!session) return null;
+  // Reject sessions whose expiry has passed. expires_at is Unix seconds (set
+  // by tryRefreshAccessToken as Math.floor(Date.now() / 1000) + expires_in).
+  if (session.expires_at < Math.floor(Date.now() / 1000)) return null;
+  return session;
 };
 
 export const setSession = async (session: AmberSession): Promise<void> => {

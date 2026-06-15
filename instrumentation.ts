@@ -9,10 +9,21 @@
  *   3. Reiniciar el server.
  *
  * Ref: backlog/ops/OPS-001-observabilidad.md
+ *
+ * SEC-002: validates required secrets at boot so the server never starts with
+ * a missing SESSION_SECRET. A mid-request 500 is worse than a clean crash at
+ * startup because it silently accepts traffic for a brief window.
  */
 import * as Sentry from '@sentry/nextjs';
+import { validateSessionSecret } from './app/lib/session-startup';
 
 export async function register() {
+  // Fail fast: crash the server at startup if SESSION_SECRET is missing.
+  // Only run the check in the Node.js runtime (instrumentation also runs in edge).
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    validateSessionSecret();
+  }
+
   const DSN = process.env.SENTRY_DSN;
   if (!DSN) return;
 
