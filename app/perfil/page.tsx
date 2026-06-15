@@ -9,6 +9,7 @@ import OrderStatusTimeline from '../components/OrderStatusTimeline';
 import { getOrderStatusMeta } from '../lib/order-status';
 import { useAuthStore } from '../lib/stores/auth.store';
 import { authService } from '../lib/services/auth.service';
+import { saveProfile } from './profile.service';
 
 interface MyOrder {
   order_id: number;
@@ -48,12 +49,27 @@ export default function PerfilPage() {
     phone: user?.phone || '+56 9 1234 5678',
   });
 
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    setSaveError(null);
+
+    const result = await saveProfile(formData);
+
+    if (!result.ok) {
+      setSaveStatus('error');
+      setSaveError(result.error);
+      return;
+    }
+
     updateUser(formData);
+    setSaveStatus('idle');
     setIsEditing(false);
   };
 
@@ -201,16 +217,18 @@ export default function PerfilPage() {
                     ) : (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setIsEditing(false)}
-                          className="px-6 py-2 border border-pearl-300 text-platinum-600 text-sm uppercase tracking-widest font-medium hover:bg-pearl-100 transition-colors"
+                          onClick={() => { setIsEditing(false); setSaveStatus('idle'); setSaveError(null); }}
+                          disabled={saveStatus === 'saving'}
+                          className="px-6 py-2 border border-pearl-300 text-platinum-600 text-sm uppercase tracking-widest font-medium hover:bg-pearl-100 transition-colors disabled:opacity-50"
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={handleSave}
-                          className="px-6 py-2 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors"
+                          disabled={saveStatus === 'saving'}
+                          className="px-6 py-2 bg-obsidian-900 text-white text-sm uppercase tracking-widest font-medium hover:bg-amber-gold-500 transition-colors disabled:opacity-50"
                         >
-                          Guardar
+                          {saveStatus === 'saving' ? 'Guardando...' : 'Guardar'}
                         </button>
                       </div>
                     )}
@@ -273,6 +291,12 @@ export default function PerfilPage() {
                         className="w-full px-4 py-3 border border-pearl-300 focus:border-amber-gold-500 focus:outline-none transition-colors disabled:bg-pearl-100 disabled:text-platinum-600"
                       />
                     </div>
+
+                    {saveStatus === 'error' && saveError && (
+                      <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        No se pudieron guardar los cambios: {saveError}
+                      </div>
+                    )}
 
                     <div className="pt-6 border-t border-pearl-200">
                       <h3 className="text-lg font-medium text-obsidian-900 mb-4">
