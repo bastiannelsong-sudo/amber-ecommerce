@@ -65,19 +65,33 @@ export async function fetchCatalog(
   filters: CatalogFilters = {},
   revalidate = 120,
 ): Promise<CatalogResponse> {
-  const res = await fetch(`${API_URL}/products/catalog${toQuery(filters)}`, {
-    next: { revalidate },
-  });
-  if (!res.ok) {
-    return { data: [], total: 0, page: filters.page ?? 1, limit: filters.limit ?? 20 };
+  const url = `${API_URL}/products/catalog${toQuery(filters)}`;
+  const sentinel: CatalogResponse = {
+    data: [],
+    total: 0,
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 20,
+  };
+  try {
+    const res = await fetch(url, { next: { revalidate } });
+    if (!res.ok) return sentinel;
+    return await res.json();
+  } catch (err) {
+    console.warn(`fetchCatalog: failed to fetch or parse response from ${url}`, err);
+    return sentinel;
   }
-  return res.json();
 }
 
 export async function fetchFacets(revalidate = 300): Promise<FacetsResponse | null> {
-  const res = await fetch(`${API_URL}/products/facets`, { next: { revalidate } });
-  if (!res.ok) return null;
-  return res.json();
+  const url = `${API_URL}/products/facets`;
+  try {
+    const res = await fetch(url, { next: { revalidate } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn(`fetchFacets: failed to fetch or parse response from ${url}`, err);
+    return null;
+  }
 }
 
 export async function fetchProductBySlug(
@@ -89,9 +103,14 @@ export async function fetchProductBySlug(
   const url = isNumeric
     ? `${API_URL}/products/${slug}`
     : `${API_URL}/products/by-slug/${encodeURIComponent(slug)}`;
-  const res = await fetch(url, { next: { revalidate } });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(url, { next: { revalidate } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn(`fetchProductBySlug: failed to fetch or parse response from ${url}`, err);
+    return null;
+  }
 }
 
 export interface ReviewSummary {

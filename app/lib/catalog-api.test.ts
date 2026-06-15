@@ -7,6 +7,9 @@
  * - fetchCollectionsTree: returns array on success, [] on error
  * - fetchCollectionBySlug: returns Collection on success, null on 404/error
  * - fetchCollectionProducts: returns products on success, empty on error
+ * - fetchCatalog: returns empty sentinel on fetch throw or non-JSON 200; warns
+ * - fetchFacets: returns null on fetch throw or non-JSON 200; warns
+ * - fetchProductBySlug: returns null on fetch throw or non-JSON 200; warns
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -306,5 +309,248 @@ describe('fetchCollectionProducts', () => {
     await fetchCollectionProducts('my collection');
     const [url] = mockFetch.mock.calls[0] as [string, RequestInit];
     expect(url).toContain('my%20collection');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchCatalog — defensive guard (RED phase: these tests FAIL before the fix)
+// ---------------------------------------------------------------------------
+
+describe('fetchCatalog', () => {
+  let fetchCatalog: typeof import('./catalog-api').fetchCatalog;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', mockFetch);
+    const mod = await import('./catalog-api');
+    fetchCatalog = mod.fetchCatalog;
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockFetch.mockReset();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('returns empty sentinel when fetch throws (network error)', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    const result = await fetchCatalog({ page: 2, limit: 12 });
+    expect(result.data).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(12);
+  });
+
+  it('calls console.warn with URL info when fetch throws', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    await fetchCatalog();
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchCatalog');
+  });
+
+  it('returns empty sentinel when response is 200 but body is non-JSON (HTML error page)', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('<html><body>Service Unavailable</body></html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    const result = await fetchCatalog({ limit: 48 });
+    expect(result.data).toEqual([]);
+    expect(result.total).toBe(0);
+    expect(result.limit).toBe(48);
+  });
+
+  it('calls console.warn with URL info when res.json throws (non-JSON body)', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('<html><body>Bad Gateway</body></html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    await fetchCatalog();
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchCatalog');
+  });
+
+  it('returns correct data when response is valid JSON', async () => {
+    const payload = { data: [{ product_id: 1, name: 'Ring' }], total: 1, page: 1, limit: 20 };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const result = await fetchCatalog();
+    expect(result.data).toHaveLength(1);
+    expect(result.total).toBe(1);
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchFacets — defensive guard
+// ---------------------------------------------------------------------------
+
+describe('fetchFacets', () => {
+  let fetchFacets: typeof import('./catalog-api').fetchFacets;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', mockFetch);
+    const mod = await import('./catalog-api');
+    fetchFacets = mod.fetchFacets;
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockFetch.mockReset();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('returns null when fetch throws (network error)', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    const result = await fetchFacets();
+    expect(result).toBeNull();
+  });
+
+  it('calls console.warn with URL info when fetch throws', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    await fetchFacets();
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchFacets');
+  });
+
+  it('returns null when response is 200 but body is non-JSON', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('<html><body>Proxy Error</body></html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    const result = await fetchFacets();
+    expect(result).toBeNull();
+  });
+
+  it('calls console.warn with URL info when res.json throws (non-JSON body)', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('not json', { status: 200, headers: { 'Content-Type': 'text/plain' } }),
+    );
+    await fetchFacets();
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchFacets');
+  });
+
+  it('returns data when response is valid JSON', async () => {
+    const payload = {
+      product_type: [],
+      audience: [],
+      material: [],
+      tags: [],
+      price_range: { min: 0, max: 100000 },
+    };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const result = await fetchFacets();
+    expect(result).not.toBeNull();
+    expect(result?.price_range.max).toBe(100000);
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchProductBySlug — defensive guard
+// ---------------------------------------------------------------------------
+
+describe('fetchProductBySlug', () => {
+  let fetchProductBySlug: typeof import('./catalog-api').fetchProductBySlug;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', mockFetch);
+    const mod = await import('./catalog-api');
+    fetchProductBySlug = mod.fetchProductBySlug;
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockFetch.mockReset();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it('returns null when fetch throws (network error)', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    const result = await fetchProductBySlug('pulsera-plata');
+    expect(result).toBeNull();
+  });
+
+  it('calls console.warn with URL info when fetch throws', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    await fetchProductBySlug('pulsera-plata');
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchProductBySlug');
+  });
+
+  it('returns null when response is 200 but body is non-JSON', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('<html>Gateway Timeout</html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    const result = await fetchProductBySlug('pulsera-plata');
+    expect(result).toBeNull();
+  });
+
+  it('calls console.warn with URL info when res.json throws (non-JSON body)', async () => {
+    mockFetch.mockResolvedValue(
+      new Response('<html>Bad Gateway</html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    );
+    await fetchProductBySlug('pulsera-plata');
+    expect(consoleWarnSpy).toHaveBeenCalledOnce();
+    expect(consoleWarnSpy.mock.calls[0][0]).toContain('fetchProductBySlug');
+  });
+
+  it('uses numeric path when slug is all digits', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ product_id: 42, name: 'Ring' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    await fetchProductBySlug('42');
+    const [url] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/products/42');
+    expect(url).not.toContain('by-slug');
+  });
+
+  it('uses by-slug path for non-numeric slug', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ product_id: 1, name: 'Ring' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    await fetchProductBySlug('pulsera-plata');
+    const [url] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/products/by-slug/pulsera-plata');
+  });
+
+  it('returns product data when response is valid JSON', async () => {
+    const product = { product_id: 1, name: 'Pulsera Plata', slug: 'pulsera-plata' };
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify(product), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const result = await fetchProductBySlug('pulsera-plata');
+    expect(result).not.toBeNull();
+    expect(result?.product_id).toBe(1);
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 });
