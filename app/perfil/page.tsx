@@ -12,6 +12,7 @@ import { authService } from '../lib/services/auth.service';
 import { saveProfile } from './profile.service';
 import { fetchOrders } from './orders.fetch';
 import type { MyOrder } from './types';
+import { buildFormData } from './form-data';
 
 export default function PerfilPage() {
   const user = useAuthStore((state) => state.user);
@@ -30,12 +31,15 @@ export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const fullName = user ? `${user.first_name} ${user.last_name}` : 'Usuario Demo';
-  const [formData, setFormData] = useState({
-    first_name: user?.first_name || 'Usuario',
-    last_name: user?.last_name || 'Demo',
-    email: user?.email || 'usuario@example.com',
-    phone: user?.phone || '+56 9 1234 5678',
-  });
+  const [formData, setFormData] = useState(() => buildFormData(user));
+
+  // Resync form when the auth-store user changes (e.g., after a profile update
+  // by another tab). Guard on isEditing to avoid clobbering an in-progress edit.
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData(buildFormData(user));
+    }
+  }, [user, isEditing]);
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
