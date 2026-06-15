@@ -9,6 +9,11 @@ import TestimonialCarousel from './components/TestimonialCarousel';
 import Footer from './components/Footer';
 import { SITE_URL } from './lib/seo-copy';
 
+// Render dynamically at request time: FeaturedProducts is a Server Component
+// that calls getFeaturedProducts (backend). Without INTERNAL_API_URL in CI
+// the localhost:3000 fallback returns non-JSON, crashing static prerendering.
+export const dynamic = 'force-dynamic';
+
 // JSON-LD: WebSite + SearchAction habilita el sitelinks searchbox en Google.
 const websiteJsonLd = {
   '@context': 'https://schema.org',

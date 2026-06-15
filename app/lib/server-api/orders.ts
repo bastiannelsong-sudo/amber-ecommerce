@@ -10,11 +10,15 @@ import { internalFetch } from './internal-fetch';
  */
 export const getOrderByNumber = cache(
   async (orderNumber: string): Promise<EcommerceOrderDetail | null> => {
-    const res = await internalFetch(
-      `/ecommerce/orders/${encodeURIComponent(orderNumber)}`,
-      { cache: 'no-store' },
-    );
-    if (!res.ok) return null;
-    return res.json();
+    try {
+      const res = await internalFetch(
+        `/ecommerce/orders/${encodeURIComponent(orderNumber)}`,
+        { cache: 'no-store' },
+      );
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
   },
 );
