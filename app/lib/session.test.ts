@@ -185,3 +185,56 @@ describe('getSession — Zod shape validation (Fix #3)', () => {
     expect(result?.refresh_token).toBe('refresh-token-value');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fix #8: expires_at validation — reject expired sessions
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('getSession — expires_at validation (Fix #8)', () => {
+  const baseSession = {
+    user_id: 1,
+    email: 'user@example.com',
+    first_name: 'Alice',
+    last_name: 'Smith',
+    access_token: 'access-tok',
+    refresh_token: 'refresh-tok',
+    expires_at: 0, // overridden per test
+  };
+
+  afterEach(() => {
+    mockCookiesGet.mockReset();
+  });
+
+  it('returns null when expires_at is 1 second in the past', async () => {
+    const expired = { ...baseSession, expires_at: Math.floor(Date.now() / 1000) - 1 };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(expired) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns null when expires_at is 24 hours in the past (triangulation)', async () => {
+    const longExpired = { ...baseSession, expires_at: Math.floor(Date.now() / 1000) - 86400 };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(longExpired) });
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+
+  it('returns the session when expires_at is 1 hour in the future', async () => {
+    const valid = { ...baseSession, expires_at: Math.floor(Date.now() / 1000) + 3600 };
+    mockCookiesGet.mockReturnValue({ value: buildCookie(valid) });
+
+    const result = await getSession();
+    expect(result).not.toBeNull();
+    expect(result?.user_id).toBe(1);
+    expect(result?.email).toBe('user@example.com');
+  });
+
+  it('returns null when no cookie is present', async () => {
+    mockCookiesGet.mockReturnValue(undefined);
+
+    const result = await getSession();
+    expect(result).toBeNull();
+  });
+});

@@ -73,7 +73,12 @@ export const getSession = async (): Promise<AmberSession | null> => {
   const store = await cookies();
   const raw = store.get(COOKIE_NAME)?.value;
   if (!raw) return null;
-  return decode(raw);
+  const session = decode(raw);
+  if (!session) return null;
+  // Reject sessions whose expiry has passed. expires_at is Unix seconds (set
+  // by tryRefreshAccessToken as Math.floor(Date.now() / 1000) + expires_in).
+  if (session.expires_at < Math.floor(Date.now() / 1000)) return null;
+  return session;
 };
 
 export const setSession = async (session: AmberSession): Promise<void> => {
