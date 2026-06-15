@@ -6,6 +6,11 @@ import Footer from '../components/Footer';
 import { fetchCollectionsTree } from '../lib/catalog-api';
 import type { Collection } from '../lib/types';
 
+// Render dynamically at request time: fetchCollectionsTree calls the backend
+// at render. Without INTERNAL_API_URL in CI the localhost:3000 fallback
+// returns non-JSON, which crashes static prerendering.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Colecciones de Joyas',
   description: 'Descubre nuestras colecciones: Proteccion y Energia, Moda y Tendencia, Cuidado de Joyas. Joyas con significado para cada estilo.',

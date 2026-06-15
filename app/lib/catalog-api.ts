@@ -221,7 +221,7 @@ export async function fetchCollectionsTree(revalidate = 60): Promise<Collection[
   try {
     const res = await fetch(`${API_URL}/collections/tree`, { next: { revalidate } });
     if (!res.ok) throw new Error(`Collections tree API error: ${res.status}`);
-    return res.json();
+    return await res.json();
   } catch {
     return [];
   }
@@ -240,7 +240,7 @@ export async function fetchCollectionBySlug(
       next: { revalidate },
     });
     if (!res.ok) return null;
-    return res.json();
+    return await res.json();
   } catch {
     return null;
   }
@@ -271,7 +271,7 @@ export async function fetchCollectionProducts(
       { next: { revalidate } },
     );
     if (!res.ok) return { data: [], total: 0 };
-    return res.json();
+    return await res.json();
   } catch {
     return { data: [], total: 0 };
   }
