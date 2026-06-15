@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createOrderSchema,
   validateCouponSchema,
+  createReviewSchema,
 } from './schemas';
 
 // ---------------------------------------------------------------------------
@@ -208,5 +209,104 @@ describe('validateCouponSchema', () => {
     if (result.success) {
       expect(Object.keys(result.data)).not.toContain('injected');
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// createReviewSchema — matches amber-back CreateReviewDto
+// Source: amber-back/src/ecommerce/dto/create-review.dto.ts
+// Backend enforces: customer_name max(100), title max(255), comment max(2000)
+// ---------------------------------------------------------------------------
+describe('createReviewSchema', () => {
+  const validReview = {
+    product_id: 42,
+    customer_name: 'Jane Doe',
+    customer_email: 'jane@example.com',
+    rating: 5,
+    comment: 'Excellent product!',
+  };
+
+  // ---- happy path ----
+
+  it('accepts a valid review payload', () => {
+    const result = createReviewSchema.safeParse(validReview);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a review with all optional fields at valid lengths', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      title: 'A'.repeat(255),
+      order_number: 'ORD-001',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts customer_name at exact max length (100 chars)', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      customer_name: 'A'.repeat(100),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts comment at exact max length (2000 chars)', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      comment: 'B'.repeat(2000),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  // ---- max-length violations (must REJECT) ----
+
+  it('rejects customer_name exceeding 100 characters', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      customer_name: 'A'.repeat(101),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects title exceeding 255 characters', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      title: 'T'.repeat(256),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects comment exceeding 2000 characters', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      comment: 'C'.repeat(2001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // ---- existing min/required rules must still hold ----
+
+  it('rejects missing comment (min(1) still applies)', () => {
+    const { comment: _, ...withoutComment } = validReview;
+    const result = createReviewSchema.safeParse(withoutComment);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty comment (min(1) still applies)', () => {
+    const result = createReviewSchema.safeParse({ ...validReview, comment: '' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects rating out of range (must be 1–5)', () => {
+    const result = createReviewSchema.safeParse({ ...validReview, rating: 6 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid customer_email', () => {
+    const result = createReviewSchema.safeParse({
+      ...validReview,
+      customer_email: 'not-an-email',
+    });
+    expect(result.success).toBe(false);
   });
 });
