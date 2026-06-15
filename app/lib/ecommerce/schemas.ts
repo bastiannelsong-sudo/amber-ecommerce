@@ -54,11 +54,11 @@ export const cardPaymentSchema = z.object({
 // Source: amber-back/src/ecommerce/dto/create-review.dto.ts — CreateReviewDto
 export const createReviewSchema = z.object({
   product_id: z.number(),
-  customer_name: z.string().min(1),
+  customer_name: z.string().min(1).max(100),
   customer_email: z.string().email(),
   rating: z.number().int().min(1).max(5),
-  title: z.string().optional(),
-  comment: z.string().min(1),
+  title: z.string().max(255).optional(),
+  comment: z.string().min(1).max(2000),
   order_number: z.string().optional(),
 });
 
