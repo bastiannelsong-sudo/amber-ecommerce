@@ -4,6 +4,7 @@
  * Fix #11: SESSION_SECRET startup validation — validateSessionSecret throws when missing/weak
  * Fix #3:  Zod shape validation — getSession returns null for malformed payloads
  * Fix #8:  expires_at validation — getSession returns null for expired sessions
+ * Fix M-7: setSession always uses secure:true (browsers exempt localhost)
  */
 
 import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
@@ -11,12 +12,13 @@ import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest';
 // ─── Mock next/headers ────────────────────────────────────────────────────────
 // vi.mock is hoisted to the top by vitest, so we must use vi.hoisted() to
 // initialize variables referenced inside the factory before the hoist happens.
-const { mockCookiesGet } = vi.hoisted(() => ({
+const { mockCookiesGet, mockCookiesSet } = vi.hoisted(() => ({
   mockCookiesGet: vi.fn(),
+  mockCookiesSet: vi.fn(),
 }));
 
 vi.mock('next/headers', () => ({
-  cookies: vi.fn().mockResolvedValue({ get: mockCookiesGet }),
+  cookies: vi.fn().mockResolvedValue({ get: mockCookiesGet, set: mockCookiesSet }),
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,7 +38,7 @@ function buildCookie(session: Record<string, unknown>): string {
 // Stub SESSION_SECRET before importing session.ts so getSecret() uses our value.
 vi.stubEnv('SESSION_SECRET', TEST_SECRET);
 
-import { getSession } from './session';
+import { getSession, setSession } from './session';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fix #11: SESSION_SECRET startup validation
@@ -236,5 +238,62 @@ describe('getSession — expires_at validation (Fix #8)', () => {
 
     const result = await getSession();
     expect(result).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fix M-7: setSession always uses secure:true
+// Browsers exempt localhost from the Secure attribute, so dev still works over
+// http://localhost. Removing the NODE_ENV gate is the safe default.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('setSession — cookie security options (Fix M-7)', () => {
+  const validSession = {
+    user_id: 1,
+    email: 'user@example.com',
+    first_name: 'Alice',
+    last_name: 'Smith',
+    access_token: 'access-tok',
+    refresh_token: 'refresh-tok',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+  };
+
+  afterEach(() => {
+    mockCookiesSet.mockReset();
+  });
+
+  it('sets secure:true in production', async () => {
+    const original = process.env.NODE_ENV;
+    // @ts-expect-error — reassigning read-only env for test purposes
+    process.env.NODE_ENV = 'production';
+    try {
+      await setSession(validSession);
+      const [, , options] = mockCookiesSet.mock.calls[0];
+      expect(options.secure).toBe(true);
+    } finally {
+      // @ts-expect-error — restoring
+      process.env.NODE_ENV = original;
+    }
+  });
+
+  it('sets secure:true in development (browsers exempt localhost)', async () => {
+    const original = process.env.NODE_ENV;
+    // @ts-expect-error — reassigning read-only env for test purposes
+    process.env.NODE_ENV = 'development';
+    try {
+      await setSession(validSession);
+      const [, , options] = mockCookiesSet.mock.calls[0];
+      expect(options.secure).toBe(true);
+    } finally {
+      // @ts-expect-error — restoring
+      process.env.NODE_ENV = original;
+    }
+  });
+
+  it('sets httpOnly:true and sameSite:lax regardless of environment', async () => {
+    await setSession(validSession);
+    const [, , options] = mockCookiesSet.mock.calls[0];
+    expect(options.httpOnly).toBe(true);
+    expect(options.sameSite).toBe('lax');
   });
 });
