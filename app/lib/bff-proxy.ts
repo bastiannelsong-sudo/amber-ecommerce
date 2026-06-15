@@ -45,6 +45,29 @@ interface RefreshResult {
 }
 
 /**
+ * Returns a headers object pre-populated with Content-Type and, when
+ * INTERNAL_API_KEY is set in the environment, x-internal-api-key.
+ *
+ * Single source of truth for internal-key injection (SEC-001). Used by
+ * proxyToBackend, backendFetch, and tryRefreshAccessToken so the header
+ * cannot be forgotten when adding new BFF call sites.
+ *
+ * If INTERNAL_API_KEY is absent (local dev without the env), the key is
+ * simply not added — no crash, same as before.
+ */
+const buildBaseHeaders = (extraHeaders: Record<string, string> = {}): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...extraHeaders,
+  };
+  const internalKey = process.env.INTERNAL_API_KEY;
+  if (internalKey) {
+    headers['x-internal-api-key'] = internalKey;
+  }
+  return headers;
+};
+
+/**
  * Intenta refrescar el access_token usando el refresh_token de la cookie.
  * Devuelve el nuevo access_token si tuvo éxito, o null si hay que re-login.
  *
@@ -58,7 +81,7 @@ const tryRefreshAccessToken = async (): Promise<string | null> => {
   try {
     const res = await fetch(`${getBackendBase()}/ecommerce-auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildBaseHeaders(),
       body: JSON.stringify({ refresh_token: session.refresh_token }),
       cache: 'no-store',
     });
@@ -162,17 +185,10 @@ export const proxyToBackend = async (
   }
 
   const buildHeaders = (token: string | null): Record<string, string> => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...extraHeaders,
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
     // Capa 1 hardening: identifica el request como proveniente del BFF.
     // Sin esto, el backend rechaza con 401 (excepto webhooks/healthcheck).
-    const internalKey = process.env.INTERNAL_API_KEY;
-    if (internalKey) {
-      headers['x-internal-api-key'] = internalKey;
-    }
+    const headers = buildBaseHeaders(extraHeaders);
+    if (token) headers.Authorization = `Bearer ${token}`;
     return headers;
   };
 
@@ -218,11 +234,8 @@ export const backendFetch = async <T = unknown>(
 ): Promise<{ ok: boolean; status: number; data: T | null }> => {
   const { authenticated, headers = {}, ...rest } = init;
 
-  const buildHeaders = (token: string | null): Record<string, string> => {
-    const h: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(headers as Record<string, string>),
-    };
+  const buildFetchHeaders = (token: string | null): Record<string, string> => {
+    const h = buildBaseHeaders(headers as Record<string, string>);
     if (token) h.Authorization = `Bearer ${token}`;
     return h;
   };
@@ -235,7 +248,7 @@ export const backendFetch = async <T = unknown>(
 
   let res = await fetch(`${getBackendBase()}${path}`, {
     ...rest,
-    headers: buildHeaders(token),
+    headers: buildFetchHeaders(token),
     cache: 'no-store',
   });
 
@@ -244,7 +257,7 @@ export const backendFetch = async <T = unknown>(
     if (newToken) {
       res = await fetch(`${getBackendBase()}${path}`, {
         ...rest,
-        headers: buildHeaders(newToken),
+        headers: buildFetchHeaders(newToken),
         cache: 'no-store',
       });
     }
