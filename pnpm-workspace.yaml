@@ -1,0 +1,27 @@
+# pnpm 10+ moved these settings out of package.json's "pnpm" field.
+# overrides: security version pins for transitive dependencies.
+overrides:
+  "ajv@6": ">=6.14.0"
+  "axios": ">=1.16.0"
+  "brace-expansion@1": ">=1.1.13"
+  "brace-expansion@2": ">=2.0.3"
+  "brace-expansion@5": ">=5.0.6"
+  "esbuild": ">=0.28.1"
+  "fast-uri": ">=3.1.2"
+  "flatted": ">=3.4.2"
+  "follow-redirects": ">=1.16.0"
+  "form-data": ">=4.0.4"
+  "minimatch@3": ">=3.1.4"
+  "minimatch@9": ">=9.0.7"
+  "picomatch": ">=4.0.4"
+  "postcss": ">=8.5.10"
+  "qs": ">=6.15.2"
+  "ws@8": ">=8.20.1"
+
+# allowBuilds: dependencies permitted to run install/build scripts (pnpm 11).
+# These are standard Next.js/tooling deps that need native binaries.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  "@sentry/cli": true
