@@ -5,15 +5,14 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { CatalogContainer } from '@/features/catalog/ui/containers/CatalogContainer';
-import { fetchCatalog, type CatalogFilters } from '../lib/catalog-api';
+import { fetchCatalog, fetchCollectionsTree, type CatalogFilters } from '../lib/catalog-api';
 import { SITE_URL } from '../lib/seo-copy';
-import type { Product, Collection } from '../lib/types';
+import type { Product } from '../lib/types';
 
 // Render dynamically at request time: depends on searchParams (URL filters)
 // and backend data that must not be prerendered at build.
 export const dynamic = 'force-dynamic';
 
-const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
 const CATALOG_URL = `${SITE_URL}/catalogo`;
 
 type SortMap = Record<string, CatalogFilters['sort']>;
@@ -129,18 +128,6 @@ async function getProducts(filters: CatalogFilters): Promise<Product[]> {
   }
 }
 
-async function getCollections(): Promise<Collection[]> {
-  try {
-    const res = await fetch(`${API_URL}/collections/tree`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
 interface CatalogoPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
@@ -150,7 +137,9 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
   const filters = paramsToBackendFilters(sp);
   const [products, collections] = await Promise.all([
     getProducts(filters),
-    getCollections(),
+    // fetchCollectionsTree centraliza el fetch (internalFetch + x-internal-api-key)
+    // y ya devuelve [] ante error — mismo contrato que el duplicado eliminado.
+    fetchCollectionsTree(),
   ]);
 
   const breadcrumbJsonLd = {
