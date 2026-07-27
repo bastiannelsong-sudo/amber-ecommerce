@@ -10,8 +10,9 @@ import 'server-only';
  * this module. Page components must never reference INTERNAL_API_URL directly.
  */
 import type { Collection, Product, SearchResponse } from './types';
-
-const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3000';
+// internalFetch prefija INTERNAL_API_URL en paths relativos e inyecta
+// x-internal-api-key — requerido por el InternalApiKeyGuard global del backend.
+import { internalFetch } from './server-api/internal-fetch';
 
 export interface CatalogFilters {
   product_type?: string;
@@ -65,7 +66,7 @@ export async function fetchCatalog(
   filters: CatalogFilters = {},
   revalidate = 120,
 ): Promise<CatalogResponse> {
-  const url = `${API_URL}/products/catalog${toQuery(filters)}`;
+  const path = `/products/catalog${toQuery(filters)}`;
   const sentinel: CatalogResponse = {
     data: [],
     total: 0,
@@ -73,23 +74,23 @@ export async function fetchCatalog(
     limit: filters.limit ?? 20,
   };
   try {
-    const res = await fetch(url, { next: { revalidate } });
+    const res = await internalFetch(path, { next: { revalidate } });
     if (!res.ok) return sentinel;
     return await res.json();
   } catch (err) {
-    console.warn(`fetchCatalog: failed to fetch or parse response from ${url}`, err);
+    console.warn(`fetchCatalog: failed to fetch or parse response from ${path}`, err);
     return sentinel;
   }
 }
 
 export async function fetchFacets(revalidate = 300): Promise<FacetsResponse | null> {
-  const url = `${API_URL}/products/facets`;
+  const path = '/products/facets';
   try {
-    const res = await fetch(url, { next: { revalidate } });
+    const res = await internalFetch(path, { next: { revalidate } });
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
-    console.warn(`fetchFacets: failed to fetch or parse response from ${url}`, err);
+    console.warn(`fetchFacets: failed to fetch or parse response from ${path}`, err);
     return null;
   }
 }
@@ -100,15 +101,15 @@ export async function fetchProductBySlug(
 ): Promise<Product | null> {
   // Si el slug es numérico, asumimos que es product_id.
   const isNumeric = /^\d+$/.test(slug);
-  const url = isNumeric
-    ? `${API_URL}/products/${slug}`
-    : `${API_URL}/products/by-slug/${encodeURIComponent(slug)}`;
+  const path = isNumeric
+    ? `/products/${slug}`
+    : `/products/by-slug/${encodeURIComponent(slug)}`;
   try {
-    const res = await fetch(url, { next: { revalidate } });
+    const res = await internalFetch(path, { next: { revalidate } });
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
-    console.warn(`fetchProductBySlug: failed to fetch or parse response from ${url}`, err);
+    console.warn(`fetchProductBySlug: failed to fetch or parse response from ${path}`, err);
     return null;
   }
 }
@@ -123,7 +124,7 @@ export async function fetchReviewSummary(
   revalidate = 300,
 ): Promise<ReviewSummary | null> {
   try {
-    const res = await fetch(`${API_URL}/ecommerce/reviews/${productId}`, {
+    const res = await internalFetch(`/ecommerce/reviews/${productId}`, {
       next: { revalidate },
     });
     if (!res.ok) return null;
@@ -187,8 +188,8 @@ export async function searchProducts(
   if (filters.collection) urlParams.set('collection', filters.collection);
 
   try {
-    const res = await fetch(
-      `${API_URL}/products/ecommerce/search?${urlParams.toString()}`,
+    const res = await internalFetch(
+      `/products/ecommerce/search?${urlParams.toString()}`,
       { next: { revalidate } },
     );
     if (!res.ok) throw new Error(`Search API error: ${res.status}`);
@@ -219,7 +220,7 @@ export async function searchProducts(
  */
 export async function fetchCollectionsTree(revalidate = 60): Promise<Collection[]> {
   try {
-    const res = await fetch(`${API_URL}/collections/tree`, { next: { revalidate } });
+    const res = await internalFetch('/collections/tree', { next: { revalidate } });
     if (!res.ok) throw new Error(`Collections tree API error: ${res.status}`);
     return await res.json();
   } catch {
@@ -236,7 +237,7 @@ export async function fetchCollectionBySlug(
   revalidate = 60,
 ): Promise<Collection | null> {
   try {
-    const res = await fetch(`${API_URL}/collections/${encodeURIComponent(slug)}`, {
+    const res = await internalFetch(`/collections/${encodeURIComponent(slug)}`, {
       next: { revalidate },
     });
     if (!res.ok) return null;
@@ -266,8 +267,8 @@ export async function fetchCollectionProducts(
   const qs = params.toString() ? `?${params.toString()}` : '';
 
   try {
-    const res = await fetch(
-      `${API_URL}/collections/${encodeURIComponent(slug)}/products${qs}`,
+    const res = await internalFetch(
+      `/collections/${encodeURIComponent(slug)}/products${qs}`,
       { next: { revalidate } },
     );
     if (!res.ok) return { data: [], total: 0 };

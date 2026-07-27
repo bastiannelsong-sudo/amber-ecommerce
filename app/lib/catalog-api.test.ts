@@ -554,3 +554,185 @@ describe('fetchProductBySlug', () => {
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// x-internal-api-key injection — el backend NestJS exige el header en TODO
+// request (InternalApiKeyGuard global). Los fetchers deben usar internalFetch;
+// un fetch plano devuelve 401 y el catálogo queda vacío en producción.
+// ---------------------------------------------------------------------------
+
+describe('x-internal-api-key injection (InternalApiKeyGuard)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', mockFetch);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    mockFetch.mockReset();
+  });
+
+  const okJson = (body: unknown) =>
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  // internalFetch pasa un Headers; normalizamos para leer el header sin
+  // depender de la forma concreta (Headers vs objeto plano).
+  const apiKeyHeaderOf = (init: RequestInit | undefined): string | null =>
+    new Headers(init?.headers).get('x-internal-api-key');
+
+  it('fetchCatalog: sends x-internal-api-key and preserves revalidate when INTERNAL_API_KEY is set', async () => {
+    vi.stubEnv('INTERNAL_API_URL', 'http://backend:3000');
+    vi.stubEnv('INTERNAL_API_KEY', 'catalog-secret');
+    const { fetchCatalog } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(okJson({ data: [], total: 0, page: 1, limit: 20 }));
+
+    await fetchCatalog({}, 120);
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://backend:3000/products/catalog');
+    expect(apiKeyHeaderOf(init)).toBe('catalog-secret');
+    expect((init as { next?: { revalidate?: number } }).next?.revalidate).toBe(120);
+  });
+
+  it('fetchFacets: sends x-internal-api-key when INTERNAL_API_KEY is set', async () => {
+    vi.stubEnv('INTERNAL_API_URL', 'http://backend:3000');
+    vi.stubEnv('INTERNAL_API_KEY', 'facets-secret');
+    const { fetchFacets } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(
+      okJson({ product_type: [], audience: [], material: [], tags: [], price_range: { min: 0, max: 1 } }),
+    );
+
+    await fetchFacets();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://backend:3000/products/facets');
+    expect(apiKeyHeaderOf(init)).toBe('facets-secret');
+  });
+
+  it('fetchCollectionsTree: sends x-internal-api-key when INTERNAL_API_KEY is set', async () => {
+    vi.stubEnv('INTERNAL_API_URL', 'http://backend:3000');
+    vi.stubEnv('INTERNAL_API_KEY', 'tree-secret');
+    const { fetchCollectionsTree } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(okJson([]));
+
+    await fetchCollectionsTree();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('http://backend:3000/collections/tree');
+    expect(apiKeyHeaderOf(init)).toBe('tree-secret');
+  });
+
+  it('fetchCatalog: omits x-internal-api-key when INTERNAL_API_KEY is not set', async () => {
+    vi.stubEnv('INTERNAL_API_KEY', '');
+    const { fetchCatalog } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(okJson({ data: [], total: 0, page: 1, limit: 20 }));
+
+    await fetchCatalog();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(apiKeyHeaderOf(init)).toBeNull();
+  });
+
+  it('fetchCollectionsTree: omits x-internal-api-key when INTERNAL_API_KEY is not set', async () => {
+    vi.stubEnv('INTERNAL_API_KEY', '');
+    const { fetchCollectionsTree } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(okJson([]));
+
+    await fetchCollectionsTree();
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(apiKeyHeaderOf(init)).toBeNull();
+  });
+
+  it('fetchCatalog: still returns the empty sentinel on 401 (behavior unchanged)', async () => {
+    vi.stubEnv('INTERNAL_API_KEY', 'some-key');
+    const { fetchCatalog } = await import('./catalog-api');
+    mockFetch.mockResolvedValue(new Response('Unauthorized', { status: 401 }));
+
+    const result = await fetchCatalog({ page: 3, limit: 12 });
+
+    expect(result).toEqual({ data: [], total: 0, page: 3, limit: 12 });
+  });
+
+  // Contrato pinneado para los 8 fetchers migrados: TODOS deben salir por
+  // internalFetch y llevar el header cuando INTERNAL_API_KEY está seteada.
+  type CatalogApiModule = typeof import('./catalog-api');
+
+  const fetcherCases: Array<[string, (mod: CatalogApiModule) => Promise<unknown>]> = [
+    ['fetchCatalog', (m) => m.fetchCatalog()],
+    ['fetchFacets', (m) => m.fetchFacets()],
+    ['fetchProductBySlug', (m) => m.fetchProductBySlug('pulsera-plata')],
+    ['fetchReviewSummary', (m) => m.fetchReviewSummary(42)],
+    ['searchProducts', (m) => m.searchProducts('collar')],
+    ['fetchCollectionsTree', (m) => m.fetchCollectionsTree()],
+    ['fetchCollectionBySlug', (m) => m.fetchCollectionBySlug('proteccion')],
+    ['fetchCollectionProducts', (m) => m.fetchCollectionProducts('proteccion')],
+  ];
+
+  it.each(fetcherCases)(
+    '%s: sends x-internal-api-key when INTERNAL_API_KEY is set',
+    async (_name, invoke) => {
+      vi.stubEnv('INTERNAL_API_KEY', 'pinned-secret');
+      const mod = await import('./catalog-api');
+      mockFetch.mockResolvedValue(okJson({}));
+
+      await invoke(mod);
+
+      expect(mockFetch).toHaveBeenCalledOnce();
+      const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      expect(apiKeyHeaderOf(init)).toBe('pinned-secret');
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// fetchReviewSummary — sentinel behavior (sin cobertura previa)
+// ---------------------------------------------------------------------------
+
+describe('fetchReviewSummary', () => {
+  let fetchReviewSummary: typeof import('./catalog-api').fetchReviewSummary;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', mockFetch);
+    const mod = await import('./catalog-api');
+    fetchReviewSummary = mod.fetchReviewSummary;
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    mockFetch.mockReset();
+  });
+
+  it('returns null when backend returns non-ok status', async () => {
+    mockFetch.mockResolvedValue(new Response('error', { status: 500 }));
+    const result = await fetchReviewSummary(42);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when fetch throws', async () => {
+    mockFetch.mockRejectedValue(new Error('network error'));
+    const result = await fetchReviewSummary(42);
+    expect(result).toBeNull();
+  });
+
+  it('returns the summary when response has valid rating data', async () => {
+    mockFetch.mockResolvedValue(
+      new Response(JSON.stringify({ average_rating: 4.5, total_reviews: 12 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const result = await fetchReviewSummary(42);
+    expect(result).toEqual({ average_rating: 4.5, total_reviews: 12 });
+  });
+});
