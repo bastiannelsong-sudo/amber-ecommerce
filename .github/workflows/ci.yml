@@ -1,0 +1,43 @@
+name: CI
+
+# Runs on every PR targeting main, and on every push to main.
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # pnpm 10 + Node 20: mirrors the production Dockerfile (node:20-alpine,
+      # npm install -g pnpm@10). package.json has no "packageManager" field,
+      # so the version must be pinned here.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # No "typecheck" script exists; tsc runs directly. ESLint is excluded
+      # on purpose: it currently crashes with a pre-existing ajv/eslintrc
+      # environment error unrelated to any code under review.
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        run: pnpm test:run
