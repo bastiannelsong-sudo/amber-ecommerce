@@ -4,11 +4,12 @@ FROM node:20-alpine AS base
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-# pnpm@9: el lockfile es lockfileVersion 9.0 y la base es node:20. corepack
-# bajaba pnpm 11 (requiere Node >=22) y crasheaba con node:sqlite.
+COPY package.json package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* ./
+# pnpm@10: los overrides viven en pnpm-workspace.yaml (formato pnpm 10+, PR #60)
+# y el lockfile es lockfileVersion 9.0, compatible. No usar corepack: bajaba
+# pnpm 11 (requiere Node >=22) y crasheaba con node:sqlite en node:20.
 RUN \
-  if [ -f pnpm-lock.yaml ]; then npm install -g pnpm@9 && pnpm install --frozen-lockfile; \
+  if [ -f pnpm-lock.yaml ]; then npm install -g pnpm@10 && pnpm install --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
   else npm install; \
   fi
